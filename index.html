@@ -23396,7 +23396,37 @@ var __async = (__this, __arguments, generator) => {
 
   <!-- Condições -->
   <div class="card">
-    <div class="section-title">💳 Condições comerciais</div>
+    <!-- Zoho CRM -->
+  <div class="section-title">🔗 Zoho CRM</div>
+  <div class="row two">
+    <div class="field">
+      <label>Fonte do cliente potencial</label>
+      <select id="fonte-lead">
+        <option value="Conversa">Conversa</option>
+        <option value="Publicidade">Publicidade</option>
+        <option value="Chamada Surpresa">Chamada Surpresa</option>
+        <option value="Referência de Funcionários">Referência de Funcionários</option>
+        <option value="Referência Externa">Referência Externa</option>
+        <option value="Armazenamento online">Armazenamento online</option>
+        <option value="Parceiro">Parceiro</option>
+        <option value="Relações Públicas">Relações Públicas</option>
+        <option value="Pseudônimo de e-mail de vendas">Pseudônimo de e-mail de vendas</option>
+        <option value="Parceiro de Seminários">Parceiro de Seminários</option>
+        <option value="Seminário interno">Seminário interno</option>
+        <option value="Exposição Profissional">Exposição Profissional</option>
+        <option value="Download em Rede">Download em Rede</option>
+        <option value="Pesquisa de Rede">Pesquisa de Rede</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Descrição do negócio</label>
+      <div style="font-size:12px;color:#888;padding:8px 10px;background:#F8F9FB;border-radius:6px;border:1px solid #E5E8EC">
+        Preenchida automaticamente a partir dos itens da proposta
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">💳 Condições comerciais</div>
     <div class="row two">
       <div class="field">
         <label>Forma de pagamento</label>
@@ -23889,10 +23919,16 @@ async function salvarNoDrive(d, docxBuffer) {
       return btoa(bin);
     };
     const payload = {
-      action:  'salvar',
-      num:     d.num,
-      cliente: d.sigla || d.cliente || 'Cliente',
-      docx:    docxBuffer ? await toBase64(docxBuffer) : null,
+      action:     'salvar',
+      num:        d.num,
+      cliente:    d.cliente || 'Cliente',
+      sigla:      d.sigla || '',
+      contato:    d.contato || '',
+      validade:   d.validade || '30',
+      valorNum:   d.grandTotal || '0',
+      fonteLead:  d.fonteLead || 'Conversa',
+      descricao:  d.descricao || '',
+      docx:       docxBuffer ? await toBase64(docxBuffer) : null,
     };
     // Apps Script requer mode no-cors para POST de origem externa
     await fetch(SHEETS_URL, {
@@ -24092,8 +24128,16 @@ function collectData(){
     formaPg: document.getElementById('forma-pg').value,
     prazoPg: document.getElementById('prazo-pg').value,
     prazoEnt: document.getElementById('prazo-entrega').value,
-    validade: document.getElementById('validade').value,
-    obs: document.getElementById('obs').value,
+    validade:   document.getElementById('validade').value,
+    obs:        document.getElementById('obs').value,
+    fonteLead:  document.getElementById('fonte-lead').value,
+    descricao:  (() => {
+      const rows = document.querySelectorAll('#items-body .item-row');
+      return Array.from(rows).map((r,i) => {
+        const desc = r.querySelector('.desc').value;
+        return (i+1) + '. ' + desc;
+      }).join('\n\n');
+    })(),
     bioinformatica: document.getElementById('bioinformatica').value,
     grandTotal: document.getElementById('grand-total').textContent,
     items
@@ -24611,7 +24655,7 @@ async function gerarDocx(d, dateStr){
   // ── Cabeçalho: logo esquerda | dados empresa centro | número direita ──
   // Usa margens reduzidas para ganhar espaço; fonte menor para caber em uma linha
   const headerTable = new Table({
-    width:{size:10440,type:WidthType.DXA}, columnWidths:[2040,5760,2640],
+    width:{size:10440,type:WidthType.DXA}, columnWidths:[2200,280,5320,2640],
     borders:{top:b0,bottom:b0,left:b0,right:b0,insideH:b0,insideV:b0},
     rows:[new TableRow({children:[
 
@@ -24621,11 +24665,19 @@ async function gerarDocx(d, dateStr){
           spacing:{before:0,after:0},
           children:[new ImageRun({
             type:'png', data:logoBytes,
-            transformation:{width:170,height:95},
+            transformation:{width:108,height:61},
             altText:{title:'Biomelting',description:'Logo Biomelting',name:'logo'}
           })]
         }),
-      ],{borders:noBorders,fill:WHITE,width:2040,vAlign:VerticalAlign.CENTER}),
+      ],{borders:noBorders,fill:WHITE,width:2200,vAlign:VerticalAlign.CENTER}),
+
+      // Espaçador
+      new TableCell({
+        borders:noBorders,
+        width:{size:280,type:WidthType.DXA},
+        margins:{top:0,bottom:0,left:0,right:0},
+        children:[para(txt(''))],
+      }),
 
       // Centro: razão social em uma linha + dados
       mkCell([
@@ -24633,8 +24685,7 @@ async function gerarDocx(d, dateStr){
         para(txt('CNPJ: 43.357.646/0001-33',{size:17,color:'666666'}),{align:AlignmentType.LEFT,before:20}),
         para(txt('Rua Celestino Frare S/N, Lote Frare – Centro, Dona Emma/SC',{size:17,color:'666666'}),{align:AlignmentType.LEFT,before:8}),
         para(txt('contato@biomelting.com.br  ·  (31) 99643-4175',{size:17,color:'666666'}),{align:AlignmentType.LEFT,before:8}),
-      ],{borders:noBorders,fill:WHITE,width:5760,vAlign:VerticalAlign.CENTER,
-         margins:{top:80,bottom:80,left:700,right:200}}),
+      ],{borders:noBorders,fill:WHITE,width:5320,vAlign:VerticalAlign.CENTER}),
 
       // Direita: proposta comercial + número + data
       mkCell([
