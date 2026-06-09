@@ -23463,7 +23463,7 @@ var __async = (__this, __arguments, generator) => {
   <div class="actions">
     <button class="btn-secondary" id="btn-copy">📋 Copiar número</button>
     <button class="btn-secondary" id="btn-preview-proposta">👁 Pré-visualizar proposta</button>
-    <button class="btn-primary" id="btn-word">⬇ Word (.docx)</button>
+    <button class="btn-primary" id="btn-word">⬇ Baixar Proposta (Word + PDF)</button>
 
   </div>
 
@@ -24273,6 +24273,16 @@ document.getElementById('btn-word').addEventListener('click', async ()=>{
     a.download = `Proposta_Biomelting_${d.num}.docx`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
+
+    // Gerar e baixar PDF via janela de impressão
+    const htmlContent = gerarHTMLParaImpressao(d, dateStr);
+    const pdfBlob = new Blob([htmlContent], {type: 'text/html'});
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const pdfA = document.createElement('a');
+    pdfA.href = pdfUrl;
+    pdfA.target = '_blank';
+    document.body.appendChild(pdfA);
+    setTimeout(() => { pdfA.click(); document.body.removeChild(pdfA); URL.revokeObjectURL(pdfUrl); }, 500);
     // Reservar este número e avançar para o próximo
     const anoMes = getAnoMes(document.getElementById('prop-date').value);
     applySeq(seqNum + 1);
