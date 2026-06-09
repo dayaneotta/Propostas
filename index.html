@@ -24997,23 +24997,39 @@ async function gerarDocx(d, dateStr){
 </div>
 
 <script>
-// Substitua pela senha desejada
-const SENHA_CORRETA = 'Biomelting123@';
-
-function verificarSenha() {
+// Verificação de senha via Apps Script
+async function verificarSenha() {
   const input = document.getElementById('senha-input').value;
-  if(input === SENHA_CORRETA) {
-    document.getElementById('senha-overlay').style.display = 'none';
-    sessionStorage.setItem('autenticado', '1');
-  } else {
-    document.getElementById('senha-erro').textContent = 'Senha incorreta. Tente novamente.';
-    document.getElementById('senha-input').value = '';
-    document.getElementById('senha-input').focus();
+  const btn = document.querySelector('#senha-overlay button[onclick]');
+  const erro = document.getElementById('senha-erro');
+  
+  if(!input) { erro.textContent = 'Digite a senha.'; return; }
+  
+  btn.disabled = true;
+  btn.textContent = 'Verificando…';
+  erro.textContent = '';
+  
+  try {
+    const resp = await fetch(`${SHEETS_URL}?action=verificar&senha=${encodeURIComponent(input)}`);
+    const data = await resp.json();
+    if(data.ok) {
+      sessionStorage.setItem('autenticado', data.token);
+      document.getElementById('senha-overlay').style.display = 'none';
+    } else {
+      erro.textContent = 'Senha incorreta. Tente novamente.';
+      document.getElementById('senha-input').value = '';
+      document.getElementById('senha-input').focus();
+    }
+  } catch(e) {
+    erro.textContent = 'Erro de conexão. Verifique a internet.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
   }
 }
 
 // Verifica se já autenticou nesta sessão
-if(sessionStorage.getItem('autenticado') === '1') {
+if(sessionStorage.getItem('autenticado')) {
   document.getElementById('senha-overlay').style.display = 'none';
 } else {
   document.getElementById('senha-input').focus();
