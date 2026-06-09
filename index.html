@@ -24059,63 +24059,97 @@ document.getElementById('add-item').addEventListener('click',()=>addItem());
 
 // ── Pré-visualizar proposta ───────────────────────────────────────────────────
 function gerarResumoHTML(d, dateStr) {
+  const logoSrc = 'data:image/png;base64,' + LOGO_B64;
   const linhas = (d.items||[]).map((it,i) => {
-    const desc = it.desc.replace(/\n/g, '<br><span style="padding-left:12px"></span>');
-    return `<tr style="border-bottom:1px solid #EEF2F7">
-      <td style="padding:8px 10px;color:#999;width:32px;text-align:center">${i+1}</td>
-      <td style="padding:8px 10px">${desc}</td>
-      <td style="padding:8px 10px;text-align:center">${it.qty} ${it.unit}</td>
-      <td style="padding:8px 10px;text-align:right">R$ ${it.unitVal}</td>
-      <td style="padding:8px 10px;text-align:right;font-weight:600">${it.total}</td>
+    const desc = (it.desc||'').split('\n').map((l,li) =>
+      li===0 ? `<strong>${l}</strong>` : `<span style="display:block;padding-left:12px;color:#555;font-size:11px">${l}</span>`
+    ).join('');
+    const bg = i%2===0 ? '#F8F9FB' : '#fff';
+    return `<tr style="background:${bg}">
+      <td style="padding:8px 10px;color:#999;width:32px;text-align:center;border-bottom:1px solid #EEF2F7">${i+1}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #EEF2F7">${desc}</td>
+      <td style="padding:8px 10px;text-align:center;border-bottom:1px solid #EEF2F7">${it.qty}<br><small style="color:#888">${it.unit}</small></td>
+      <td style="padding:8px 10px;text-align:right;border-bottom:1px solid #EEF2F7">R$ ${it.unitVal}</td>
+      <td style="padding:8px 10px;text-align:right;font-weight:600;border-bottom:1px solid #EEF2F7">${it.total}</td>
     </tr>`;
   }).join('');
 
   return `
-    <div style="margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1A73C8">
-      <div style="font-weight:700;font-size:15px;color:#0D4E8A">BIOMELTING ASSESSORIA E CONSULTORIA LTDA</div>
-      <div style="font-size:12px;color:#888;margin-top:2px">CNPJ: 43.357.646/0001-33</div>
+    <!-- Cabeçalho -->
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
+      <img src="${logoSrc}" style="height:60px">
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:13px;color:#0D4E8A">BIOMELTING ASSESSORIA E CONSULTORIA LTDA</div>
+        <div style="font-size:11px;color:#666;margin-top:3px">CNPJ: 43.357.646/0001-33</div>
+        <div style="font-size:11px;color:#666">Rua Celestino Frare S/N, Lote Frare – Centro, Dona Emma/SC</div>
+        <div style="font-size:11px;color:#666">contato@biomelting.com.br · (31) 99643-4175</div>
+      </div>
+      <div style="text-align:right;background:#0D4E8A;border-radius:8px;padding:10px 16px;min-width:140px">
+        <div style="font-size:9px;color:#C8DFF5;text-transform:uppercase;letter-spacing:.05em">Proposta Comercial</div>
+        <div style="font-size:18px;font-weight:700;color:#fff;font-family:monospace;margin:4px 0">${d.num||'—'}</div>
+        <div style="font-size:10px;color:#C8DFF5">${dateStr}</div>
+      </div>
+    </div>
+    <div style="border-bottom:2px solid #1A73C8;margin-bottom:14px"></div>
+
+    <!-- Cliente -->
+    <div style="background:#EAF2FB;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px">
+      <div style="font-weight:700;color:#0D4E8A;margin-bottom:6px;font-size:11px;text-transform:uppercase">Dados do Cliente</div>
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:3px 8px">
+        <span style="color:#888;font-weight:600">Cliente:</span><span>${d.cliente||'—'}${d.sigla?' ('+d.sigla+')':''}</span>
+        <span style="color:#888;font-weight:600">CNPJ/CPF:</span><span>${d.cnpj||'—'}</span>
+        <span style="color:#888;font-weight:600">Endereço:</span><span>${d.end||'—'}</span>
+        <span style="color:#888;font-weight:600">Contato:</span><span>${d.contato||'—'} · ${d.email||'—'}</span>
+        <span style="color:#888;font-weight:600">Processo:</span><span>${d.processo||'—'}</span>
+      </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px">
-      <div><span style="color:#888">Proposta nº:</span> <strong style="color:#1A73C8;font-family:monospace">${d.num}</strong></div>
-      <div><span style="color:#888">Data:</span> ${dateStr}</div>
-      <div><span style="color:#888">Validade:</span> ${d.validade} dias</div>
-      <div><span style="color:#888">Processo:</span> ${d.processo||'—'}</div>
-    </div>
-
-    <div style="background:#EAF2FB;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:12px">
-      <div style="font-weight:600;color:#0D4E8A;margin-bottom:4px">CLIENTE</div>
-      <div>${d.cliente||'—'} ${d.sigla?'('+d.sigla+')':''}</div>
-      <div style="color:#666">CNPJ/CPF: ${d.cnpj||'—'} · ${d.end||'—'}</div>
-      <div style="color:#666">Contato: ${d.contato||'—'} · ${d.email||'—'}</div>
-    </div>
-
-    <div style="font-weight:600;color:#0D4E8A;font-size:12px;margin-bottom:6px;text-transform:uppercase">Itens da proposta</div>
+    <!-- Itens -->
+    <div style="font-weight:700;color:#0D4E8A;font-size:11px;text-transform:uppercase;margin-bottom:6px">Descrição do Serviço</div>
     <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">
-      <thead>
-        <tr style="background:#0D4E8A;color:#fff">
-          <th style="padding:7px 10px">#</th>
-          <th style="padding:7px 10px;text-align:left">Descrição</th>
-          <th style="padding:7px 10px">Qtd</th>
-          <th style="padding:7px 10px">Valor unit.</th>
-          <th style="padding:7px 10px">Total</th>
-        </tr>
-      </thead>
+      <thead><tr style="background:#0D4E8A;color:#fff">
+        <th style="padding:7px 10px;width:32px">#</th>
+        <th style="padding:7px 10px;text-align:left">Descrição</th>
+        <th style="padding:7px 10px;text-align:center">Qtd / Un.</th>
+        <th style="padding:7px 10px;text-align:right">Valor unit.</th>
+        <th style="padding:7px 10px;text-align:right">Total</th>
+      </tr></thead>
       <tbody>${linhas}</tbody>
-      <tfoot>
-        <tr style="background:#EAF2FB">
-          <td colspan="4" style="padding:8px 10px;text-align:right;font-weight:600;color:#0D4E8A">TOTAL DO SERVIÇO</td>
-          <td style="padding:8px 10px;text-align:right;font-weight:700;color:#0D4E8A">${d.grandTotal}</td>
-        </tr>
-      </tfoot>
+      <tfoot><tr>
+        <td colspan="4" style="padding:8px 10px;text-align:right;font-weight:700;color:#0D4E8A;background:#EAF2FB">TOTAL DO SERVIÇO</td>
+        <td style="padding:8px 10px;text-align:right;font-weight:700;background:#1A73C8;color:#fff">${d.grandTotal||'—'}</td>
+      </tr></tfoot>
     </table>
+    <div style="font-size:11px;font-style:italic;color:#888;margin-bottom:14px">${d.grandTotal||''}</div>
 
-    <div style="font-size:12px;background:#F8F9FB;border-radius:6px;padding:10px 14px;margin-bottom:8px">
-      <div style="font-weight:600;color:#0D4E8A;margin-bottom:4px">CONDIÇÕES COMERCIAIS</div>
-      <div><span style="color:#666">Pagamento:</span> ${d.formaPg} — ${d.prazoPg} dias após contratação</div>
-      <div><span style="color:#666">Entrega:</span> ${d.prazoEnt} dias corridos após recebimento das amostras</div>
+    <!-- Condições -->
+    <div style="font-weight:700;color:#0D4E8A;font-size:11px;text-transform:uppercase;margin-bottom:6px">Condições Comerciais</div>
+    <div style="font-size:12px;border-radius:6px;overflow:hidden;border:1px solid #EEF2F7;margin-bottom:14px">
+      ${[
+        ['Forma de pagamento', d.formaPg||'—'],
+        ['Prazo de pagamento', (d.prazoPg||'—')+' dias após a contratação'],
+        ['Prazo de entrega', (d.prazoEnt||'—')+' dias corridos após recebimento das amostras'],
+        ['Validade da proposta', (d.validade||'—')+' dias a partir da data de emissão'],
+        ['Forma de entrega', 'Arquivo digital compactado com os arquivos de sequência'],
+      ].map(([l,v],i) => `<div style="display:grid;grid-template-columns:180px 1fr;gap:8px;padding:7px 12px;background:${i%2===0?'#F8F9FB':'#fff'}">
+        <span style="font-weight:600;color:#555">${l}:</span><span>${v}</span>
+      </div>`).join('')}
     </div>
-    ${d.obs ? `<div style="font-size:12px;color:#555;padding:8px 0"><span style="font-weight:600">Obs.:</span> ${d.obs}</div>` : ''}
+    ${d.obs?`<div style="font-size:12px;background:#FFF9EC;border:1px solid #F4D96B;border-radius:6px;padding:8px 12px;margin-bottom:14px"><span style="font-weight:600;color:#856404">Observações:</span> ${d.obs}</div>`:''}
+
+    <!-- Informações importantes -->
+    <div style="font-weight:700;color:#0D4E8A;font-size:11px;text-transform:uppercase;margin-bottom:6px">Informações Importantes e Condições de Fornecimento</div>
+    <div style="font-size:11px;border-radius:6px;overflow:hidden;border:1px solid #EEF2F7;margin-bottom:14px">
+      ${[
+        ['Formas de pagamento','Boleto bancário ou depósito no BANCO DO BRASIL / AGÊNCIA: 3493-2 / CONTA: 58.600-5. A existência de títulos em aberto impede a prestação de novos serviços.'],
+        ['Cancelamento e devoluções','Os pedidos referentes a serviços sob encomenda não poderão ser cancelados após o início da execução.'],
+        ['Regras de envio de amostras','As amostras devem ser encaminhadas em condições adequadas, contendo material suficiente para extração de no mínimo 1 µg de DNA total, livre de contaminantes exógenos. Os custos de envio estão incluídos nesta proposta.'],
+      ].map(([t,v],i) => `<div style="padding:8px 12px;background:${i%2===0?'#F8F9FB':'#fff'}">
+        <div style="font-weight:600;color:#0D4E8A;margin-bottom:3px">${t}</div>
+        <div style="color:#555;line-height:1.5">${v}</div>
+      </div>`).join('')}
+    </div>
+    <div style="font-size:10px;color:#aaa;font-style:italic">* Esta proposta tem validade de ${d.validade||'30'} dias a partir da data de emissão. Após esse prazo, as condições poderão sofrer alterações.</div>
   `;
 }
 
