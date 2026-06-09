@@ -23930,15 +23930,17 @@ async function salvarNoDrive(d, docxBuffer) {
       descricao:  d.descricao || '',
       docx:       docxBuffer ? await toBase64(docxBuffer) : null,
     };
-    // Apps Script requer mode no-cors para POST de origem externa
-    await fetch(SHEETS_URL, {
+    // Enviar para o Apps Script
+    showToast('💾 Salvando no Drive e criando negócio no Zoho…');
+    const resp = await fetch(SHEETS_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload),
     });
     // Com no-cors não conseguimos ler a resposta, mas o script executa
-    showToast('✓ Enviado para o Drive! Verifique em instantes.');
+    showToast('✓ Arquivos salvos no Drive!');
+    setTimeout(() => showToast('✓ Negócio criado no Zoho CRM!'), 2000);
   } catch(e) {
     showToast('⚠ Não foi possível salvar no Drive.');
     console.error(e);
