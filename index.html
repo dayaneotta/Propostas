@@ -23876,13 +23876,9 @@ var __async = (__this, __arguments, generator) => {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div>
-          <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Status das propostas</div>
-          <div style="position:relative;height:220px"><canvas id="rel-chart-status"></canvas></div>
-        </div>
-        <div>
+        <div style="grid-column:1/-1">
           <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Serviços mais solicitados</div>
-          <div style="position:relative;height:220px"><canvas id="rel-chart-servico"></canvas></div>
+          <div style="position:relative;height:260px"><canvas id="rel-chart-servico"></canvas></div>
         </div>
       </div>
       <div style="margin-top:16px;font-size:11px;color:#aaa;text-align:right" id="rel-updated"></div>
@@ -24596,7 +24592,7 @@ document.getElementById('tpl-org-outro-text').addEventListener('input', updatePr
 // Numeração via Google Sheets — URL configurada diretamente no código
 
 // ── Relatórios ───────────────────────────────────────────────────────────────
-let chartMes, chartValor, chartStatus, chartServico;
+let chartMes, chartValor, chartServico;
 
 document.getElementById('btn-relatorios').addEventListener('click', async () => {
   document.getElementById('relatorios-modal').classList.add('open');
@@ -24628,7 +24624,7 @@ async function carregarRelatorio() {
       </div>`).join('');
 
     // Destroy existing charts
-    [chartMes, chartValor, chartStatus, chartServico].forEach(c => c && c.destroy());
+    [chartMes, chartValor, chartServico].forEach(c => c && c.destroy());
 
     const meses = Object.keys(d.porMes).sort();
     const cores = ['#1A73C8','#2EC4A5','#F4A100','#E24B4A','#534AB7','#1D9E75'];
@@ -24650,24 +24646,15 @@ async function carregarRelatorio() {
         scales: { y: { beginAtZero: true, ticks: { callback: v => 'R$'+v.toLocaleString('pt-BR') } } } }
     });
 
-    const statusLabels = Object.keys(d.totalStatus);
-    chartStatus = new Chart(document.getElementById('rel-chart-status'), {
-      type: 'doughnut',
-      data: { labels: statusLabels, datasets: [{ data: statusLabels.map(s => d.totalStatus[s]),
-        backgroundColor: cores, borderWidth: 2, borderColor: '#fff' }] },
-      options: { responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
-    });
-
     const servicoLabels = Object.keys(d.porServico).sort((a,b) => d.porServico[b]-d.porServico[a]).slice(0,8);
     chartServico = new Chart(document.getElementById('rel-chart-servico'), {
       type: 'bar',
       data: { labels: servicoLabels, datasets: [{ data: servicoLabels.map(s => d.porServico[s]),
         backgroundColor: '#534AB7', borderRadius: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false,
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y',
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } },
-          x: { ticks: { font: { size: 10 }, maxRotation: 35, minRotation: 25 } } } }
+        scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } },
+          y: { ticks: { font: { size: 11 } } } } }
     });
 
     document.getElementById('rel-updated').textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
