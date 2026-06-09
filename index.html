@@ -23464,7 +23464,7 @@ var __async = (__this, __arguments, generator) => {
     <button class="btn-secondary" id="btn-copy">📋 Copiar número</button>
     <button class="btn-secondary" id="btn-preview-proposta">👁 Pré-visualizar proposta</button>
     <button class="btn-secondary" id="btn-relatorios" style="background:var(--blue);color:#fff;border-color:var(--blue)">📊 Relatórios</button>
-    <button class="btn-primary" id="btn-word">⬇ Baixar Proposta (.docx)</button>
+    <button class="btn-primary" id="btn-word">⬇ Gerar Proposta</button>
 
   </div>
 
@@ -23484,7 +23484,7 @@ var __async = (__this, __arguments, generator) => {
       <button onclick="document.getElementById('preview-modal').classList.remove('open')"
         style="padding:10px 18px;border:1px solid #D0D7DE;border-radius:7px;background:#fff;cursor:pointer;font-size:14px">Fechar</button>
       <button id="btn-word-from-preview" style="padding:10px 18px;background:linear-gradient(135deg,#1A73C8,#2EC4A5);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:14px;font-weight:600">
-        ⬇ Confirmar e Baixar Word + PDF
+        ⬇ Confirmar e Gerar
       </button>
     </div>
   </div>
@@ -24361,7 +24361,7 @@ document.getElementById('btn-word').addEventListener('click', async ()=>{
   } catch(e) {
     alert('Erro ao gerar o arquivo: '+e.message);
   } finally {
-    btn.disabled = false; btn.textContent = '⬇ Baixar Proposta (.docx)';
+    btn.disabled = false; btn.textContent = '⬇ Gerar Proposta';
   }
 });
 
