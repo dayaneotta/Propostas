@@ -24028,8 +24028,10 @@ function calcTotals(){
   document.querySelectorAll('.item-row').forEach(row=>{
     const q = parseFloat(row.querySelector('.qty').value)||0;
     const u = parseBRL(row.querySelector('.unit-val').value);
-    grand += q*u;
-    row.querySelector('.row-total').textContent = fmtBRL(q*u);
+    const total = q * u;
+    grand += total;
+    const inp = row.querySelector('.row-total-input');
+    if(inp && document.activeElement !== inp) inp.value = fmtBRL(total).replace('R$ ','');
   });
   document.getElementById('grand-total').textContent = fmtBRL(grand);
 }
@@ -24044,11 +24046,28 @@ function addItem(desc='',qtd='1',unit='',valor=''){
     <td><input class="qty" type="number" value="${qtd||1}" min="0.01" step="any"></td>
     <td><input class="unit-label" type="text" placeholder="Ex: amostras, pares…" value="${unit}"></td>
     <td><input class="unit-val" type="text" value="${valor}" placeholder="0,00" style="text-align:right"></td>
-    <td style="text-align:right;font-weight:600" class="row-total">R$ 0,00</td>
+    <td><input class="row-total-input" type="text" placeholder="0,00" style="text-align:right;font-weight:600;width:100%;border:none;background:transparent;font-size:inherit;font-family:inherit;color:inherit;cursor:text"></td>
     <td><button class="btn-remove" title="Remover">✕</button></td>`;
   tbody.appendChild(tr);
   tr.querySelector('.qty').addEventListener('input', calcTotals);
   tr.querySelector('.unit-val').addEventListener('input', e=>{ formatCurrency(e.target); calcTotals(); });
+  tr.querySelector('.row-total-input').addEventListener('input', e=>{
+    formatCurrency(e.target);
+    const row = e.target.closest('.item-row');
+    const q = parseFloat(row.querySelector('.qty').value)||1;
+    const total = parseBRL(e.target.value);
+    const unit = q > 0 ? total/q : 0;
+    const unitInp = row.querySelector('.unit-val');
+    unitInp.value = fmtBRL(unit).replace('R$ ','');
+    // Update grand total
+    let grand = 0;
+    document.querySelectorAll('.item-row').forEach(r=>{
+      const qq = parseFloat(r.querySelector('.qty').value)||0;
+      const uu = parseBRL(r.querySelector('.unit-val').value);
+      grand += qq*uu;
+    });
+    document.getElementById('grand-total').textContent = fmtBRL(grand);
+  });
   tr.querySelector('.btn-remove').addEventListener('click',()=>{ tr.remove(); renumberItems(); calcTotals(); });
   if(valor) calcTotals();
 }
@@ -24190,7 +24209,7 @@ function collectData(){
       qty: row.querySelector('.qty').value,
       unit: row.querySelector('.unit-label').value,
       unitVal: row.querySelector('.unit-val').value,
-      total: row.querySelector('.row-total').textContent
+      total: 'R$ ' + (row.querySelector('.row-total-input').value || '0,00')
     });
   });
   return {
