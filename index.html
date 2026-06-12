@@ -24950,7 +24950,7 @@ async function gerarDocx(d, dateStr){
         margins:{top:90,bottom:90,left:140,right:140},
         children:[para(descRuns)]
       }),
-      tdB(txt(`${it.qty}\n${it.unit}`,{size:17,color:MID}),1580,AlignmentType.CENTER,i),
+      tdB(txt(`${it.qty} ${it.unit}`,{size:17,color:MID}),1580,AlignmentType.CENTER,i),
       tdB(txt(`R$ ${it.unitVal}`,{size:18,color:DARK}),1800,AlignmentType.RIGHT,i),
       tdB(txt(it.total,{size:18,bold:true,color:BLUE_DARK}),1440,AlignmentType.RIGHT,i),
     ]});
