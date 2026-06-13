@@ -445,6 +445,8 @@ function normalizarContato(p) {
     desqualificado: p.desqualificado === true || p.desqualificado === 'true',
     desq_motivo: String(p.desq_motivo || ''),
     status: String(p.status || ''),
+    retorno_data: normalizarData(p.retorno_data),
+    retorno_obs: String(p.retorno_obs || ''),
   };
 }
 
