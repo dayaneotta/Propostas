@@ -426,7 +426,7 @@ function normalizarData(val) {
 
 function normalizarContato(p) {
   return {
-    id: p.id,
+    id: p.id ? String(p.id) : (String(p.nome||'') + '_' + String(p.inst||'')),
     nome: String(p.nome || ''),
     email: String(p.email || ''),
     linha: String(p.linha || ''),
