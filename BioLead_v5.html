@@ -413,6 +413,17 @@ let dados = [];
 let sortCol = 'nome', sortDir = 'asc', paginaAtual = 1;
 let _bioLeadCarregado = false;
 
+function normalizarData(val) {
+  if (!val) return '';
+  const s = String(val);
+  // Already DD/MM/YYYY
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+  // ISO format: 2026-03-24T... or 2026-03-24
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return m[3] + '/' + m[2] + '/' + m[1];
+  return s;
+}
+
 function normalizarContato(p) {
   return {
     id: p.id,
@@ -425,11 +436,11 @@ function normalizarContato(p) {
     lattes: String(p.lattes || ''),
     instagram: String(p.instagram || ''),
     score: String(p.score || ''),
-    c1_raw: String(p.c1_raw || ''),
+    c1_raw: normalizarData(p.c1_raw),
     c1_nota: String(p.c1_nota || ''),
-    c2_raw: String(p.c2_raw || ''),
+    c2_raw: normalizarData(p.c2_raw),
     c2_nota: String(p.c2_nota || ''),
-    c3_raw: String(p.c3_raw || ''),
+    c3_raw: normalizarData(p.c3_raw),
     c3_nota: String(p.c3_nota || ''),
     desqualificado: p.desqualificado === true || p.desqualificado === 'true',
     desq_motivo: String(p.desq_motivo || ''),
