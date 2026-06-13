@@ -438,43 +438,33 @@ function normalizarContato(p) {
 }
 
 function carregarDados() {
+  window._blResolve = null;
+  window._blReject = null;
   return new Promise((resolve, reject) => {
-    const cbName = 'blCallback_' + Date.now();
-    const script = document.createElement('script');
+    window._blResolve = resolve;
+    window._blReject = reject;
+    const cbName = '_blCb';
     window[cbName] = function(res) {
-      document.head.removeChild(script);
-      delete window[cbName];
-      if (res.ok) {
-        dados = res.dados.map(normalizarContato);
-        _bioLeadCarregado = true;
-        render(); atualizarCards(); renderBadge();
-        resolve();
-      } else {
-        reject(new Error(res.error || 'Erro'));
+      try {
+        if (res.ok) {
+          dados = res.dados.map(normalizarContato);
+          _bioLeadCarregado = true;
+          render(); atualizarCards(); renderBadge();
+          resolve();
+        } else {
+          reject(new Error(res.error || 'Erro'));
+        }
+      } catch(e) {
+        reject(e);
       }
     };
-    script.onerror = () => {
-      document.head.removeChild(script);
-      delete window[cbName];
-      // Fallback: try direct fetch
-      fetch(SHEETS_URL_BL + '?action=biolead&sub=listar&params=%7B%7D')
-        .then(r => r.json())
-        .then(res => {
-          if (res.ok) {
-            dados = res.dados.map(normalizarContato);
-            _bioLeadCarregado = true;
-            render(); atualizarCards(); renderBadge();
-            resolve();
-          }
-        })
-        .catch(e => {
-          console.error('Erro ao carregar BioLead:', e);
-          toast('⚠ Erro ao carregar dados. Verifique a conexão.');
-          reject(e);
-        });
-    };
-    script.src = SHEETS_URL_BL + '?action=biolead&sub=listar&params=%7B%7D&callback=' + cbName;
+    const script = document.createElement('script');
+    script.src = SHEETS_URL_BL + '?action=biolead&sub=listar&params=%7B%7D&callback=_blCb&t=' + Date.now();
+    script.onerror = () => reject(new Error('Script load failed'));
     document.head.appendChild(script);
+  }).catch(e => {
+    console.error('Erro ao carregar BioLead:', e);
+    toast('⚠ Erro ao carregar dados. Verifique a conexão.');
   });
 }
 let POR_PAGINA = 25;
@@ -816,6 +806,8 @@ function remover(id) {
 
 // ── Render tabela ─────────────────────────────────────────────────────────────
 function render() {
+  // Garantir que todos os campos são strings
+  dados = dados.map(normalizarContato);
   const filtro=(document.getElementById('filtro').value||'').toLowerCase();
   const fScore=document.getElementById('fil-score').value;
   const fStatus=document.getElementById('fil-status').value;
