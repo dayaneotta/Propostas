@@ -24963,7 +24963,7 @@ async function gerarDocx(d, dateStr){
       );
     });
     return new TableRow({children:[
-      tdB(txt(String(it.num),{size:18,color:MID}),460,AlignmentType.CENTER,i),
+      tdB(txt(String(it.num),{size:18,color:MID}),620,AlignmentType.CENTER,i),
       new TableCell({
         borders:{top:b0,bottom:{style:BorderStyle.SINGLE,size:2,color:'EEF2F7'},left:b0,right:b0},
         shading:{fill:i%2===0?GRAY_BG:WHITE,type:ShadingType.CLEAR},
