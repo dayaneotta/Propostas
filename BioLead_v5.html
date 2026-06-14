@@ -873,6 +873,10 @@ function showTab(t) {
   if (t === 'dashboard') {
     setTimeout(() => {
       console.log('Dashboard init, dados length:', dados.length);
+      const dtEl = document.getElementById('dt');
+      const f_estado = document.getElementById('f-estado');
+      console.log('dt element:', dtEl);
+      console.log('f-estado element:', f_estado);
       try { _dashInit(); console.log('Dashboard init OK'); } 
       catch(e) { console.error('Dashboard error:', e.message, e.stack); }
     }, 300);
