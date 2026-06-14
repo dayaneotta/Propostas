@@ -633,21 +633,21 @@ td{padding:9px 13px;vertical-align:middle}
   </div>
   <div class="hdr-right" style="display:flex;align-items:center;gap:12px">
     <button class="btn-refresh" onclick="location.reload()" title="Recarregar dados do BioLead">↻ Atualizar</button>
-    <i class="ti ti-calendar-event"></i><span id="dt"></span>
+    <i class="ti ti-calendar-event"></i><span id="dash-dt"></span>
   </div>
 </header>
 
 <div class="container">
   <div class="filters-bar">
     <span class="flabel"><i class="ti ti-filter" style="font-size:13px"></i> Filtros</span>
-    <div class="sw"><i class="ti ti-search"></i><input type="text" id="busca" placeholder="Buscar pesquisador, instituição..."></div>
-    <select id="f-estado"><option value="">Todos os estados</option></select>
-    <select id="f-score">
+    <div class="sw"><i class="ti ti-search"></i><input type="text" id="dash-busca" placeholder="Buscar pesquisador, instituição..."></div>
+    <select id="dash-f-estado"><option value="">Todos os estados</option></select>
+    <select id="dash-f-score">
       <option value="">Todos os scores</option>
       <option value="ALTO">Alto</option>
       <option value="MÉDIO">Médio</option>
     </select>
-    <select id="f-status">
+    <select id="dash-f-status">
       <option value="">Todos os status</option>
       <option value="Novo">Novo</option>
       <option value="Aguardando">Aguardando</option>
@@ -666,7 +666,7 @@ td{padding:9px 13px;vertical-align:middle}
     <button class="btn-clear" id="btn-clr"><i class="ti ti-x" style="font-size:12px"></i> Limpar</button>
     <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
       <span style="font-size:11px;font-weight:600;color:var(--bm-blue)">Por página</span>
-      <select id="f-perpag" style="width:70px">
+      <select id="dash-f-perpag" style="width:70px">
         <option value="25" selected>25</option>
         <option value="50">50</option>
         <option value="100">100</option>
@@ -679,17 +679,17 @@ td{padding:9px 13px;vertical-align:middle}
   <div class="charts-row">
     <div class="chart-card">
       <div class="chart-title"><i class="ti ti-map-pin"></i> Leads por estado</div>
-      <div style="position:relative;height:250px"><canvas id="cE" role="img" aria-label="Leads por estado"></canvas></div>
+      <div style="position:relative;height:250px"><canvas id="dash-cE" role="img" aria-label="Leads por estado"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title"><i class="ti ti-timeline"></i> Maturidade dos contatos</div>
-      <div style="position:relative;min-height:220px"><canvas id="cST" style="display:none"></canvas><div id="funil-html"></div></div>
+      <div style="position:relative;min-height:220px"><canvas id="dash-cST" style="display:none"></canvas><div id="funil-html"></div></div>
     </div>
   </div>
 
   <div class="table-card">
     <div class="table-hdr">
-      <div class="table-title"><i class="ti ti-users" style="font-size:15px"></i> Pesquisadores <span class="rc" id="rc">0</span></div>
+      <div class="table-title"><i class="ti ti-users" style="font-size:15px"></i> Pesquisadores <span class="rc" id="dash-rc">0</span></div>
     </div>
     <div style="overflow-x:auto">
       <table>
@@ -704,9 +704,9 @@ td{padding:9px 13px;vertical-align:middle}
             <th class="no-sort">Links</th>
           </tr>
         </thead>
-        <tbody id="tbody"></tbody>
+        <tbody id="dash-tbody"></tbody>
       </table>
-      <div class="no-res" id="nores" style="display:none"><i class="ti ti-search-off"></i>Nenhum resultado com os filtros aplicados.</div>
+      <div class="no-res" id="dash-nores" style="display:none"><i class="ti ti-search-off"></i>Nenhum resultado com os filtros aplicados.</div>
     </div>
     <div class="pag"><span id="pi"></span><div class="pbtns" id="pb"></div></div>
   </div>
@@ -1534,8 +1534,8 @@ function _dash_buildDots(d){
 }
 
 function _dash_renderTabela(){
-  const tbody=document.getElementById('tbody');
-  const nores=document.getElementById('nores');
+  const tbody=document.getElementById('dash-tbody');
+  const nores=document.getElementById('dash-nores');
   const slice=_dashfiltrado.slice((_dashpag-1)*_dashPOR_PAG,_dashpag*_dashPOR_PAG);
   if(!_dashfiltrado.length){tbody.innerHTML='';nores.style.display='';}
   else{
@@ -1559,7 +1559,7 @@ ${ig?`<a href="${ig}" target="_blank" class="la" title="Instagram"><i class="ti 
 </div></td></tr>`;
     }).join('');
   }
-  document.getElementById('rc').textContent=_dashfiltrado.length+' registro'+(_dashfiltrado.length!==1?'s':'');
+  document.getElementById('dash-rc').textContent=_dashfiltrado.length+' registro'+(_dashfiltrado.length!==1?'s':'');
   _dash_renderPag();
 }
 
@@ -1588,7 +1588,7 @@ function _dash_updateCharts(){
   const byE={};ativos.forEach(d=>{byE[d.estado]=(byE[d.estado]||0)+1;});
   const ents=Object.entries(byE).sort((a,b)=>b[1]-a[1]);
   if(typeof cE !== 'undefined' && cE)cE.destroy();
-  cE=new Chart(document.getElementById('cE'),{
+  cE=new Chart(document.getElementById('dash-cE'),{
     type:'bar',
     data:{labels:ents.map(e=>e[0]),datasets:[{
       label:'Leads',data:ents.map(e=>e[1]),
@@ -1614,7 +1614,7 @@ function _dash_updateCharts(){
   var total=ativos.length||1;
   var funilVals=funil.map(function(f){return Object.assign({},f,{n:ativos.filter(function(d){return f.keys.includes(d._status||'Novo');}).length});});
   var maxF=Math.max.apply(null,funilVals.map(function(v){return v.n;}))||1;
-  var cSTel=document.getElementById('cST');
+  var cSTel=document.getElementById('dash-cST');
   if(!cSTel)return;
   var existing=Chart.getChart(cSTel);
   if(existing)existing.destroy();
@@ -1650,10 +1650,10 @@ function _dash_gradC(t,alpha){
 }
 
 function _dash_aplicar(){
-  const b=document.getElementById('busca').value.toLowerCase();
-  const est=document.getElementById('f-estado').value;
-  const scr=document.getElementById('f-score').value;
-  const sts=document.getElementById('f-status').value;
+  const b=document.getElementById('dash-busca').value.toLowerCase();
+  const est=document.getElementById('dash-f-estado').value;
+  const scr=document.getElementById('dash-f-score').value;
+  const sts=document.getElementById('dash-f-status').value;
   _dashfiltrado=_dashALL.filter(d=>{
     if(est&&d.estado!==est)return false;
     if(scr==='ALTO'&&d.score!=='ALTO')return false;
@@ -1740,7 +1740,7 @@ function _dash_updateMetrics(){
   ];
 
   const total = ativos.length || 1;
-  const funilEl = document.getElementById('cST');
+  const funilEl = document.getElementById('dash-cST');
   if (!funilEl) return;
 
   // Calcular valores
@@ -1813,12 +1813,12 @@ function _dashInit(){
   _dashALL = DADOS.map(d=>({...d,sc:_dash_detectStatus(d)}));
   _dashfiltrado=[..._dashALL];
 
-  document.getElementById('dt').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('dash-dt').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
   const estados=[...new Set(_dashALL.map(d=>d.estado))].sort();
-  const sel=document.getElementById('f-estado');
+  const sel=document.getElementById('dash-f-estado');
   estados.forEach(e=>{const o=document.createElement('option');o.value=e;o.textContent=e;sel.appendChild(o);});
-  document.getElementById('f-perpag').addEventListener('change',()=>{
-    _dashPOR_PAG=parseInt(document.getElementById('f-perpag').value);
+  document.getElementById('dash-f-perpag').addEventListener('change',()=>{
+    _dashPOR_PAG=parseInt(document.getElementById('dash-f-perpag').value);
     _dashpag=1;_dash_renderTabela();
   });
   ['busca','f-estado','f-score','f-status'].forEach(id=>{
@@ -1826,8 +1826,8 @@ function _dashInit(){
     document.getElementById(id).addEventListener('change',_dash_aplicar);
   });
   document.getElementById('btn-clr').addEventListener('click',()=>{
-    document.getElementById('f-perpag').addEventListener('change',()=>{
-    _dashPOR_PAG=parseInt(document.getElementById('f-perpag').value);
+    document.getElementById('dash-f-perpag').addEventListener('change',()=>{
+    _dashPOR_PAG=parseInt(document.getElementById('dash-f-perpag').value);
     _dashpag=1;_dash_renderTabela();
   });
   ['busca','f-estado','f-score','f-status'].forEach(id=>{document.getElementById(id).value='';});
