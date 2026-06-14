@@ -883,8 +883,8 @@ function render() {
       <td style="max-width:200px"><a href="mailto:${p.email}" style="font-size:12px;color:var(--bm-blue);text-decoration:none;font-style:italic;letter-spacing:-.01em" title="Clique para enviar e-mail">${p.email||'—'}</a></td>
       <td><div class="lc">${latBtn}${igBtn}</div></td>
       <td style="white-space:nowrap">
-        <button class="btn" style="padding:3px 8px;font-size:11px" onclick="abrirModal('${p.id}')">✏️</button>
-        <button class="btn" style="padding:3px 8px;font-size:11px;margin-left:3px;background:#fff;color:#0D4E8A;border-color:#0D4E8A" onclick="gerarProposta('${p.id}')" title="Gerar proposta">🧾</button>
+        <button class="btn" style="padding:3px 8px;font-size:11px" onclick="abrirModal('${p.id}')"><i class="ti ti-pencil" style="font-size:14px"></i></button>
+        <button class="btn" style="padding:3px 8px;font-size:11px;margin-left:3px;background:#fff;color:#0D4E8A;border-color:#0D4E8A" onclick="gerarProposta('${p.id}')" title="Gerar proposta"><i class="ti ti-file-invoice" style="font-size:14px"></i></button>
         <button class="btn btn-danger" style="padding:3px 8px;font-size:11px;margin-left:3px" onclick="if(confirm('Remover ${p.nome.replace(/'/g,"\\'")}?'))remover('${p.id}')">✕</button>
       </td>
     </tr>`;
