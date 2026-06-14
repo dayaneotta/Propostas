@@ -679,6 +679,21 @@ function updateMetrics(){
 }
 
 let ALL=[], filtrado=[];
+function detectStatus(d) {
+  if (d.desqualificado) return 'desq';
+  const s = d.status || 'Novo';
+  if (s === 'Reunião realizada' || s === 'Convertido') return 'reuniaoreal';
+  if (s === 'Reunião cancelada') return 'reuniaocanc';
+  if (s === 'Reunião agendada') return 'reuniao';
+  if (s === 'Respondeu — Pediu orçamento') return 'orcamento';
+  if (s === 'Respondeu — Sem interesse' || s === 'Respondeu — Sem projeto no momento') return 'sem';
+  if (s === 'Respondeu — Sem retorno após interesse') return 'nr';
+  if (s === 'Respondeu — Pediu informações' || s === 'Respondeu — Solicitou contato futuro') return 'respondeu';
+  if (s === 'Aguardando') return 'aguardando';
+  if (s === 'Novo' || s === 'Inativo') return 'nc';
+  return 'nr';
+}
+
 function init(){
   // Rebuild data arrays from loaded data
   const DADOS = carregarDados().map(p => {
