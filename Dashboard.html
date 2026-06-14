@@ -330,28 +330,28 @@ function updateMetrics() {
   var parts = ['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">'];
 
   // Main flows
-  parts.push(mkFlow(col[0],yCad,hCad, col[1],yCont,hCont, '#0D6FB6', 0.6));
-  parts.push(mkFlow(col[1],yCont,hCont, col[2],yResp,hResp, '#1A73C8', 0.6));
-  if(nReuniaoAgend>0) parts.push(mkFlow(col[2],yResp,hReu, col[3],yReu,hReu, '#0F7A5A', 0.6));
-  if(nOrcamento>0)    parts.push(mkFlow(col[2],yResp+hReu,hOrc, col[3],yOrc,hOrc, '#4B3BAF', 0.6));
-  if(nSemInteresse>0) parts.push(mkFlow(col[2],yResp+hReu+hOrc,hSem, col[3],ySem,hSem, '#9C2A1A', 0.35));
+  parts.push(mkFlow(col[0],yCad,hCad, col[1],yCont,hCont, '#0D4E8A', 0.85));
+  parts.push(mkFlow(col[1],yCont,hCont, col[2],yResp,hResp, '#2EC4A5', 0.85));
+  if(nReuniaoAgend>0) parts.push(mkFlow(col[2],yResp,hReu, col[3],yReu,hReu, '#1A73C8', 0.85));
+  if(nOrcamento>0)    parts.push(mkFlow(col[2],yResp+hReu,hOrc, col[3],yOrc,hOrc, '#7048B8', 0.85));
+  if(nSemInteresse>0) parts.push(mkFlow(col[2],yResp+hReu+hOrc,hSem, col[3],ySem,hSem, '#B84040', 0.35));
   // Reunião → realizada / cancelada
-  if(nReuniaoReal>0) parts.push(mkFlow(col[3],yReu,hReuReal, col[4],yReuReal,hReuReal, '#0A6147', 0.6));
-  if(nReuniaoCanc>0) parts.push(mkFlow(col[3],yReu+hReuReal,hReuCanc, col[4],yReuCanc,hReuCanc, '#9C2A1A', 0.35));
+  if(nReuniaoReal>0) parts.push(mkFlow(col[3],yReu,hReuReal, col[4],yReuReal,hReuReal, '#1A9E78', 0.85));
+  if(nReuniaoCanc>0) parts.push(mkFlow(col[3],yReu+hReuReal,hReuCanc, col[4],yReuCanc,hReuCanc, '#B84040', 0.35));
 
   // Gray flows (discrete)
   if(nNaoContat>0)  parts.push(mkFlow(col[0],yCad+hCad+4,hNaoCont, col[1],ySemRet+hSemRet+4,hNaoCont, '#8AAABB', 0.25));
   if(nSemRetorno>0) parts.push(mkFlow(col[1],yCont+hCont+4,hSemRet, col[2],yResp+hResp+4,hSemRet, '#8AAABB', 0.2));
 
   // Nodes
-  parts.push(mkNode(col[0],yCad,hCad,'#0D6FB6','cadastrados',nCadastrados,''));
+  parts.push(mkNode(col[0],yCad,hCad,'#0D4E8A','cadastrados',nCadastrados,''));
   parts.push(mkNode(col[1],yCont,hCont,'#1A73C8','contatados',nContatados,sankeyPct(nContatados,nCadastrados)+'%'));
-  parts.push(mkNode(col[2],yResp,hResp,'#0F7A5A','responderam',nResponderam,sankeyPct(nResponderam,nContatados)+'%'));
-  if(nReuniaoAgend>0) parts.push(mkNode(col[3],yReu,hReu,'#0F7A5A','reuniões',nReuniaoAgend,sankeyPct(nReuniaoAgend,nResponderam)+'%'));
-  if(nOrcamento>0)    parts.push(mkNode(col[3],yOrc,hOrc,'#4B3BAF','orçamentos',nOrcamento,sankeyPct(nOrcamento,nResponderam)+'%'));
-  if(nSemInteresse>0) parts.push(mkNode(col[3],ySem,hSem,'#9C2A1A','s/ interesse',nSemInteresse,sankeyPct(nSemInteresse,nResponderam)+'%'));
-  if(nReuniaoReal>0) parts.push(mkNode(col[4],yReuReal,hReuReal,'#0A6147','realizadas',nReuniaoReal,sankeyPct(nReuniaoReal,nReuniaoAgend)+'%'));
-  if(nReuniaoCanc>0) parts.push(mkNode(col[4],yReuCanc,hReuCanc,'#9C2A1A','canceladas',nReuniaoCanc,sankeyPct(nReuniaoCanc,nReuniaoAgend)+'%'));
+  parts.push(mkNode(col[2],yResp,hResp,'#2EC4A5','responderam',nResponderam,sankeyPct(nResponderam,nContatados)+'%'));
+  if(nReuniaoAgend>0) parts.push(mkNode(col[3],yReu,hReu,'#1A73C8','reuniões',nReuniaoAgend,sankeyPct(nReuniaoAgend,nResponderam)+'%'));
+  if(nOrcamento>0)    parts.push(mkNode(col[3],yOrc,hOrc,'#7048B8','orçamentos',nOrcamento,sankeyPct(nOrcamento,nResponderam)+'%'));
+  if(nSemInteresse>0) parts.push(mkNode(col[3],ySem,hSem,'#B84040','s/ interesse',nSemInteresse,sankeyPct(nSemInteresse,nResponderam)+'%'));
+  if(nReuniaoReal>0) parts.push(mkNode(col[4],yReuReal,hReuReal,'#1A9E78','realizadas',nReuniaoReal,sankeyPct(nReuniaoReal,nReuniaoAgend)+'%'));
+  if(nReuniaoCanc>0) parts.push(mkNode(col[4],yReuCanc,hReuCanc,'#B84040','canceladas',nReuniaoCanc,sankeyPct(nReuniaoCanc,nReuniaoAgend)+'%'));
 
   // Gray labels
   if(nNaoContat>0)  parts.push(mkGrayLabel(col[1],ySemRet+hSemRet+4,hNaoCont,nNaoContat+' s/ contato'));
