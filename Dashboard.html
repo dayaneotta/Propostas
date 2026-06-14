@@ -182,8 +182,9 @@ td{padding:9px 13px;vertical-align:middle}
 .sp.orc{background:var(--purple-bg);color:var(--purple)}
 .sp.resp{background:var(--bm-light);color:var(--bm-blue)}
 .sp.sem{background:var(--coral-bg);color:var(--coral)}
-.sp.nc{background:var(--surface2);color:var(--text3)}
-.sp.nr{background:var(--surface2);color:var(--text3)}
+.sp.nc{background:#F1EFE8;color:#5F5E5A}
+.sp.nr{background:#FAEEDA;color:#854F0B}
+.sp.aguardando{background:#FAEEDA;color:#854F0B}
 .sp.desq{background:var(--gray-bg);color:var(--gray);font-weight:600}
 .est{font-size:10px;font-weight:700;color:var(--bm-mid);background:var(--bm-light);border-radius:4px;padding:2px 6px}
 
@@ -397,7 +398,7 @@ function mapearStatus(status) {
 let cE=null,cS=null;
 
 const statusLabel={reuniaoreal:'Reunião realizada',reuniaocanc:'Reunião cancelada',reuniao:'Reunião agendada',orcamento:'Orçamento enviado',respondeu:'Respondeu',sem:'Sem interesse',nc:'Não contatado',aguardando:'Aguardando',nr:'Sem retorno',desq:'Desqualificado'};
-const statusCls={reuniaoreal:'reun-real',reuniaocanc:'reun-canc',reuniao:'reun',orcamento:'orc',respondeu:'resp',sem:'sem',nc:'nc',aguardando:'nr',nr:'nr',desq:'desq'};
+const statusCls={reuniaoreal:'reun-real',reuniaocanc:'reun-canc',reuniao:'reun',orcamento:'orc',respondeu:'resp',sem:'sem',nc:'nc',aguardando:'aguardando',nr:'nr',desq:'desq'};
 
 function initials(n){const p=n.replace(/\*/g,'').trim().split(' ');return(p[0][0]+(p[1]?p[1][0]:'')).toUpperCase()}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
