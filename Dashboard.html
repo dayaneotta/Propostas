@@ -321,7 +321,19 @@ function updateMetrics() {
 
   // Taxa de resposta
   const naoResp = ta - resp;
-  document.getElementById('taxa-content').innerHTML = '    <div style="display:flex;align-items:center;gap:20px;padding:8px 0">      <div>        <div class="taxa-pct">${taxaResp}%</div>        <div style="font-size:12px;color:var(--text3);margin-top:4px">taxa de resposta</div>      </div>      <div style="flex:1">        <div style="display:flex;height:12px;border-radius:20px;overflow:hidden;margin-bottom:10px">          <div style="width:${taxaResp}%;background:var(--bm-teal)"></div>          <div style="flex:1;background:#EAF4FA"></div>        </div>        <div style="font-size:12px;color:var(--text2);line-height:2">          <span style="color:var(--bm-teal);font-weight:600">${resp}</span> pesquisadores responderam<br>          <span style="color:var(--text3);font-weight:600">${naoResp}</span> ainda sem resposta<br>          <span style="color:#27a85a;font-weight:600">${conv}</span> convertidos em clientes        </div>      </div>    </div>';
+  document.getElementById('taxa-content').innerHTML =
+    '<div style="display:flex;align-items:center;gap:20px;padding:8px 0">' +
+    '<div><div class="taxa-pct">' + taxaResp + '%</div>' +
+    '<div style="font-size:12px;color:var(--text3);margin-top:4px">taxa de resposta</div></div>' +
+    '<div style="flex:1">' +
+    '<div style="display:flex;height:12px;border-radius:20px;overflow:hidden;margin-bottom:10px">' +
+    '<div style="width:' + taxaResp + '%;background:var(--bm-teal)"></div>' +
+    '<div style="flex:1;background:#EAF4FA"></div></div>' +
+    '<div style="font-size:12px;color:var(--text2);line-height:2">' +
+    '<span style="color:var(--bm-teal);font-weight:600">' + resp + '</span> pesquisadores responderam<br>' +
+    '<span style="color:var(--text3);font-weight:600">' + naoResp + '</span> ainda sem resposta<br>' +
+    '<span style="color:#27a85a;font-weight:600">' + conv + '</span> convertidos em clientes' +
+    '</div></div></div>';
 
   // Tempo médio entre contatos
   let somaC1C2 = 0, contC1C2 = 0, somaC2C3 = 0, contC2C3 = 0;
@@ -330,7 +342,15 @@ function updateMetrics() {
     if (d1 && d2) { somaC1C2 += (d2-d1)/(1000*60*60*24); contC1C2++; }
     if (d2 && d3) { somaC2C3 += (d3-d2)/(1000*60*60*24); contC2C3++; }
   });
-  document.getElementById('tempo-content').innerHTML = '    <div class="tempo-item">      <div class="tempo-label">1º → 2º contato</div>      <div class="tempo-val">${contC1C2 ? Math.round(somaC1C2/contC1C2) : \'—\'} <span style="font-size:11px;font-weight:400;color:var(--text3)">dias em média</span></div>    </div>    <div class="tempo-item">      <div class="tempo-label">2º → 3º contato</div>      <div class="tempo-val">${contC2C3 ? Math.round(somaC2C3/contC2C3) : \'—\'} <span style="font-size:11px;font-weight:400;color:var(--text3)">dias em média</span></div>    </div>    <div class="tempo-item">      <div class="tempo-label">Pesquisadores c/ 2+ contatos</div>      <div class="tempo-val">${contC1C2} <span style="font-size:11px;font-weight:400;color:var(--text3)">de ${ta}</span></div>    </div>';
+  document.getElementById('tempo-content').innerHTML =
+    '<div class="tempo-item"><div class="tempo-label">1º → 2º contato</div>' +
+    '<div class="tempo-val">' + (contC1C2 ? Math.round(somaC1C2/contC1C2) : '—') +
+    ' <span style="font-size:11px;font-weight:400;color:var(--text3)">dias em média</span></div></div>' +
+    '<div class="tempo-item"><div class="tempo-label">2º → 3º contato</div>' +
+    '<div class="tempo-val">' + (contC2C3 ? Math.round(somaC2C3/contC2C3) : '—') +
+    ' <span style="font-size:11px;font-weight:400;color:var(--text3)">dias em média</span></div></div>' +
+    '<div class="tempo-item"><div class="tempo-label">Pesquisadores c/ 2+ contatos</div>' +
+    '<div class="tempo-val">' + contC1C2 + ' <span style="font-size:11px;font-weight:400;color:var(--text3)">de ' + ta + '</span></div></div>';
 
   // Distribuição por estado - gráfico de barras
   const byEstado = {};
