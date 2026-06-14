@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>
+(function() {
+  if (!sessionStorage.getItem('bl_auth_token')) {
+    window.location.href = '/Propostas/home.html';
+  }
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — Biomelting</title>
