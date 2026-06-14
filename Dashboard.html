@@ -228,7 +228,14 @@ function updateMetrics() {
   const reunAgend = ativos.filter(function(d){ return d.status === 'Reunião agendada'; }).length;
   const reunReal = ativos.filter(d => d.sc === 'reuniaoreal').length;
   const reunCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
-  const orc = ativos.filter(d => d.sc === 'orcamento').length;
+  // Orçamentos = pedidos diretos (status) + pedidos pós-reunião (notas/raw)
+  const orcDireto = ativos.filter(function(d){ return d.sc === 'orcamento' || d.status === 'Respondeu — Pediu orçamento'; }).length;
+  const orcPosReun = ativos.filter(function(d){
+    if (d.sc === 'orcamento' || d.status === 'Respondeu — Pediu orçamento') return false;
+    var textos = [d.c1_raw,d.c2_raw,d.c3_raw,d.c1_nota,d.c2_nota,d.c3_nota].join(' ').toLowerCase();
+    return /or[cç]amento|proposta/.test(textos) && ['Reunião realizada','Reunião cancelada'].includes(d.status||'');
+  }).length;
+  const orc = orcDireto + orcPosReun;
   const conv = ativos.filter(d => d.status === 'Convertido').length;
   const taxaResp = ta ? Math.round(resp/ta*100) : 0;
 
@@ -239,7 +246,7 @@ function updateMetrics() {
     {cls:'amber', icon:'ti-calendar-event', label:'Reun. agendadas', val:reunAgend, sub:'aguardando realização'},
     {cls:'green', icon:'ti-calendar-check', label:'Reun. realizadas', val:reunReal, sub:reunReal+' de '+reunAgend+' agendadas'},
     {cls:'red', icon:'ti-calendar-x', label:'Reun. canceladas', val:reunCanc, sub:'reagendamento pendente'},
-    {cls:'green', icon:'ti-file-invoice', label:'Orçamentos', val:orc, sub:'solicitados'},
+    {cls:'green', icon:'ti-file-invoice', label:'Orçamentos', val:orc, sub:orcDireto+' diretos · '+orcPosReun+' pós-reunião'},
     {cls:'purple', icon:'ti-trophy', label:'Convertidos', val:conv, sub:'clientes confirmados'},
     {cls:'red', icon:'ti-ban', label:'Desqualificados', val:desq, sub:'fora do perfil'},
   ].map(function(m) { return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px" aria-hidden="true"></i> '+m.label+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>'; }).join('');
@@ -253,7 +260,7 @@ function updateMetrics() {
   const nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
   const nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
   const nReuniaoCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
-  const nOrcamento = ativos.filter(function(d){ return d.sc === 'orcamento' || d.status === 'Respondeu — Pediu orçamento'; }).length;
+  const nOrcamento = orcDireto + orcPosReun;
   const nSemInteresse = ativos.filter(function(d){ return ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'].includes(d.status||''); }).length;
   const nSemRetorno = Math.max(0, nContatados - nResponderam);
   const nNaoContat = Math.max(0, nCadastrados - nContatados - desq);
@@ -323,14 +330,14 @@ function updateMetrics() {
   var parts = ['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">'];
 
   // Main flows
-  parts.push(mkFlow(col[0],yCad,hCad, col[1],yCont,hCont, '#1A73C8'));
-  parts.push(mkFlow(col[1],yCont,hCont, col[2],yResp,hResp, '#2EC4A5'));
-  if(nReuniaoAgend>0) parts.push(mkFlow(col[2],yResp,hReu, col[3],yReu,hReu, '#EF9F27'));
-  if(nOrcamento>0)    parts.push(mkFlow(col[2],yResp+hReu,hOrc, col[3],yOrc,hOrc, '#7F77DD'));
-  if(nSemInteresse>0) parts.push(mkFlow(col[2],yResp+hReu+hOrc,hSem, col[3],ySem,hSem, '#E24B4A', 0.3));
+  parts.push(mkFlow(col[0],yCad,hCad, col[1],yCont,hCont, '#1A73C8', 0.65));
+  parts.push(mkFlow(col[1],yCont,hCont, col[2],yResp,hResp, '#2EC4A5', 0.65));
+  if(nReuniaoAgend>0) parts.push(mkFlow(col[2],yResp,hReu, col[3],yReu,hReu, '#1A73C8', 0.55));
+  if(nOrcamento>0)    parts.push(mkFlow(col[2],yResp+hReu,hOrc, col[3],yOrc,hOrc, '#2EC4A5', 0.55));
+  if(nSemInteresse>0) parts.push(mkFlow(col[2],yResp+hReu+hOrc,hSem, col[3],ySem,hSem, '#E24B4A', 0.35));
   // Reunião → realizada / cancelada
-  if(nReuniaoReal>0) parts.push(mkFlow(col[3],yReu,hReuReal, col[4],yReuReal,hReuReal, '#27a85a'));
-  if(nReuniaoCanc>0) parts.push(mkFlow(col[3],yReu+hReuReal,hReuCanc, col[4],yReuCanc,hReuCanc, '#E24B4A', 0.4));
+  if(nReuniaoReal>0) parts.push(mkFlow(col[3],yReu,hReuReal, col[4],yReuReal,hReuReal, '#2EC4A5', 0.65));
+  if(nReuniaoCanc>0) parts.push(mkFlow(col[3],yReu+hReuReal,hReuCanc, col[4],yReuCanc,hReuCanc, '#E24B4A', 0.35));
 
   // Gray flows (discrete)
   if(nNaoContat>0)  parts.push(mkFlow(col[0],yCad+hCad+4,hNaoCont, col[1],ySemRet+hSemRet+4,hNaoCont, '#b0bec5', 0.25));
@@ -339,11 +346,11 @@ function updateMetrics() {
   // Nodes
   parts.push(mkNode(col[0],yCad,hCad,'#1A73C8','cadastrados',nCadastrados,''));
   parts.push(mkNode(col[1],yCont,hCont,'#2EC4A5','contatados',nContatados,sankeyPct(nContatados,nCadastrados)+'%'));
-  parts.push(mkNode(col[2],yResp,hResp,'#EF9F27','responderam',nResponderam,sankeyPct(nResponderam,nContatados)+'%'));
-  if(nReuniaoAgend>0) parts.push(mkNode(col[3],yReu,hReu,'#EF9F27','reuniões',nReuniaoAgend,sankeyPct(nReuniaoAgend,nResponderam)+'%'));
-  if(nOrcamento>0)    parts.push(mkNode(col[3],yOrc,hOrc,'#7F77DD','orçamentos',nOrcamento,sankeyPct(nOrcamento,nResponderam)+'%'));
+  parts.push(mkNode(col[2],yResp,hResp,'#2EC4A5','responderam',nResponderam,sankeyPct(nResponderam,nContatados)+'%'));
+  if(nReuniaoAgend>0) parts.push(mkNode(col[3],yReu,hReu,'#1A73C8','reuniões',nReuniaoAgend,sankeyPct(nReuniaoAgend,nResponderam)+'%'));
+  if(nOrcamento>0)    parts.push(mkNode(col[3],yOrc,hOrc,'#2EC4A5','orçamentos',nOrcamento,sankeyPct(nOrcamento,nResponderam)+'%'));
   if(nSemInteresse>0) parts.push(mkNode(col[3],ySem,hSem,'#E24B4A','s/ interesse',nSemInteresse,sankeyPct(nSemInteresse,nResponderam)+'%'));
-  if(nReuniaoReal>0) parts.push(mkNode(col[4],yReuReal,hReuReal,'#27a85a','realizadas',nReuniaoReal,sankeyPct(nReuniaoReal,nReuniaoAgend)+'%'));
+  if(nReuniaoReal>0) parts.push(mkNode(col[4],yReuReal,hReuReal,'#2EC4A5','realizadas',nReuniaoReal,sankeyPct(nReuniaoReal,nReuniaoAgend)+'%'));
   if(nReuniaoCanc>0) parts.push(mkNode(col[4],yReuCanc,hReuCanc,'#E24B4A','canceladas',nReuniaoCanc,sankeyPct(nReuniaoCanc,nReuniaoAgend)+'%'));
 
   // Gray labels
