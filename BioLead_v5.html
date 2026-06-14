@@ -1551,7 +1551,7 @@ function _dash_renderTabela(){
 <td>${_dash_scoreBadge(d.score,d.desqualificado)}</td>
 <td style="max-width:220px;font-size:11px;color:var(--text2);white-space:normal">${_dash_esc(d.linha)}</td>
 <td><div class="dots-wrap">${_dash_buildDots(d)}</div></td>
-<td><span class="sp ${statusCls[d.sc]||'nr'}" style="${d._status?'font-size:10px':''}">${d._status||statusLabel[d.sc]||d.sc}</span></td>
+<td><span class="sp ${statusCls[d.sc]||'nr'}" style="${d._status?'font-size:10px':''}">${d._status||d.status||statusLabel[d.sc]||d.sc}</span></td>
 <td><div class="lc">
 ${lat?`<a href="${lat}" target="_blank" class="la" title="Lattes"><i class="ti ti-file-description"></i></a>`:''}
 ${em?`<a href="mailto:${em}" class="la" title="E-mail"><i class="ti ti-mail"></i></a>`:''}
@@ -1671,7 +1671,7 @@ function _dash_srt(col){
   const ic=document.getElementById('s-'+col);if(ic)ic.textContent=_dashSortDir===1?'▲':'▼';
   _dashfiltrado.sort((a,b)=>{
     if(col==='score'){const o={'ALTO':0,'MÉDIO':1};const av=a.desqualificado?2:(o[a.score]??1),bv=b.desqualificado?2:(o[b.score]??1);return(av-bv)*_dashSortDir;}
-    if(col==='sc')return(statusLabel[a.sc]||'').localeCompare(statusLabel[b.sc]||'')*_dashSortDir;
+    if(col==='sc')return((a.status||statusLabel[a.sc]||'').localeCompare(b.status||statusLabel[b.sc]||'')*_dashSortDir;
     return(a[col]||'').localeCompare(b[col]||'')*_dashSortDir;
   });_dash_renderTabela();
 }
