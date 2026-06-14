@@ -143,7 +143,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 const SHEETS_URL_DASH = 'https://script.google.com/macros/s/AKfycbw9hKu9e5IlpCF1A_CjLM4qavd7s0sS281KyEDdersJ-42vyDRZddRL9F8OQrfXJk1MSA/exec';
 const STORAGE_KEY = 'biolead-v3';
 let ALL = [], filtrado = [], sortCol = 'nome', sortDir = 1, pag = 1, POR_PAG = 25;
-let cE = null;
+let cE = null; let cEstados = null;
 
 function mapearStatus(s) {
   if (!s || s === 'Novo') return 'nc';
@@ -305,8 +305,8 @@ function updateMetrics() {
   const byEstado = {};
   filtrado.forEach(d => { if (d.estado) byEstado[d.estado] = (byEstado[d.estado]||0)+1; });
   const estadosSorted = Object.entries(byEstado).sort((a,b) => b[1]-a[1]);
-  if (window.cEstados && typeof window.cEstados.destroy === "function") window.cEstados.destroy();
-  window.cEstados = new Chart(document.getElementById('cEstados'), {
+  if (cEstados) { try { cEstados.destroy(); } catch(e) {} cEstados = null; }
+  cEstados = new Chart(document.getElementById('cEstados'), {
     type: 'bar',
     data: {
       labels: estadosSorted.map(([e]) => e),
