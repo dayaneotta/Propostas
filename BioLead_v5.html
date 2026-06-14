@@ -663,7 +663,7 @@ td{padding:9px 13px;vertical-align:middle}
       <option value="Convertido">Convertido</option>
       <option value="Desqualificado">Desqualificado</option>
     </select>
-    <button class="btn-clear" id="btn-clr"><i class="ti ti-x" style="font-size:12px"></i> Limpar</button>
+    <button class="btn-clear" id="dash-btn-clr"><i class="ti ti-x" style="font-size:12px"></i> Limpar</button>
     <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
       <span style="font-size:11px;font-weight:600;color:var(--bm-blue)">Por página</span>
       <select id="dash-f-perpag" style="width:70px">
@@ -674,7 +674,7 @@ td{padding:9px 13px;vertical-align:middle}
     </div>
   </div>
 
-  <div class="metrics" id="mbox"></div>
+  <div class="metrics" id="dash-mbox"></div>
 
   <div class="charts-row">
     <div class="chart-card">
@@ -683,7 +683,7 @@ td{padding:9px 13px;vertical-align:middle}
     </div>
     <div class="chart-card">
       <div class="chart-title"><i class="ti ti-timeline"></i> Maturidade dos contatos</div>
-      <div style="position:relative;min-height:220px"><canvas id="dash-cST" style="display:none"></canvas><div id="funil-html"></div></div>
+      <div style="position:relative;min-height:220px"><canvas id="dash-cST" style="display:none"></canvas><div id="dash-funil-html"></div></div>
     </div>
   </div>
 
@@ -708,7 +708,7 @@ td{padding:9px 13px;vertical-align:middle}
       </table>
       <div class="no-res" id="dash-nores" style="display:none"><i class="ti ti-search-off"></i>Nenhum resultado com os filtros aplicados.</div>
     </div>
-    <div class="pag"><span id="pi"></span><div class="pbtns" id="pb"></div></div>
+    <div class="pag"><span id="dash-pi"></span><div class="pbtns" id="dash-pb"></div></div>
   </div>
 </div>
 </div><!-- /pane-dashboard -->
@@ -1566,8 +1566,8 @@ ${ig?`<a href="${ig}" target="_blank" class="la" title="Instagram"><i class="ti 
 function _dash_renderPag(){
   const total=Math.ceil(_dashfiltrado.length/_dashPOR_PAG);
   const s=(_dashpag-1)*_dashPOR_PAG+1,e=Math.min(_dashpag*_dashPOR_PAG,_dashfiltrado.length);
-  document.getElementById('pi').textContent=_dashfiltrado.length?`${s}–${e} de ${_dashfiltrado.length}`:'';
-  const pb=document.getElementById('pb');
+  document.getElementById('dash-pi').textContent=_dashfiltrado.length?`${s}–${e} de ${_dashfiltrado.length}`:'';
+  const pb=document.getElementById('dash-pb');
   let h=`<button class="pb" onclick="_dash_irPag(${_dashpag-1})" ${_dashpag===1?'disabled':''}><i class="ti ti-chevron-left" style="font-size:12px"></i></button>`;
   for(let i=1;i<=total;i++){
     if(total<=8||i===1||i===total||Math.abs(i-_dashpag)<=1)h+=`<button class="pb ${i===_dashpag?'active':''}" onclick="_dash_irPag(${i})">${i}</button>`;
@@ -1619,7 +1619,7 @@ function _dash_updateCharts(){
   var existing=Chart.getChart(cSTel);
   if(existing)existing.destroy();
   cSTel.style.display='none';
-  var funilHtml=document.getElementById('funil-html');
+  var funilHtml=document.getElementById('dash-funil-html');
   if(!funilHtml){funilHtml=document.createElement('div');funilHtml.id='funil-html';cSTel.parentElement.appendChild(funilHtml);}
   funilHtml.innerHTML=funilVals.map(function(v,i){
     var pct=Math.round(v.n/total*100);
@@ -1696,7 +1696,7 @@ function _dash_updateMetrics(){
   const STATUS_RESPONDEU=['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   const resp=ativos.filter(d=>STATUS_RESPONDEU.includes(d._status||'')).length;
   const ests=new Set(_dashfiltrado.map(d=>d.estado)).size;
-  document.getElementById('mbox').innerHTML=
+  document.getElementById('dash-mbox').innerHTML=
     '<div class="mc tot"><div class="mc-label"><i class="ti ti-users" style="font-size:12px"></i> Total</div><div class="mc-val">'+t+'</div><div class="mc-sub">'+ests+' estado'+(ests!==1?'s':'')+'</div></div>'
     +'<div class="mc alto"><div class="mc-label"><i class="ti ti-star" style="font-size:12px"></i> Score alto</div><div class="mc-val">'+alto+'</div><div class="mc-sub">'+(ta?Math.round(alto/ta*100):0)+'% dos ativos</div></div>'
     +'<div class="mc resp"><div class="mc-label"><i class="ti ti-mail-check" style="font-size:12px"></i> Responderam</div><div class="mc-val">'+resp+'</div><div class="mc-sub">'+(ta?Math.round(resp/ta*100):0)+'% dos ativos</div></div>'
@@ -1753,7 +1753,7 @@ function _dash_updateMetrics(){
   // Renderizar como HTML em vez de canvas
   funilEl.style.display = 'none';
   const wrapper = funilEl.parentElement;
-  let funilHtml = document.getElementById('funil-html');
+  let funilHtml = document.getElementById('dash-funil-html');
   if (!funilHtml) {
     funilHtml = document.createElement('div');
     funilHtml.id = 'funil-html';
@@ -1821,16 +1821,16 @@ function _dashInit(){
     _dashPOR_PAG=parseInt(document.getElementById('dash-f-perpag').value);
     _dashpag=1;_dash_renderTabela();
   });
-  ['busca','f-estado','f-score','f-status'].forEach(id=>{
+  ['dash-busca','dash-f-estado','dash-f-score','dash-f-status'].forEach(id=>{
     document.getElementById(id).addEventListener('input',_dash_aplicar);
     document.getElementById(id).addEventListener('change',_dash_aplicar);
   });
-  document.getElementById('btn-clr').addEventListener('click',()=>{
+  document.getElementById('dash-btn-clr').addEventListener('click',()=>{
     document.getElementById('dash-f-perpag').addEventListener('change',()=>{
     _dashPOR_PAG=parseInt(document.getElementById('dash-f-perpag').value);
     _dashpag=1;_dash_renderTabela();
   });
-  ['busca','f-estado','f-score','f-status'].forEach(id=>{document.getElementById(id).value='';});
+  ['dash-busca','dash-f-estado','dash-f-score','dash-f-status'].forEach(id=>{document.getElementById(id).value='';});
     _dash_aplicar();
   });
   _dashfiltrado=[..._dashALL];_dash_updateMetrics();_dash_updateCharts();_dash_renderTabela();
