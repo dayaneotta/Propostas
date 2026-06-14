@@ -452,7 +452,7 @@ function renderTabela(){
 <td>${scoreBadge(d.score,d.desqualificado)}</td>
 <td style="max-width:220px;font-size:11px;color:var(--text2);white-space:normal">${esc(d.linha)}</td>
 <td><div class="dots-wrap">${buildDots(d)}</div></td>
-<td><span class="sp ${statusCls[d.sc]||'nr'}" style="${d._status?'font-size:10px':''}">${d._status||statusLabel[d.sc]||d.sc}</span></td>
+<td><span class="sp ${statusCls[d.sc]||'nr'}" style="${d.status?'font-size:10px':''}">${d.status||statusLabel[d.sc]||d.sc}</span></td>
 <td><div class="lc">
 ${lat?`<a href="${lat}" target="_blank" class="la" title="Lattes"><i class="ti ti-file-description"></i></a>`:''}
 ${em?`<a href="mailto:${em}" class="la" title="E-mail"><i class="ti ti-mail"></i></a>`:''}
@@ -513,7 +513,7 @@ function updateCharts(){
     {label:'Convertido',sub:'Cliente confirmado',keys:['Convertido'],color:'#39BA9B',icon:''},
   ];
   var total=ativos.length||1;
-  var funilVals=funil.map(function(f){return Object.assign({},f,{n:ativos.filter(function(d){return f.keys.includes(d._status||'Novo');}).length});});
+  var funilVals=funil.map(function(f){return Object.assign({},f,{n:ativos.filter(function(d){return f.keys.includes(d.status||'Novo');}).length});});
   var maxF=Math.max.apply(null,funilVals.map(function(v){return v.n;}))||1;
   var cSTel=document.getElementById('cST');
   if(!cSTel)return;
@@ -584,18 +584,18 @@ function updateMetrics(){
   const ta=ativos.length;
   const alto=ativos.filter(d=>d.score==='ALTO').length;
   const reunAgend=ativos.filter(d=>d._sc==='reuniao').length;
-  const reunReal=ativos.filter(d=>d._sc==='reuniaoreal'||d._status==='Reunião realizada').length;
+  const reunReal=ativos.filter(d=>d._sc==='reuniaoreal'||d.status==='Reunião realizada').length;
   const _todosTextos = d => [d.c1_raw,d.c2_raw,d.c3_raw,d.c1_nota,d.c2_nota,d.c3_nota,d.nota||''].join(' ');
   const reunRealOrc=ativos.filter(d=>{
     const textos = _todosTextos(d);
-    const temReunReal = d._status==='Reunião realizada' || /reuni[aã]o\s*realizada/i.test(textos);
+    const temReunReal = d.status==='Reunião realizada' || /reuni[aã]o\s*realizada/i.test(textos);
     const temOrc = /or[cç]amento/i.test(textos);
     return temReunReal && temOrc;
   }).length;
   const reunCanc=ativos.filter(d=>d._sc==='reuniaocanc').length;
-  const orc=ativos.filter(d=>d._sc==='orcamento'||d._status==='Respondeu — Pediu orçamento').length;
+  const orc=ativos.filter(d=>d._sc==='orcamento'||d.status==='Respondeu — Pediu orçamento').length;
   const STATUS_RESPONDEU=['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
-  const resp=ativos.filter(d=>STATUS_RESPONDEU.includes(d._status||'')).length;
+  const resp=ativos.filter(d=>STATUS_RESPONDEU.includes(d.status||'')).length;
   const ests=new Set(filtrado.map(d=>d.estado)).size;
   document.getElementById('mbox').innerHTML=
     '<div class="mc tot"><div class="mc-label"><i class="ti ti-users" style="font-size:12px"></i> Total</div><div class="mc-val">'+t+'</div><div class="mc-sub">'+ests+' estado'+(ests!==1?'s':'')+'</div></div>'
@@ -647,7 +647,7 @@ function updateMetrics(){
   // Calcular valores
   const funilVals = funil.map(f => ({
     ...f,
-    n: ativos.filter(d => f.keys.includes(d._status||'Novo')).length
+    n: ativos.filter(d => f.keys.includes(d.status||'Novo')).length
   }));
   const max = Math.max(...funilVals.map(v => v.n), 1);
 
