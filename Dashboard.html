@@ -247,35 +247,32 @@ function updateMetrics() {
   // Sankey de engajamento
   const STATUS_RESP_ALL = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   const nCadastrados = filtrado.length;
-  const nContatados = ativos.filter(d => d.c1_raw && d.c1_raw.trim()).length;
-  const nResponderam = ativos.filter(d => STATUS_RESP_ALL.includes(d.status||'')).length;
-  const nReuniaoAgend = ativos.filter(d => ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||'')).length;
-  const nReuniaoReal = ativos.filter(d => d.status === 'Reunião realizada').length;
-  const nOrcamento = ativos.filter(d => d.sc === 'orcamento' || d.status === 'Respondeu — Pediu orçamento').length;
-  const nSemInteresse = ativos.filter(d => ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'].includes(d.status||'')).length;
+  const nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
+  const nResponderam = ativos.filter(function(d){ return STATUS_RESP_ALL.includes(d.status||''); }).length;
+  const nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
+  const nOrcamento = ativos.filter(function(d){ return d.sc === 'orcamento' || d.status === 'Respondeu — Pediu orçamento'; }).length;
+  const nSemInteresse = ativos.filter(function(d){ return ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'].includes(d.status||''); }).length;
   const nSemRetorno = nContatados - nResponderam;
-  const nNaoContat = nCadastrados - nContatados - desq;
+  const nNaoContat = Math.max(0, nCadastrados - nContatados - desq);
 
-  const pct = (n, of) => of > 0 ? Math.round(n/of*100) : 0;
+  function sankeyPct(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
 
-  // SVG Sankey dimensions
-  const W = 640, H = 300;
-  const col = [40, 200, 360, 520];
-  const nodeW = 16;
+  const W = 640, H = 300, nodeW = 14;
+  const col = [30, 190, 350, 510];
+  const maxH = 220;
+  const sc = maxH / (nCadastrados || 1);
 
-  // Node heights proportional to count (max height = 220px)
-  const scale = 220 / (nCadastrados || 1);
-  const hCad = Math.max(nCadastrados * scale, 8);
-  const hCont = Math.max(nContatados * scale, 4);
-  const hResp = Math.max(nResponderam * scale, 4);
-  const hReu = Math.max(nReuniaoAgend * scale, 4);
-  const hOrc = Math.max(nOrcamento * scale, 4);
-  const hSem = Math.max(nSemInteresse * scale, 4);
-  const hSemRet = Math.max(nSemRetorno * scale, 4);
-  const hNaoCont = Math.max(nNaoContat * scale, 4);
-  const hReuReal = Math.max(nReuniaoReal * scale, 4);
+  function nh(n) { return Math.max(n * sc, 4); }
 
-  // Y positions
+  const hCad = nh(nCadastrados);
+  const hCont = nh(nContatados);
+  const hResp = nh(nResponderam);
+  const hReu = nh(nReuniaoAgend);
+  const hOrc = nh(nOrcamento);
+  const hSem = nh(nSemInteresse);
+  const hSemRet = nh(nSemRetorno);
+  const hNaoCont = nh(nNaoContat);
+
   const yCad = 40;
   const yCont = 40;
   const yNaoCont = yCont + hCont + 10;
@@ -285,36 +282,46 @@ function updateMetrics() {
   const yOrc = yReu + hReu + 8;
   const ySem = yOrc + hOrc + 8;
 
-  function flow(x1,y1,h1, x2,y2,h2, color, alpha=0.6) {
-    return \`<path d="M\${x1+nodeW} \${y1} C\${(x1+x2)/2} \${y1}, \${(x1+x2)/2} \${y2}, \${x2} \${y2} L\${x2} \${y2+h2} C\${(x1+x2)/2} \${y2+h2}, \${(x1+x2)/2} \${y1+h1}, \${x1+nodeW} \${y1+h1} Z" fill="\${color}" opacity="\${alpha}"/>\`;
+  function mkFlow(x1,y1,h1,x2,y2,h2,color,alpha) {
+    alpha = alpha || 0.55;
+    var mx = (x1+x2)/2;
+    return '<path d="M'+(x1+nodeW)+' '+y1+' C'+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2+' L'+x2+' '+(y2+h2)+' C'+mx+' '+(y2+h2)+','+mx+' '+(y1+h1)+','+(x1+nodeW)+' '+(y1+h1)+' Z" fill="'+color+'" opacity="'+alpha+'"/>';
   }
 
-  function node(x,y,h,color,label,val,sub) {
-    return \`<rect x="\${x}" y="\${y}" width="\${nodeW}" height="\${h}" rx="4" fill="\${color}"/>
-      <text x="\${x+nodeW+8}" y="\${y+h/2-6}" font-size="12" font-weight="600" fill="\${color}" font-family="Segoe UI,sans-serif">\${val}</text>
-      <text x="\${x+nodeW+8}" y="\${y+h/2+8}" font-size="10" fill="#64748b" font-family="Segoe UI,sans-serif">\${label}\${sub?' · '+sub:''}</text>\`;
+  function mkNode(x,y,h,color,label,val,sub) {
+    var tx = x + nodeW + 8;
+    var ty1 = y + h/2 - 6;
+    var ty2 = y + h/2 + 8;
+    var subTxt = sub ? ' · ' + sub : '';
+    return '<rect x="'+x+'" y="'+y+'" width="'+nodeW+'" height="'+h+'" rx="4" fill="'+color+'"/>'+
+      '<text x="'+tx+'" y="'+ty1+'" font-size="12" font-weight="600" fill="'+color+'" font-family="Segoe UI,sans-serif">'+val+'</text>'+
+      '<text x="'+tx+'" y="'+ty2+'" font-size="10" fill="#64748b" font-family="Segoe UI,sans-serif">'+label+subTxt+'</text>';
   }
 
-  const svg = \`<svg width="100%" viewBox="0 0 \${W} \${H}" role="img" aria-label="Fluxo de engajamento dos pesquisadores">
-    <title>Fluxo de engajamento</title>
-    \${flow(col[0],yCad,hCad, col[1],yCont,hCont, '#1A73C8')}
-    \${nNaoContat>0?flow(col[0],yCad+hCad-hNaoCont,hNaoCont, col[1],yNaoCont,hNaoCont, '#888780',0.3):''}
-    \${flow(col[1],yCont,hCont, col[2],yResp,hResp, '#2EC4A5')}
-    \${nSemRetorno>0?flow(col[1],yCont+hCont-hSemRet,hSemRet, col[2],ySemRet,hSemRet, '#888780',0.25):''}
-    \${nReuniaoAgend>0?flow(col[2],yResp,hReu, col[3],yReu,hReu, '#EF9F27'):''}
-    \${nOrcamento>0?flow(col[2],yResp+hReu,hOrc, col[3],yOrc,hOrc, '#7F77DD'):''}
-    \${nSemInteresse>0?flow(col[2],yResp+hReu+hOrc,hSem, col[3],ySem,hSem, '#E24B4A',0.4):''}
-    \${node(col[0],yCad,hCad,'#1A73C8','cadastrados',nCadastrados,'')}
-    \${node(col[1],yCont,hCont,'#2EC4A5','contatados',nContatados,pct(nContatados,nCadastrados)+'%')}
-    \${nNaoContat>0?\`<text x="\${col[1]+nodeW+8}" y="\${yNaoCont+hNaoCont/2+4}" font-size="10" fill="#94a3b8" font-family="Segoe UI,sans-serif">\${nNaoContat} s/ contato</text>\`:''}
-    \${node(col[2],yResp,hResp,'#EF9F27','responderam',nResponderam,pct(nResponderam,nContatados)+'%')}
-    \${nSemRetorno>0?\`<text x="\${col[2]+nodeW+8}" y="\${ySemRet+hSemRet/2+4}" font-size="10" fill="#94a3b8" font-family="Segoe UI,sans-serif">\${nSemRetorno} s/ retorno</text>\`:''}
-    \${nReuniaoAgend>0?node(col[3],yReu,hReu,'#EF9F27','reuniões',nReuniaoAgend,pct(nReuniaoAgend,nResponderam)+'%'):''}
-    \${nOrcamento>0?node(col[3],yOrc,hOrc,'#7F77DD','orçamentos',nOrcamento,pct(nOrcamento,nResponderam)+'%'):''}
-    \${nSemInteresse>0?node(col[3],ySem,hSem,'#E24B4A','s/ interesse',nSemInteresse,pct(nSemInteresse,nResponderam)+'%'):''}
-  </svg>\`;
+  function mkGray(x,y,h,label) {
+    return '<text x="'+(x+nodeW+8)+'" y="'+(y+h/2+4)+'" font-size="10" fill="#94a3b8" font-family="Segoe UI,sans-serif">'+label+'</text>';
+  }
 
-  document.getElementById('sankey-wrap').innerHTML = svg;
+  var svgParts = ['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">'];
+  svgParts.push(mkFlow(col[0],yCad,hCad,col[1],yCont,hCont,'#1A73C8'));
+  if(nNaoContat>0) svgParts.push(mkFlow(col[0],yCad+hCad-hNaoCont,hNaoCont,col[1],yNaoCont,hNaoCont,'#888780',0.25));
+  svgParts.push(mkFlow(col[1],yCont,hCont,col[2],yResp,hResp,'#2EC4A5'));
+  if(nSemRetorno>0) svgParts.push(mkFlow(col[1],yCont+hCont-hSemRet,hSemRet,col[2],ySemRet,hSemRet,'#888780',0.2));
+  if(nReuniaoAgend>0) svgParts.push(mkFlow(col[2],yResp,hReu,col[3],yReu,hReu,'#EF9F27'));
+  if(nOrcamento>0) svgParts.push(mkFlow(col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'#7F77DD'));
+  if(nSemInteresse>0) svgParts.push(mkFlow(col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'#E24B4A',0.4));
+  svgParts.push(mkNode(col[0],yCad,hCad,'#1A73C8','cadastrados',nCadastrados,''));
+  svgParts.push(mkNode(col[1],yCont,hCont,'#2EC4A5','contatados',nContatados,sankeyPct(nContatados,nCadastrados)+'%'));
+  if(nNaoContat>0) svgParts.push(mkGray(col[1],yNaoCont,hNaoCont,nNaoContat+' s/ contato'));
+  svgParts.push(mkNode(col[2],yResp,hResp,'#EF9F27','responderam',nResponderam,sankeyPct(nResponderam,nContatados)+'%'));
+  if(nSemRetorno>0) svgParts.push(mkGray(col[2],ySemRet,hSemRet,nSemRetorno+' s/ retorno'));
+  if(nReuniaoAgend>0) svgParts.push(mkNode(col[3],yReu,hReu,'#EF9F27','reuniões',nReuniaoAgend,sankeyPct(nReuniaoAgend,nResponderam)+'%'));
+  if(nOrcamento>0) svgParts.push(mkNode(col[3],yOrc,hOrc,'#7F77DD','orçamentos',nOrcamento,sankeyPct(nOrcamento,nResponderam)+'%'));
+  if(nSemInteresse>0) svgParts.push(mkNode(col[3],ySem,hSem,'#E24B4A','s/ interesse',nSemInteresse,sankeyPct(nSemInteresse,nResponderam)+'%'));
+  svgParts.push('</svg>');
+
+  document.getElementById('sankey-wrap').innerHTML = svgParts.join('');
+
 
   // Taxa de resposta
   const naoResp = ta - resp;
