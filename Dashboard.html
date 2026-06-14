@@ -63,10 +63,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .funil-pct{font-size:10px;color:var(--text3);text-align:right}
 
 /* Mapa por estado */
-.estado-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
-.estado-item{background:var(--bm-light);border-radius:6px;padding:8px;text-align:center}
-.estado-sigla{font-size:12px;font-weight:700;color:var(--bm-blue)}
-.estado-count{font-size:18px;font-weight:700;color:var(--bm-mid)}
+
 
 /* Taxa de resposta */
 .taxa-wrap{display:flex;align-items:center;gap:16px}
@@ -133,10 +130,10 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
       </div>
     </div>
 
-    <!-- Mapa por estado -->
+    <!-- Distribuição por estado -->
     <div class="chart-card full" style="margin-bottom:16px">
       <div class="chart-title"><i class="ti ti-map-pin" aria-hidden="true"></i> Distribuição por estado</div>
-      <div class="estado-grid" id="mapa-estados"></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="cEstados"></canvas></div>
     </div>
 
   </div>
@@ -304,19 +301,29 @@ function updateMetrics() {
       <div class="tempo-val">${contC1C2} <span style="font-size:11px;font-weight:400;color:var(--text3)">de ${ta}</span></div>
     </div>`;
 
-  // Mapa por estado
+  // Distribuição por estado - gráfico de barras
   const byEstado = {};
   filtrado.forEach(d => { if (d.estado) byEstado[d.estado] = (byEstado[d.estado]||0)+1; });
   const estadosSorted = Object.entries(byEstado).sort((a,b) => b[1]-a[1]);
-  const maxEst = estadosSorted[0]?.[1] || 1;
-  document.getElementById('mapa-estados').innerHTML = estadosSorted.map(([est, n]) => {
-    const intensity = Math.round(n/maxEst*100);
-    const bg = `rgba(26,115,200,${0.1 + intensity/100*0.6})`;
-    return `<div class="estado-item" style="background:${bg}">
-      <div class="estado-sigla">${est}</div>
-      <div class="estado-count">${n}</div>
-    </div>`;
-  }).join('');
+  if (window.cEstados) window.cEstados.destroy();
+  window.cEstados = new Chart(document.getElementById('cEstados'), {
+    type: 'bar',
+    data: {
+      labels: estadosSorted.map(([e]) => e),
+      datasets: [{
+        label: 'Pesquisadores',
+        data: estadosSorted.map(([,n]) => n),
+        backgroundColor: estadosSorted.map((_,i) => { const t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0; return gradC(t, 0.82); }),
+        hoverBackgroundColor: estadosSorted.map((_,i) => { const t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0; return gradC(t, 1); }),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
 }
 
 function updateCharts() {
@@ -349,6 +356,20 @@ function updateCharts() {
       scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
     }
   });
+}
+
+function gradC(t,alpha){
+  t=Math.max(0,Math.min(1,t));
+  var stops=[[0,[6,92,169]],[0.2,[20,132,198]],[0.4,[24,148,210]],[0.6,[37,162,190]],[0.8,[45,173,174]],[1,[57,186,155]]];
+  for(var i=0;i<stops.length-1;i++){
+    if(t>=stops[i][0]&&t<=stops[i+1][0]){
+      var r=(t-stops[i][0])/(stops[i+1][0]-stops[i][0]);
+      var lerp=function(a,b){return Math.round(a+(b-a)*r);};
+      var c0=stops[i][1],c1=stops[i+1][1];
+      if(alpha>=1)return '#'+lerp(c0[0],c1[0]).toString(16).padStart(2,'0')+lerp(c0[1],c1[1]).toString(16).padStart(2,'0')+lerp(c0[2],c1[2]).toString(16).padStart(2,'0');
+      return 'rgba('+lerp(c0[0],c1[0])+','+lerp(c0[1],c1[1])+','+lerp(c0[2],c1[2])+','+alpha+')';
+    }
+  }
 }
 
 function carregarEIniciar() {
