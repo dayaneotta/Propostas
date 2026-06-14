@@ -24741,9 +24741,10 @@ async function carregarRelatorio() {
 // Pré-preencher campos a partir de parâmetros da URL (vindo do BioLead)
 (function() {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('cli-nome')) {
+  if (params.get('cli-nome') || params.get('cli-sigla')) {
     const set = (id, key) => { const el = document.getElementById(id); if (el && params.get(key)) el.value = params.get(key); };
     set('cli-nome', 'cli-nome');
+    set('cli-sigla', 'cli-sigla');
     set('cli-contato', 'cli-contato');
     set('cli-email', 'cli-email');
     set('cli-tel', 'cli-tel');
