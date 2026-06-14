@@ -322,11 +322,36 @@ const SHEETS_URL_DASH = 'https://script.google.com/macros/s/AKfycbw9hKu9e5IlpCF1
 const STORAGE_KEY = 'biolead-v3';
 
 
+function carregarEIniciar() {
+  document.getElementById('loading-overlay').style.display = 'flex';
+  const cbName = '_dashBlCb';
+  window[cbName] = function(res) {
+    document.getElementById('loading-overlay').style.display = 'none';
+    if(res.ok) {
+      window._dashDados = res.dados.map(p => ({
+        ...p,
+        nome: String(p.nome||''), email: String(p.email||''),
+        linha: String(p.linha||''), inst: String(p.inst||''),
+        estado: String(p.estado||''), score: String(p.score||''),
+        status: String(p.status||'Novo'),
+        c1_raw: String(p.c1_raw||''), c2_raw: String(p.c2_raw||''),
+        c3_raw: String(p.c3_raw||''), c1_nota: String(p.c1_nota||''),
+        c2_nota: String(p.c2_nota||''), c3_nota: String(p.c3_nota||''),
+        desqualificado: p.desqualificado === true || p.desqualificado === 'true',
+        desq_motivo: String(p.desq_motivo||''),
+      }));
+      init();
+    } else {
+      alert('Erro ao carregar dados: ' + (res.error||'desconhecido'));
+    }
+  };
+  const script = document.createElement('script');
+  script.src = 'https://script.google.com/macros/s/AKfycbw9hKu9e5IlpCF1A_CjLM4qavd7s0sS281KyEDdersJ-42vyDRZddRL9F8OQrfXJk1MSA/exec?action=biolead&sub=listar&params=%7B%7D&callback=' + cbName + '&t=' + Date.now();
+  script.onerror = () => { document.getElementById('loading-overlay').style.display = 'none'; alert('Erro ao carregar dados.'); };
+  document.head.appendChild(script);
+}
+
 carregarEIniciar();
-
-
-
-
 
 function carregarDados() {
   return window._dashDados || [];
