@@ -1777,21 +1777,17 @@ function _dash_updateMetrics(){
 }
 
 function _dash_detectStatus(d) {
-  if (d._sc) return d._sc;
   if (d.desqualificado) return 'desq';
-  const raws = [d.c1_raw, d.c2_raw, d.c3_raw].map(v=>(v||'').toLowerCase());
-  const rawAll = raws.join(' ');
-  const hasTooltip = !!(d.c1_nota||d.c2_nota||d.c3_nota);
-  const notas = [d.c1_nota||'', d.c2_nota||'', d.c3_nota||''].join(' ').toLowerCase();
-  const combined = rawAll + ' ' + notas;
-  if (/reuni[aã]o realizada|reuni[aã]o feita/.test(combined)) return 'reuniaoreal';
-  if (/cancel/.test(combined) && /reuni[aã]o/.test(combined)) return 'reuniaocanc';
-  if (/reuni[aã]o/.test(combined)) return 'reuniao';
-  if (/or[cç]amento|proposta/.test(combined)) return 'orcamento';
-  if (/sem interesse|n[aã]o (tem|possui) interesse/.test(combined)) return 'sem';
-  if (/respondeu|retornou/.test(combined)) return 'respondeu';
-  const temContato = raws.some(v => v && v !== '---' && v !== '***' && v.replace(/[\/\-\.\s]/g,'').length > 3);
-  if (!temContato) return 'nc';
+  const s = d.status || 'Novo';
+  if (s === 'Reunião realizada' || s === 'Convertido') return 'reuniaoreal';
+  if (s === 'Reunião cancelada') return 'reuniaocanc';
+  if (s === 'Reunião agendada') return 'reuniao';
+  if (s === 'Respondeu — Pediu orçamento') return 'orcamento';
+  if (s === 'Respondeu — Sem interesse' || s === 'Respondeu — Sem projeto no momento') return 'sem';
+  if (s === 'Respondeu — Sem retorno após interesse') return 'nr';
+  if (s === 'Respondeu — Pediu informações' || s === 'Respondeu — Solicitou contato futuro') return 'respondeu';
+  if (s === 'Aguardando') return 'aguardando';
+  if (s === 'Novo') return 'nc';
   return 'nr';
 }
 
