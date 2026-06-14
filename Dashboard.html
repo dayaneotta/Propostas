@@ -559,7 +559,7 @@ function aplicar(){
     if(est&&d.estado!==est)return false;
     if(scr==='ALTO'&&d.score!=='ALTO')return false;
     if(scr==='MÉDIO'&&d.score!=='MÉDIO')return false;
-    if(sts&&(d._status||'Novo')!==sts)return false;
+    if(sts&&(d.status||'Novo')!==sts)return false;
     if(b){const h=(d.nome+d.inst+d.linha+d.estado+d.email+(d.nota||'')).toLowerCase();if(!h.includes(b))return false;}
     return true;
   });
