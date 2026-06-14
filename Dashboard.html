@@ -109,8 +109,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
     <!-- Funil + Evolução -->
     <div class="charts-grid">
       <div class="chart-card">
-        <div class="chart-title"><i class="ti ti-filter" aria-hidden="true"></i> Funil de conversão</div>
-        <div id="funil-html"></div>
+        <div class="chart-title"><i class="ti ti-git-merge" aria-hidden="true"></i> Fluxo de engajamento</div>
+        <div id="sankey-wrap" style="width:100%;overflow:hidden"></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><i class="ti ti-trending-up" aria-hidden="true"></i> Evolução de contatos por mês</div>
@@ -244,23 +244,77 @@ function updateMetrics() {
   </div>`).join('');
 
   // Funil
-  const atTot = ta || 1;
-  const funil = [
-    {label:'Prospecção', sub:'Novo + Aguardando', keys:['Novo','Aguardando','Inativo'], color:'#1A73C8'},
-    {label:'Engajamento', sub:'Respondeu + Reunião', keys:['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Sem retorno após interesse','Respondeu — Solicitou contato futuro','Reunião agendada','Reunião realizada','Reunião cancelada'], color:'#2EC4A5'},
-    {label:'Sem continuidade', sub:'Sem interesse / projeto', keys:['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'], color:'#ef4444'},
-    {label:'Convertido', sub:'Cliente confirmado', keys:['Convertido'], color:'#27a85a'},
-  ];
-  const funilVals = funil.map(f => ({...f, n: ativos.filter(d => f.keys.includes(d.status||'Novo')).length}));
-  const maxN = Math.max(...funilVals.map(v => v.n), 1);
+  // Sankey de engajamento
+  const STATUS_RESP_ALL = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
+  const nCadastrados = filtrado.length;
+  const nContatados = ativos.filter(d => d.c1_raw && d.c1_raw.trim()).length;
+  const nResponderam = ativos.filter(d => STATUS_RESP_ALL.includes(d.status||'')).length;
+  const nReuniaoAgend = ativos.filter(d => ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||'')).length;
+  const nReuniaoReal = ativos.filter(d => d.status === 'Reunião realizada').length;
+  const nOrcamento = ativos.filter(d => d.sc === 'orcamento' || d.status === 'Respondeu — Pediu orçamento').length;
+  const nSemInteresse = ativos.filter(d => ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'].includes(d.status||'')).length;
+  const nSemRetorno = nContatados - nResponderam;
+  const nNaoContat = nCadastrados - nContatados - desq;
 
-  document.getElementById('funil-html').innerHTML = funilVals.map(v => `
-    <div class="funil-row">
-      <div><div class="funil-label">${v.label}</div><div class="funil-sub">${v.sub}</div></div>
-      <div class="funil-bar-bg"><div class="funil-bar" style="width:${Math.round(v.n/maxN*100)}%;background:${v.color}"></div></div>
-      <div class="funil-n" style="color:${v.color}">${v.n}</div>
-      <div class="funil-pct">${Math.round(v.n/atTot*100)}%</div>
-    </div>`).join('');
+  const pct = (n, of) => of > 0 ? Math.round(n/of*100) : 0;
+
+  // SVG Sankey dimensions
+  const W = 640, H = 300;
+  const col = [40, 200, 360, 520];
+  const nodeW = 16;
+
+  // Node heights proportional to count (max height = 220px)
+  const scale = 220 / (nCadastrados || 1);
+  const hCad = Math.max(nCadastrados * scale, 8);
+  const hCont = Math.max(nContatados * scale, 4);
+  const hResp = Math.max(nResponderam * scale, 4);
+  const hReu = Math.max(nReuniaoAgend * scale, 4);
+  const hOrc = Math.max(nOrcamento * scale, 4);
+  const hSem = Math.max(nSemInteresse * scale, 4);
+  const hSemRet = Math.max(nSemRetorno * scale, 4);
+  const hNaoCont = Math.max(nNaoContat * scale, 4);
+  const hReuReal = Math.max(nReuniaoReal * scale, 4);
+
+  // Y positions
+  const yCad = 40;
+  const yCont = 40;
+  const yNaoCont = yCont + hCont + 10;
+  const yResp = 40;
+  const ySemRet = yResp + hResp + 10;
+  const yReu = 40;
+  const yOrc = yReu + hReu + 8;
+  const ySem = yOrc + hOrc + 8;
+
+  function flow(x1,y1,h1, x2,y2,h2, color, alpha=0.6) {
+    return \`<path d="M\${x1+nodeW} \${y1} C\${(x1+x2)/2} \${y1}, \${(x1+x2)/2} \${y2}, \${x2} \${y2} L\${x2} \${y2+h2} C\${(x1+x2)/2} \${y2+h2}, \${(x1+x2)/2} \${y1+h1}, \${x1+nodeW} \${y1+h1} Z" fill="\${color}" opacity="\${alpha}"/>\`;
+  }
+
+  function node(x,y,h,color,label,val,sub) {
+    return \`<rect x="\${x}" y="\${y}" width="\${nodeW}" height="\${h}" rx="4" fill="\${color}"/>
+      <text x="\${x+nodeW+8}" y="\${y+h/2-6}" font-size="12" font-weight="600" fill="\${color}" font-family="Segoe UI,sans-serif">\${val}</text>
+      <text x="\${x+nodeW+8}" y="\${y+h/2+8}" font-size="10" fill="#64748b" font-family="Segoe UI,sans-serif">\${label}\${sub?' · '+sub:''}</text>\`;
+  }
+
+  const svg = \`<svg width="100%" viewBox="0 0 \${W} \${H}" role="img" aria-label="Fluxo de engajamento dos pesquisadores">
+    <title>Fluxo de engajamento</title>
+    \${flow(col[0],yCad,hCad, col[1],yCont,hCont, '#1A73C8')}
+    \${nNaoContat>0?flow(col[0],yCad+hCad-hNaoCont,hNaoCont, col[1],yNaoCont,hNaoCont, '#888780',0.3):''}
+    \${flow(col[1],yCont,hCont, col[2],yResp,hResp, '#2EC4A5')}
+    \${nSemRetorno>0?flow(col[1],yCont+hCont-hSemRet,hSemRet, col[2],ySemRet,hSemRet, '#888780',0.25):''}
+    \${nReuniaoAgend>0?flow(col[2],yResp,hReu, col[3],yReu,hReu, '#EF9F27'):''}
+    \${nOrcamento>0?flow(col[2],yResp+hReu,hOrc, col[3],yOrc,hOrc, '#7F77DD'):''}
+    \${nSemInteresse>0?flow(col[2],yResp+hReu+hOrc,hSem, col[3],ySem,hSem, '#E24B4A',0.4):''}
+    \${node(col[0],yCad,hCad,'#1A73C8','cadastrados',nCadastrados,'')}
+    \${node(col[1],yCont,hCont,'#2EC4A5','contatados',nContatados,pct(nContatados,nCadastrados)+'%')}
+    \${nNaoContat>0?\`<text x="\${col[1]+nodeW+8}" y="\${yNaoCont+hNaoCont/2+4}" font-size="10" fill="#94a3b8" font-family="Segoe UI,sans-serif">\${nNaoContat} s/ contato</text>\`:''}
+    \${node(col[2],yResp,hResp,'#EF9F27','responderam',nResponderam,pct(nResponderam,nContatados)+'%')}
+    \${nSemRetorno>0?\`<text x="\${col[2]+nodeW+8}" y="\${ySemRet+hSemRet/2+4}" font-size="10" fill="#94a3b8" font-family="Segoe UI,sans-serif">\${nSemRetorno} s/ retorno</text>\`:''}
+    \${nReuniaoAgend>0?node(col[3],yReu,hReu,'#EF9F27','reuniões',nReuniaoAgend,pct(nReuniaoAgend,nResponderam)+'%'):''}
+    \${nOrcamento>0?node(col[3],yOrc,hOrc,'#7F77DD','orçamentos',nOrcamento,pct(nOrcamento,nResponderam)+'%'):''}
+    \${nSemInteresse>0?node(col[3],ySem,hSem,'#E24B4A','s/ interesse',nSemInteresse,pct(nSemInteresse,nResponderam)+'%'):''}
+  </svg>\`;
+
+  document.getElementById('sankey-wrap').innerHTML = svg;
 
   // Taxa de resposta
   const naoResp = ta - resp;
