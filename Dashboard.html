@@ -225,17 +225,8 @@ function updateMetrics() {
   const alto = ativos.filter(d => d.score === 'ALTO').length;
   const STATUS_RESPONDEU = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   const resp = ativos.filter(d => STATUS_RESPONDEU.includes(d.status||'')).length;
-  const reunAgend = ativos.filter(function(d){ return d.status === 'Reunião agendada'; }).length;
   const reunReal = ativos.filter(d => d.sc === 'reuniaoreal').length;
-  const reunCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
-  // Orçamentos = pedidos diretos (status) + pedidos pós-reunião (notas/raw)
-  const orcDireto = ativos.filter(function(d){ return d.sc === 'orcamento' || d.status === 'Respondeu — Pediu orçamento'; }).length;
-  const orcPosReun = ativos.filter(function(d){
-    if (d.sc === 'orcamento' || d.status === 'Respondeu — Pediu orçamento') return false;
-    var textos = [d.c1_raw,d.c2_raw,d.c3_raw,d.c1_nota,d.c2_nota,d.c3_nota].join(' ').toLowerCase();
-    return /or[cç]amento|proposta/.test(textos) && ['Reunião realizada','Reunião cancelada'].includes(d.status||'');
-  }).length;
-  const orc = orcDireto + orcPosReun;
+  const orc = ativos.filter(d => d.sc === 'orcamento').length;
   const conv = ativos.filter(d => d.status === 'Convertido').length;
   const taxaResp = ta ? Math.round(resp/ta*100) : 0;
 
@@ -243,10 +234,8 @@ function updateMetrics() {
     {cls:'', icon:'ti-users', label:'Total', val:t, sub:ta+' ativos'},
     {cls:'', icon:'ti-star', label:'Score alto', val:alto, sub:(ta?Math.round(alto/ta*100):0)+'% dos ativos'},
     {cls:'teal', icon:'ti-mail-check', label:'Responderam', val:resp, sub:taxaResp+'% dos ativos'},
-    {cls:'amber', icon:'ti-calendar-event', label:'Reun. agendadas', val:reunAgend, sub:'aguardando realização'},
-    {cls:'green', icon:'ti-calendar-check', label:'Reun. realizadas', val:reunReal, sub:reunReal+' de '+reunAgend+' agendadas'},
-    {cls:'red', icon:'ti-calendar-x', label:'Reun. canceladas', val:reunCanc, sub:'reagendamento pendente'},
-    {cls:'green', icon:'ti-file-invoice', label:'Orçamentos', val:orc, sub:orcDireto+' diretos · '+orcPosReun+' pós-reunião'},
+    {cls:'amber', icon:'ti-calendar-event', label:'Reuniões', val:reunReal, sub:'realizadas'},
+    {cls:'green', icon:'ti-file-invoice', label:'Orçamentos', val:orc, sub:'solicitados'},
     {cls:'purple', icon:'ti-trophy', label:'Convertidos', val:conv, sub:'clientes confirmados'},
     {cls:'red', icon:'ti-ban', label:'Desqualificados', val:desq, sub:'fora do perfil'},
   ].map(function(m) { return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px" aria-hidden="true"></i> '+m.label+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>'; }).join('');
@@ -258,107 +247,77 @@ function updateMetrics() {
   const nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
   const nResponderam = ativos.filter(function(d){ return STATUS_RESP_ALL.includes(d.status||''); }).length;
   const nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
-  const nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
-  const nReuniaoCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
-  const nOrcamento = orcDireto + orcPosReun;
+  const nOrcamento = ativos.filter(function(d){ return d.sc === 'orcamento' || d.status === 'Respondeu — Pediu orçamento'; }).length;
   const nSemInteresse = ativos.filter(function(d){ return ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'].includes(d.status||''); }).length;
-  const nSemRetorno = Math.max(0, nContatados - nResponderam);
+  const nSemRetorno = nContatados - nResponderam;
   const nNaoContat = Math.max(0, nCadastrados - nContatados - desq);
 
   function sankeyPct(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
 
-  // Use sqrt scale to soften extremes
-  function sqrtH(n, maxN, maxH) {
-    return Math.max(Math.round(Math.sqrt(n / maxN) * maxH), 6);
-  }
+  const W = 640, H = 300, nodeW = 14;
+  const col = [30, 190, 350, 510];
+  const maxH = 220;
+  const sc = maxH / (nCadastrados || 1);
 
-  var W = 960, H = 360, nodeW = 12;
-  var col = [30, 220, 420, 620, 800];
-  var maxH = 240;
-  var maxN = nCadastrados;
+  function nh(n) { return Math.max(n * sc, 4); }
 
-  var hCad  = sqrtH(nCadastrados, maxN, maxH);
-  var hCont = sqrtH(nContatados,  maxN, maxH);
-  var hResp = sqrtH(nResponderam, maxN, maxH);
-  var hReu  = sqrtH(nReuniaoAgend, maxN, maxH);
-  var hReuReal = sqrtH(nReuniaoReal, maxN, maxH);
-  var hReuCanc = sqrtH(nReuniaoCanc, maxN, maxH);
-  var hOrc  = sqrtH(nOrcamento,   maxN, maxH);
-  var hSem  = sqrtH(nSemInteresse,maxN, maxH);
-  // sem retorno and nao contatado: even smaller (cube root)
-  var hSemRet  = nSemRetorno  > 0 ? Math.max(Math.round(Math.cbrt(nSemRetorno /maxN)*maxH*0.5), 4) : 0;
-  var hNaoCont = nNaoContat   > 0 ? Math.max(Math.round(Math.cbrt(nNaoContat  /maxN)*maxH*0.5), 4) : 0;
+  const hCad = nh(nCadastrados);
+  const hCont = nh(nContatados);
+  const hResp = nh(nResponderam);
+  const hReu = nh(nReuniaoAgend);
+  const hOrc = nh(nOrcamento);
+  const hSem = nh(nSemInteresse);
+  const hSemRet = nh(nSemRetorno);
+  const hNaoCont = nh(nNaoContat);
 
-  // Y positions — center main nodes
-  var centerY = H / 2;
-  var yCad  = centerY - hCad/2;
-  var yCont = centerY - hCont/2;
-  var yResp = centerY - hResp/2;
-
-  // Results: stack from center
-  var totalResults = hReu + hOrc + hSem + (nReuniaoAgend>0?8:0) + (nOrcamento>0?8:0);
-  var yReu  = centerY - totalResults/2;
-  var yReuReal = centerY - (hReuReal + (nReuniaoCanc>0?hReuCanc+8:0))/2;
-  var yReuCanc = yReuReal + hReuReal + 8;
-  var yOrc  = yReu + hReu + 8;
-  var ySem  = yOrc + hOrc + 8;
-
-  // Gray nodes below
-  var yNaoCont = yCad  + hCad  + 16;
-  var ySemRet  = yCont + hCont + 16;
+  const yCad = 40;
+  const yCont = 40;
+  const yNaoCont = yCont + hCont + 10;
+  const yResp = 40;
+  const ySemRet = yResp + hResp + 10;
+  const yReu = 40;
+  const yOrc = yReu + hReu + 8;
+  const ySem = yOrc + hOrc + 8;
 
   function mkFlow(x1,y1,h1,x2,y2,h2,color,alpha) {
     alpha = alpha || 0.55;
     var mx = (x1+x2)/2;
-    return '<path d="M'+(x1+nodeW)+' '+y1+' C'+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2
-      +' L'+x2+' '+(y2+h2)+' C'+mx+' '+(y2+h2)+','+mx+' '+(y1+h1)+','+(x1+nodeW)+' '+(y1+h1)+' Z"'
-      +' fill="'+color+'" opacity="'+alpha+'"/>';
+    return '<path d="M'+(x1+nodeW)+' '+y1+' C'+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2+' L'+x2+' '+(y2+h2)+' C'+mx+' '+(y2+h2)+','+mx+' '+(y1+h1)+','+(x1+nodeW)+' '+(y1+h1)+' Z" fill="'+color+'" opacity="'+alpha+'"/>';
   }
 
-  function mkNode(x,y,h,color,label,val,pctTxt) {
-    var tx = x + nodeW + 10;
-    var midY = y + h/2;
-    return '<rect x="'+x+'" y="'+y+'" width="'+nodeW+'" height="'+h+'" rx="4" fill="'+color+'"/>'
-      +'<text x="'+tx+'" y="'+(midY-7)+'" font-size="14" font-weight="700" fill="'+color+'" font-family="Segoe UI,sans-serif">'+val+'</text>'
-      +'<text x="'+tx+'" y="'+(midY+9)+'" font-size="11" fill="#64748b" font-family="Segoe UI,sans-serif">'+label+(pctTxt?' · '+pctTxt:'')+'</text>';
+  function mkNode(x,y,h,color,label,val,sub) {
+    var tx = x + nodeW + 8;
+    var ty1 = y + h/2 - 6;
+    var ty2 = y + h/2 + 8;
+    var subTxt = sub ? ' · ' + sub : '';
+    return '<rect x="'+x+'" y="'+y+'" width="'+nodeW+'" height="'+h+'" rx="4" fill="'+color+'"/>'+
+      '<text x="'+tx+'" y="'+ty1+'" font-size="12" font-weight="600" fill="'+color+'" font-family="Segoe UI,sans-serif">'+val+'</text>'+
+      '<text x="'+tx+'" y="'+ty2+'" font-size="10" fill="#64748b" font-family="Segoe UI,sans-serif">'+label+subTxt+'</text>';
   }
 
-  function mkGrayLabel(x,y,h,txt) {
-    return '<text x="'+(x+nodeW+8)+'" y="'+(y+h/2+4)+'" font-size="10" fill="#b0bec5" font-family="Segoe UI,sans-serif">'+txt+'</text>';
+  function mkGray(x,y,h,label) {
+    return '<text x="'+(x+nodeW+8)+'" y="'+(y+h/2+4)+'" font-size="10" fill="#94a3b8" font-family="Segoe UI,sans-serif">'+label+'</text>';
   }
 
-  var parts = ['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">'];
+  var svgParts = ['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">'];
+  svgParts.push(mkFlow(col[0],yCad,hCad,col[1],yCont,hCont,'#1A73C8'));
+  if(nNaoContat>0) svgParts.push(mkFlow(col[0],yCad+hCad-hNaoCont,hNaoCont,col[1],yNaoCont,hNaoCont,'#888780',0.25));
+  svgParts.push(mkFlow(col[1],yCont,hCont,col[2],yResp,hResp,'#2EC4A5'));
+  if(nSemRetorno>0) svgParts.push(mkFlow(col[1],yCont+hCont-hSemRet,hSemRet,col[2],ySemRet,hSemRet,'#888780',0.2));
+  if(nReuniaoAgend>0) svgParts.push(mkFlow(col[2],yResp,hReu,col[3],yReu,hReu,'#EF9F27'));
+  if(nOrcamento>0) svgParts.push(mkFlow(col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'#7F77DD'));
+  if(nSemInteresse>0) svgParts.push(mkFlow(col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'#E24B4A',0.4));
+  svgParts.push(mkNode(col[0],yCad,hCad,'#1A73C8','cadastrados',nCadastrados,''));
+  svgParts.push(mkNode(col[1],yCont,hCont,'#2EC4A5','contatados',nContatados,sankeyPct(nContatados,nCadastrados)+'%'));
+  if(nNaoContat>0) svgParts.push(mkGray(col[1],yNaoCont,hNaoCont,nNaoContat+' s/ contato'));
+  svgParts.push(mkNode(col[2],yResp,hResp,'#EF9F27','responderam',nResponderam,sankeyPct(nResponderam,nContatados)+'%'));
+  if(nSemRetorno>0) svgParts.push(mkGray(col[2],ySemRet,hSemRet,nSemRetorno+' s/ retorno'));
+  if(nReuniaoAgend>0) svgParts.push(mkNode(col[3],yReu,hReu,'#EF9F27','reuniões',nReuniaoAgend,sankeyPct(nReuniaoAgend,nResponderam)+'%'));
+  if(nOrcamento>0) svgParts.push(mkNode(col[3],yOrc,hOrc,'#7F77DD','orçamentos',nOrcamento,sankeyPct(nOrcamento,nResponderam)+'%'));
+  if(nSemInteresse>0) svgParts.push(mkNode(col[3],ySem,hSem,'#E24B4A','s/ interesse',nSemInteresse,sankeyPct(nSemInteresse,nResponderam)+'%'));
+  svgParts.push('</svg>');
 
-  // Main flows
-  parts.push(mkFlow(col[0],yCad,hCad, col[1],yCont,hCont, '#1A73C8', 0.65));
-  parts.push(mkFlow(col[1],yCont,hCont, col[2],yResp,hResp, '#2EC4A5', 0.65));
-  if(nReuniaoAgend>0) parts.push(mkFlow(col[2],yResp,hReu, col[3],yReu,hReu, '#1A73C8', 0.55));
-  if(nOrcamento>0)    parts.push(mkFlow(col[2],yResp+hReu,hOrc, col[3],yOrc,hOrc, '#2EC4A5', 0.55));
-  if(nSemInteresse>0) parts.push(mkFlow(col[2],yResp+hReu+hOrc,hSem, col[3],ySem,hSem, '#E24B4A', 0.35));
-  // Reunião → realizada / cancelada
-  if(nReuniaoReal>0) parts.push(mkFlow(col[3],yReu,hReuReal, col[4],yReuReal,hReuReal, '#2EC4A5', 0.65));
-  if(nReuniaoCanc>0) parts.push(mkFlow(col[3],yReu+hReuReal,hReuCanc, col[4],yReuCanc,hReuCanc, '#E24B4A', 0.35));
-
-  // Gray flows (discrete)
-  if(nNaoContat>0)  parts.push(mkFlow(col[0],yCad+hCad+4,hNaoCont, col[1],ySemRet+hSemRet+4,hNaoCont, '#b0bec5', 0.25));
-  if(nSemRetorno>0) parts.push(mkFlow(col[1],yCont+hCont+4,hSemRet, col[2],yResp+hResp+4,hSemRet, '#b0bec5', 0.2));
-
-  // Nodes
-  parts.push(mkNode(col[0],yCad,hCad,'#1A73C8','cadastrados',nCadastrados,''));
-  parts.push(mkNode(col[1],yCont,hCont,'#2EC4A5','contatados',nContatados,sankeyPct(nContatados,nCadastrados)+'%'));
-  parts.push(mkNode(col[2],yResp,hResp,'#2EC4A5','responderam',nResponderam,sankeyPct(nResponderam,nContatados)+'%'));
-  if(nReuniaoAgend>0) parts.push(mkNode(col[3],yReu,hReu,'#1A73C8','reuniões',nReuniaoAgend,sankeyPct(nReuniaoAgend,nResponderam)+'%'));
-  if(nOrcamento>0)    parts.push(mkNode(col[3],yOrc,hOrc,'#2EC4A5','orçamentos',nOrcamento,sankeyPct(nOrcamento,nResponderam)+'%'));
-  if(nSemInteresse>0) parts.push(mkNode(col[3],ySem,hSem,'#E24B4A','s/ interesse',nSemInteresse,sankeyPct(nSemInteresse,nResponderam)+'%'));
-  if(nReuniaoReal>0) parts.push(mkNode(col[4],yReuReal,hReuReal,'#2EC4A5','realizadas',nReuniaoReal,sankeyPct(nReuniaoReal,nReuniaoAgend)+'%'));
-  if(nReuniaoCanc>0) parts.push(mkNode(col[4],yReuCanc,hReuCanc,'#E24B4A','canceladas',nReuniaoCanc,sankeyPct(nReuniaoCanc,nReuniaoAgend)+'%'));
-
-  // Gray labels
-  if(nNaoContat>0)  parts.push(mkGrayLabel(col[1],ySemRet+hSemRet+4,hNaoCont,nNaoContat+' s/ contato'));
-  if(nSemRetorno>0) parts.push(mkGrayLabel(col[2],yResp+hResp+4,hSemRet,nSemRetorno+' s/ retorno'));
-
-  parts.push('</svg>');
-  document.getElementById('sankey-wrap').innerHTML = parts.join('');
+  document.getElementById('sankey-wrap').innerHTML = svgParts.join('');
 
 
   // Taxa de resposta
