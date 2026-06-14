@@ -340,7 +340,10 @@ function carregarEIniciar() {
         desqualificado: p.desqualificado === true || p.desqualificado === 'true',
         desq_motivo: String(p.desq_motivo||''),
       }));
+      console.log('Dados carregados:', window._dashDados.length, 'contatos');
+      console.log('Primeiro:', window._dashDados[0]?.nome, window._dashDados[0]?.status);
       init();
+      console.log('init() executado');
     } else {
       alert('Erro ao carregar dados: ' + (res.error||'desconhecido'));
     }
