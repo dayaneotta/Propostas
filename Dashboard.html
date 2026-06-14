@@ -225,7 +225,9 @@ function updateMetrics() {
   const alto = ativos.filter(d => d.score === 'ALTO').length;
   const STATUS_RESPONDEU = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   const resp = ativos.filter(d => STATUS_RESPONDEU.includes(d.status||'')).length;
+  const reunAgend = ativos.filter(function(d){ return d.status === 'Reunião agendada'; }).length;
   const reunReal = ativos.filter(d => d.sc === 'reuniaoreal').length;
+  const reunCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
   const orc = ativos.filter(d => d.sc === 'orcamento').length;
   const conv = ativos.filter(d => d.status === 'Convertido').length;
   const taxaResp = ta ? Math.round(resp/ta*100) : 0;
@@ -234,7 +236,9 @@ function updateMetrics() {
     {cls:'', icon:'ti-users', label:'Total', val:t, sub:ta+' ativos'},
     {cls:'', icon:'ti-star', label:'Score alto', val:alto, sub:(ta?Math.round(alto/ta*100):0)+'% dos ativos'},
     {cls:'teal', icon:'ti-mail-check', label:'Responderam', val:resp, sub:taxaResp+'% dos ativos'},
-    {cls:'amber', icon:'ti-calendar-event', label:'Reuniões', val:reunReal, sub:'realizadas'},
+    {cls:'amber', icon:'ti-calendar-event', label:'Reun. agendadas', val:reunAgend, sub:'aguardando realização'},
+    {cls:'green', icon:'ti-calendar-check', label:'Reun. realizadas', val:reunReal, sub:reunReal+' de '+reunAgend+' agendadas'},
+    {cls:'red', icon:'ti-calendar-x', label:'Reun. canceladas', val:reunCanc, sub:'reagendamento pendente'},
     {cls:'green', icon:'ti-file-invoice', label:'Orçamentos', val:orc, sub:'solicitados'},
     {cls:'purple', icon:'ti-trophy', label:'Convertidos', val:conv, sub:'clientes confirmados'},
     {cls:'red', icon:'ti-ban', label:'Desqualificados', val:desq, sub:'fora do perfil'},
@@ -247,6 +251,8 @@ function updateMetrics() {
   const nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
   const nResponderam = ativos.filter(function(d){ return STATUS_RESP_ALL.includes(d.status||''); }).length;
   const nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
+  const nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
+  const nReuniaoCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
   const nOrcamento = ativos.filter(function(d){ return d.sc === 'orcamento' || d.status === 'Respondeu — Pediu orçamento'; }).length;
   const nSemInteresse = ativos.filter(function(d){ return ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'].includes(d.status||''); }).length;
   const nSemRetorno = Math.max(0, nContatados - nResponderam);
@@ -259,8 +265,8 @@ function updateMetrics() {
     return Math.max(Math.round(Math.sqrt(n / maxN) * maxH), 6);
   }
 
-  var W = 860, H = 360, nodeW = 12;
-  var col = [40, 260, 480, 720];
+  var W = 960, H = 360, nodeW = 12;
+  var col = [30, 220, 420, 620, 800];
   var maxH = 240;
   var maxN = nCadastrados;
 
@@ -268,6 +274,8 @@ function updateMetrics() {
   var hCont = sqrtH(nContatados,  maxN, maxH);
   var hResp = sqrtH(nResponderam, maxN, maxH);
   var hReu  = sqrtH(nReuniaoAgend, maxN, maxH);
+  var hReuReal = sqrtH(nReuniaoReal, maxN, maxH);
+  var hReuCanc = sqrtH(nReuniaoCanc, maxN, maxH);
   var hOrc  = sqrtH(nOrcamento,   maxN, maxH);
   var hSem  = sqrtH(nSemInteresse,maxN, maxH);
   // sem retorno and nao contatado: even smaller (cube root)
@@ -283,6 +291,8 @@ function updateMetrics() {
   // Results: stack from center
   var totalResults = hReu + hOrc + hSem + (nReuniaoAgend>0?8:0) + (nOrcamento>0?8:0);
   var yReu  = centerY - totalResults/2;
+  var yReuReal = centerY - (hReuReal + (nReuniaoCanc>0?hReuCanc+8:0))/2;
+  var yReuCanc = yReuReal + hReuReal + 8;
   var yOrc  = yReu + hReu + 8;
   var ySem  = yOrc + hOrc + 8;
 
@@ -318,6 +328,9 @@ function updateMetrics() {
   if(nReuniaoAgend>0) parts.push(mkFlow(col[2],yResp,hReu, col[3],yReu,hReu, '#EF9F27'));
   if(nOrcamento>0)    parts.push(mkFlow(col[2],yResp+hReu,hOrc, col[3],yOrc,hOrc, '#7F77DD'));
   if(nSemInteresse>0) parts.push(mkFlow(col[2],yResp+hReu+hOrc,hSem, col[3],ySem,hSem, '#E24B4A', 0.3));
+  // Reunião → realizada / cancelada
+  if(nReuniaoReal>0) parts.push(mkFlow(col[3],yReu,hReuReal, col[4],yReuReal,hReuReal, '#27a85a'));
+  if(nReuniaoCanc>0) parts.push(mkFlow(col[3],yReu+hReuReal,hReuCanc, col[4],yReuCanc,hReuCanc, '#E24B4A', 0.4));
 
   // Gray flows (discrete)
   if(nNaoContat>0)  parts.push(mkFlow(col[0],yCad+hCad+4,hNaoCont, col[1],ySemRet+hSemRet+4,hNaoCont, '#b0bec5', 0.25));
@@ -330,6 +343,8 @@ function updateMetrics() {
   if(nReuniaoAgend>0) parts.push(mkNode(col[3],yReu,hReu,'#EF9F27','reuniões',nReuniaoAgend,sankeyPct(nReuniaoAgend,nResponderam)+'%'));
   if(nOrcamento>0)    parts.push(mkNode(col[3],yOrc,hOrc,'#7F77DD','orçamentos',nOrcamento,sankeyPct(nOrcamento,nResponderam)+'%'));
   if(nSemInteresse>0) parts.push(mkNode(col[3],ySem,hSem,'#E24B4A','s/ interesse',nSemInteresse,sankeyPct(nSemInteresse,nResponderam)+'%'));
+  if(nReuniaoReal>0) parts.push(mkNode(col[4],yReuReal,hReuReal,'#27a85a','realizadas',nReuniaoReal,sankeyPct(nReuniaoReal,nReuniaoAgend)+'%'));
+  if(nReuniaoCanc>0) parts.push(mkNode(col[4],yReuCanc,hReuCanc,'#E24B4A','canceladas',nReuniaoCanc,sankeyPct(nReuniaoCanc,nReuniaoAgend)+'%'));
 
   // Gray labels
   if(nNaoContat>0)  parts.push(mkGrayLabel(col[1],ySemRet+hSemRet+4,hNaoCont,nNaoContat+' s/ contato'));
