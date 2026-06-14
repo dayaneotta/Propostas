@@ -132,6 +132,24 @@ textarea{resize:vertical;min-height:60px}
 .logo-biolead{display:flex;flex-direction:column;gap:1px}
 .logo-biolead-name{font-size:14px;font-weight:700;color:var(--bm-blue)}
 .logo-biolead-sub{font-size:10px;color:var(--text3);letter-spacing:.03em;text-transform:uppercase}
+
+.dots-wrap{display:flex;gap:6px;align-items:center}
+.dot-item{position:relative;display:inline-flex;align-items:center}
+.dot-item:hover .tip{display:block}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(13,111,182,.15);cursor:default;transition:transform .15s}
+.dot-item:hover .dot{transform:scale(1.4)}
+.dot-item .tip{
+  display:none;position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+  background:#072847;color:#E8F5FB;font-size:11px;line-height:1.45;padding:7px 11px;
+  border-radius:7px;width:max-content;max-width:260px;white-space:normal;
+  z-index:999;pointer-events:none;box-shadow:0 3px 14px rgba(6,92,169,.3)
+}
+.dot-item .tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#072847}
+.dot.f{background:var(--bm-teal)}
+.dot.r{background:var(--bm-blue)}
+.dot.n{background:#fca5a5;border:1.5px solid #dc2626}
+.dot.x{background:#e5e7eb;border:1.5px solid #9ca3af}
+
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 </head>
@@ -881,7 +899,7 @@ function render() {
       <td><div class="name-cell"><div class="av ${av}">${ini}</div><div><div class="nmt">${p.nome}</div><div class="ins">${p.inst||'—'}</div></div></div></td>
       <td><span style="font-size:10px;font-weight:700;color:var(--bm-blue);background:#E8F5FB;border-radius:4px;padding:2px 6px">${p.estado||'—'}</span></td>
       <td><span class="badge badge-${p.score==='ALTO'?'alto':'medio'}">● ${p.score}</span></td>
-      <td><span style="font-size:12px;font-weight:600;color:${cColor}">${nC}/3</span></td>
+      <td><div class="dots-wrap">${buildDotsBL(p)}</div></td>
       <td><span class="sp" style="${stStyle}">${emoji} ${status}</span></td>
       <td style="max-width:200px"><a href="mailto:${p.email}" style="font-size:12px;color:var(--bm-blue);text-decoration:none;font-style:italic;letter-spacing:-.01em" title="Clique para enviar e-mail">${p.email||'—'}</a></td>
       <td><div class="lc">${latBtn}${igBtn}</div></td>
@@ -1271,6 +1289,42 @@ const INST_NOMES = {
   'FGV': 'Fundação Getulio Vargas',
   'INSPER': 'Insper Instituto de Ensino e Pesquisa',
 };
+
+function fmtDateBL(s){
+  if(!s)return'';
+  const m=s.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+  if(!m)return s;
+  const months=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return parseInt(m[1])+' '+months[parseInt(m[2])-1]+' '+m[3];
+}
+
+function buildDotsBL(p){
+  const contacts=[{raw:p.c1_raw,nota:p.c1_nota},{raw:p.c2_raw,nota:p.c2_nota},{raw:p.c3_raw,nota:p.c3_nota}];
+  const escBL=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return contacts.map(({raw,nota})=>{
+    const empty=!raw||raw.trim()===''||/^-{2,}/.test(raw.trim())||raw==='***';
+    if(empty)return '<span class="dot-item"><span class="dot"></span></span>';
+    const combined=(raw+' '+(nota||'')).toLowerCase();
+    let cls='f';
+    if(p.desqualificado)cls='x';
+    else if(/cancel/i.test(combined)&&/reuni[aã]o/i.test(combined))cls='n';
+    else if(/sem interesse|n[aã]o (tem|possui|tenho) interesse/i.test(combined))cls='n';
+    else if(/sem projetos?/i.test(combined))cls='n';
+    else if(/reuni[aã]o|or[cç]amento|respondeu|retornou/i.test(combined))cls='r';
+    else if(/n[aã]o retornou|sem retorno/i.test(combined))cls='n';
+    const rawSemData=raw.replace(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/g,'').replace(/^[\s\-\.]+/,'').trim();
+    const tipText=(nota&&nota.trim())?nota.trim():rawSemData||'';
+    if(tipText)
+      return '<span class="dot-item"><span class="dot '+cls+'"></span><span class="tip">'+escBL(tipText)+'</span></span>';
+    if(cls==='f'){
+      const dateTip=fmtDateBL(raw);
+      if(dateTip)
+        return '<span class="dot-item"><span class="dot f"></span><span class="tip">'+dateTip+'</span></span>';
+    }
+    return '<span class="dot-item"><span class="dot '+cls+'"></span></span>';
+  }).join('');
+}
+
 
 function gerarProposta(id) {
   const p = dados.find(x=>String(x.id)===String(id));
