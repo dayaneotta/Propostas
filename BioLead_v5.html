@@ -1459,7 +1459,7 @@ function _dashCarregarDados() {
 }
 
 // Mapear status BioLead → categoria dashboard
-function mapearStatus(status) {
+function _dash_mapearStatus(status) {
   if (!status || status === 'Novo') return 'nc';
   if (status === 'Aguardando') return 'aguardando';
   if (status === 'Respondeu — Pediu informações') return 'respondeu';
@@ -1482,20 +1482,20 @@ let cE=null,cS=null;
 const statusLabel={reuniaoreal:'Reunião realizada',reuniaocanc:'Reunião cancelada',reuniao:'Reunião agendada',orcamento:'Orçamento enviado',respondeu:'Respondeu',sem:'Sem interesse',nc:'Não contatado',aguardando:'Aguardando',nr:'Sem retorno',desq:'Desqualificado'};
 const statusCls={reuniaoreal:'reun-real',reuniaocanc:'reun-canc',reuniao:'reun',orcamento:'orc',respondeu:'resp',sem:'sem',nc:'nc',aguardando:'nr',nr:'nr',desq:'desq'};
 
-function initials(n){const p=n.replace(/\*/g,'').trim().split(' ');return(p[0][0]+(p[1]?p[1][0]:'')).toUpperCase()}
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function _dash_initials(n){const p=n.replace(/\*/g,'').trim().split(' ');return(p[0][0]+(p[1]?p[1][0]:'')).toUpperCase()}
+function _dash_esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-function scoreBadge(s,desq){
+function _dash_scoreBadge(s,desq){
   if(desq)return'<span class="badge desq-badge">Desqualificado</span>';
   if(s==='ALTO')return'<span class="badge alto">● Alto</span>';
   return'<span class="badge medio">● Médio</span>';
 }
-function avClass(d){
+function _dash_avClass(d){
   if(d.desqualificado)return'x';
   return d.score==='ALTO'?'alto':'medio';
 }
 
-function fmtDate(raw){
+function _dash_fmtDate(raw){
   // Extract first dd/mm/yyyy from the raw string and format as "21 mai 2026"
   const m = (raw||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
   if(!m) return '';
@@ -1504,7 +1504,7 @@ function fmtDate(raw){
   return `${day} ${mon} ${year}`;
 }
 
-function buildDots(d){
+function _dash_buildDots(d){
   const contacts=[{raw:d.c1_raw,nota:d.c1_nota},{raw:d.c2_raw,nota:d.c2_nota},{raw:d.c3_raw,nota:d.c3_nota}];
   return contacts.map(({raw,nota})=>{
     const empty=!raw||raw.trim()===''||/^-{2,}/.test(raw.trim())||raw==='***';
@@ -1521,10 +1521,10 @@ function buildDots(d){
     const rawSemData = raw.replace(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/g,'').replace(/^[\s\-\.]+/,'').trim();
     const tipText = (nota&&nota.trim()) ? nota.trim() : rawSemData || '';
     if(tipText)
-      return`<span class="dot-item"><span class="dot ${cls}"></span><span class="tip">${esc(tipText)}</span></span>`;
+      return`<span class="dot-item"><span class="dot ${cls}"></span><span class="tip">${_dash_esc(tipText)}</span></span>`;
     // Green dots (cls==='f'): show formatted date as tooltip
     if(cls==='f'){
-      const dateTip=fmtDate(raw);
+      const dateTip=_dash_fmtDate(raw);
       if(dateTip)
         return`<span class="dot-item"><span class="dot f"></span><span class="tip">${dateTip}</span></span>`;
     }
@@ -1532,7 +1532,7 @@ function buildDots(d){
   }).join('');
 }
 
-function renderTabela(){
+function _dash_renderTabela(){
   const tbody=document.getElementById('tbody');
   const nores=document.getElementById('nores');
   const slice=_dashfiltrado.slice((_dashpag-1)*_dashPOR_PAG,_dashpag*_dashPOR_PAG);
@@ -1540,16 +1540,16 @@ function renderTabela(){
   else{
     nores.style.display='none';
     tbody.innerHTML=slice.map(d=>{
-      const av=avClass(d);
+      const av=_dash_avClass(d);
       const lat=d.lattes&&d.lattes.startsWith('http')?d.lattes:'';
       const ig=d.instagram&&d.instagram.startsWith('@')?'https://instagram.com/'+d.instagram.slice(1):'';
       const em=d.email?d.email.split('/')[0].trim():'';
       return`<tr class="${d.desqualificado?'desq':''}">
-<td><div class="name-cell"><div class="av ${av}">${initials(d.nome)}</div><div><div class="nmt${d.desqualificado?' striked':''}">${esc(d.nome.replace(/\*/g,'').trim())}</div><div class="ins">${esc(d.inst)}</div></div></div></td>
+<td><div class="name-cell"><div class="av ${av}">${_dash_initials(d.nome)}</div><div><div class="nmt${d.desqualificado?' striked':''}">${_dash_esc(d.nome.replace(/\*/g,'').trim())}</div><div class="ins">${_dash_esc(d.inst)}</div></div></div></td>
 <td><span class="est">${d.estado}</span></td>
-<td>${scoreBadge(d.score,d.desqualificado)}</td>
-<td style="max-width:220px;font-size:11px;color:var(--text2);white-space:normal">${esc(d.linha)}</td>
-<td><div class="dots-wrap">${buildDots(d)}</div></td>
+<td>${_dash_scoreBadge(d.score,d.desqualificado)}</td>
+<td style="max-width:220px;font-size:11px;color:var(--text2);white-space:normal">${_dash_esc(d.linha)}</td>
+<td><div class="dots-wrap">${_dash_buildDots(d)}</div></td>
 <td><span class="sp ${statusCls[d.sc]||'nr'}" style="${d._status?'font-size:10px':''}">${d._status||statusLabel[d.sc]||d.sc}</span></td>
 <td><div class="lc">
 ${lat?`<a href="${lat}" target="_blank" class="la" title="Lattes"><i class="ti ti-file-description"></i></a>`:''}
@@ -1559,30 +1559,30 @@ ${ig?`<a href="${ig}" target="_blank" class="la" title="Instagram"><i class="ti 
     }).join('');
   }
   document.getElementById('rc').textContent=_dashfiltrado.length+' registro'+(_dashfiltrado.length!==1?'s':'');
-  renderPag();
+  _dash_renderPag();
 }
 
-function renderPag(){
+function _dash_renderPag(){
   const total=Math.ceil(_dashfiltrado.length/_dashPOR_PAG);
   const s=(_dashpag-1)*_dashPOR_PAG+1,e=Math.min(_dashpag*_dashPOR_PAG,_dashfiltrado.length);
   document.getElementById('pi').textContent=_dashfiltrado.length?`${s}–${e} de ${_dashfiltrado.length}`:'';
   const pb=document.getElementById('pb');
-  let h=`<button class="pb" onclick="irPag(${_dashpag-1})" ${_dashpag===1?'disabled':''}><i class="ti ti-chevron-left" style="font-size:12px"></i></button>`;
+  let h=`<button class="pb" onclick="_dash_irPag(${_dashpag-1})" ${_dashpag===1?'disabled':''}><i class="ti ti-chevron-left" style="font-size:12px"></i></button>`;
   for(let i=1;i<=total;i++){
-    if(total<=8||i===1||i===total||Math.abs(i-_dashpag)<=1)h+=`<button class="pb ${i===_dashpag?'active':''}" onclick="irPag(${i})">${i}</button>`;
+    if(total<=8||i===1||i===total||Math.abs(i-_dashpag)<=1)h+=`<button class="pb ${i===_dashpag?'active':''}" onclick="_dash_irPag(${i})">${i}</button>`;
     else if(Math.abs(i-_dashpag)===2)h+=`<button class="pb" disabled style="border:none;opacity:.4">…</button>`;
   }
-  h+=`<button class="pb" onclick="irPag(${_dashpag+1})" ${_dashpag>=total||!total?'disabled':''}><i class="ti ti-chevron-right" style="font-size:12px"></i></button>`;
+  h+=`<button class="pb" onclick="_dash_irPag(${_dashpag+1})" ${_dashpag>=total||!total?'disabled':''}><i class="ti ti-chevron-right" style="font-size:12px"></i></button>`;
   pb.innerHTML=h;
 }
 
-function irPag(n){
+function _dash_irPag(n){
   const total=Math.ceil(_dashfiltrado.length/_dashPOR_PAG);
-  if(n<1||n>total)return;_dashpag=n;renderTabela();
+  if(n<1||n>total)return;_dashpag=n;_dash_renderTabela();
   document.querySelector('.table-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-function updateCharts(){
+function _dash_updateCharts(){
   const ativos=_dashfiltrado.filter(d=>!d.desqualificado);
   const byE={};ativos.forEach(d=>{byE[d.estado]=(byE[d.estado]||0)+1;});
   const ents=Object.entries(byE).sort((a,b)=>b[1]-a[1]);
@@ -1591,8 +1591,8 @@ function updateCharts(){
     type:'bar',
     data:{labels:ents.map(e=>e[0]),datasets:[{
       label:'Leads',data:ents.map(e=>e[1]),
-      backgroundColor:ents.map((_,i)=>{const t=ents.length>1?i/(ents.length-1):0;return gradC(t,0.82);}),
-      hoverBackgroundColor:ents.map((_,i)=>{const t=ents.length>1?i/(ents.length-1):0;return gradC(t,1.0);}),
+      backgroundColor:ents.map((_,i)=>{const t=ents.length>1?i/(ents.length-1):0;return _dash_gradC(t,0.82);}),
+      hoverBackgroundColor:ents.map((_,i)=>{const t=ents.length>1?i/(ents.length-1):0;return _dash_gradC(t,1.0);}),
       borderRadius:4
     }]},
     options:{responsive:true,maintainAspectRatio:false,
@@ -1634,7 +1634,7 @@ function updateCharts(){
   }).join('');
 }
 
-function gradC(t,alpha){
+function _dash_gradC(t,alpha){
   t=Math.max(0,Math.min(1,t));
   var stops=[[0,[6,92,169]],[0.2,[20,132,198]],[0.4,[24,148,210]],[0.6,[37,162,190]],[0.8,[45,173,174]],[1,[57,186,155]]];
   for(var i=0;i<stops.length-1;i++){
@@ -1648,7 +1648,7 @@ function gradC(t,alpha){
   }
 }
 
-function aplicar(){
+function _dash_aplicar(){
   const b=document.getElementById('busca').value.toLowerCase();
   const est=document.getElementById('f-estado').value;
   const scr=document.getElementById('f-score').value;
@@ -1661,10 +1661,10 @@ function aplicar(){
     if(b){const h=(d.nome+d.inst+d.linha+d.estado+d.email+(d.nota||'')).toLowerCase();if(!h.includes(b))return false;}
     return true;
   });
-  _dashpag=1;renderTabela();updateCharts();updateMetrics();
+  _dashpag=1;_dash_renderTabela();_dash_updateCharts();_dash_updateMetrics();
 }
 
-function srt(col){
+function _dash_srt(col){
   if(_dashSortCol===col)_dashSortDir*=-1;else{_dashSortCol=col;_dashSortDir=1;}
   document.querySelectorAll('thead th span').forEach(e=>e.textContent='↕');
   const ic=document.getElementById('s-'+col);if(ic)ic.textContent=_dashSortDir===1?'▲':'▼';
@@ -1672,10 +1672,10 @@ function srt(col){
     if(col==='score'){const o={'ALTO':0,'MÉDIO':1};const av=a.desqualificado?2:(o[a.score]??1),bv=b.desqualificado?2:(o[b.score]??1);return(av-bv)*_dashSortDir;}
     if(col==='sc')return(statusLabel[a.sc]||'').localeCompare(statusLabel[b.sc]||'')*_dashSortDir;
     return(a[col]||'').localeCompare(b[col]||'')*_dashSortDir;
-  });renderTabela();
+  });_dash_renderTabela();
 }
 
-function updateMetrics(){
+function _dash_updateMetrics(){
   const t=_dashfiltrado.length;
   const desq=_dashfiltrado.filter(d=>d.desqualificado).length;
   const ativos=_dashfiltrado.filter(d=>!d.desqualificado);
@@ -1775,10 +1775,29 @@ function updateMetrics(){
   }).join('');
 }
 
+function _dash_detectStatus(d) {
+  if (d._sc) return d._sc;
+  if (d.desqualificado) return 'desq';
+  const raws = [d.c1_raw, d.c2_raw, d.c3_raw].map(v=>(v||'').toLowerCase());
+  const rawAll = raws.join(' ');
+  const hasTooltip = !!(d.c1_nota||d.c2_nota||d.c3_nota);
+  const notas = [d.c1_nota||'', d.c2_nota||'', d.c3_nota||''].join(' ').toLowerCase();
+  const combined = rawAll + ' ' + notas;
+  if (/reuni[aã]o realizada|reuni[aã]o feita/.test(combined)) return 'reuniaoreal';
+  if (/cancel/.test(combined) && /reuni[aã]o/.test(combined)) return 'reuniaocanc';
+  if (/reuni[aã]o/.test(combined)) return 'reuniao';
+  if (/or[cç]amento|proposta/.test(combined)) return 'orcamento';
+  if (/sem interesse|n[aã]o (tem|possui) interesse/.test(combined)) return 'sem';
+  if (/respondeu|retornou/.test(combined)) return 'respondeu';
+  const temContato = raws.some(v => v && v !== '---' && v !== '***' && v.replace(/[\/\-\.\s]/g,'').length > 3);
+  if (!temContato) return 'nc';
+  return 'nr';
+}
+
 function _dashInit(){
   // Rebuild data from current BioLead dados
   const DADOS = _dashCarregarDados().map(p => {
-    const sc = mapearStatus(p.status);
+    const sc = _dash_mapearStatus(p.status);
     return {
       nome: p.nome||'', email: p.email||'', linha: p.linha||'',
       score: p.score||'MÉDIO', inst: p.inst||'', estado: p.estado||'',
@@ -1790,7 +1809,7 @@ function _dashInit(){
       sc
     };
   });
-  _dashALL = DADOS.map(d=>({...d,sc:detectStatus(d)}));
+  _dashALL = DADOS.map(d=>({...d,sc:_dash_detectStatus(d)}));
   _dashfiltrado=[..._dashALL];
 
   document.getElementById('dt').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
@@ -1799,21 +1818,21 @@ function _dashInit(){
   estados.forEach(e=>{const o=document.createElement('option');o.value=e;o.textContent=e;sel.appendChild(o);});
   document.getElementById('f-perpag').addEventListener('change',()=>{
     _dashPOR_PAG=parseInt(document.getElementById('f-perpag').value);
-    _dashpag=1;renderTabela();
+    _dashpag=1;_dash_renderTabela();
   });
   ['busca','f-estado','f-score','f-status'].forEach(id=>{
-    document.getElementById(id).addEventListener('input',aplicar);
-    document.getElementById(id).addEventListener('change',aplicar);
+    document.getElementById(id).addEventListener('input',_dash_aplicar);
+    document.getElementById(id).addEventListener('change',_dash_aplicar);
   });
   document.getElementById('btn-clr').addEventListener('click',()=>{
     document.getElementById('f-perpag').addEventListener('change',()=>{
     _dashPOR_PAG=parseInt(document.getElementById('f-perpag').value);
-    _dashpag=1;renderTabela();
+    _dashpag=1;_dash_renderTabela();
   });
   ['busca','f-estado','f-score','f-status'].forEach(id=>{document.getElementById(id).value='';});
-    aplicar();
+    _dash_aplicar();
   });
-  _dashfiltrado=[..._dashALL];updateMetrics();updateCharts();renderTabela();
+  _dashfiltrado=[..._dashALL];_dash_updateMetrics();_dash_updateCharts();_dash_renderTabela();
 }
 // _dashInit called from showTab
 
