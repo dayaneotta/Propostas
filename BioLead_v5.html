@@ -40,7 +40,7 @@ header{background:linear-gradient(135deg,#065CA9 0%,#1484C6 35%,#1894D2 55%,#2DA
 .tab{padding:6px 16px;border-radius:7px;font-size:12px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-weight:500;position:relative}
 .tab.active{background:var(--bm-blue);color:#fff}
 .pane{display:none}
-.pane.active{display:block}
+.pane.active{display:block;height:calc(100vh - 90px);overflow-y:auto;padding-bottom:20px}
 /* ── stat pills ─────────────────────────────── */
 .stat-pill{display:inline-flex;flex-direction:column;align-items:center;padding:3px 10px;border-radius:var(--r-sm);background:var(--surface);border:.5px solid var(--border);min-width:52px}
 .stat-pill-val{font-size:17px;font-weight:700;color:var(--bm-blue);line-height:1.1}
