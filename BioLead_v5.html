@@ -848,9 +848,15 @@ function toast(msg) {
 }
 
 function showTab(t) {
-  if (t === 'dashboard' && window._initDashboard) {
-    setTimeout(() => window._initDashboard(), 100);
-    window._initDashboard = null; // only init once
+  if (t === 'dashboard') {
+    setTimeout(() => {
+      if (window._initDashboard) {
+        window._initDashboard();
+        window._initDashboard = null;
+      } else if (window._reinitDashboard) {
+        window._reinitDashboard();
+      }
+    }, 150);
   }
   ['lista','lembretes','add','import','dashboard'].forEach(id => {
     document.getElementById('pane-'+id).classList.toggle('active', id===t);
@@ -1827,6 +1833,9 @@ function initDashboard() { init(); }
 
 
 window._initDashboard = initDashboard;
+window._reinitDashboard = function() { 
+  try { init(); } catch(e) { console.error('Dashboard reinit error:', e); }
+};
 })();
 </script>
 </body>
