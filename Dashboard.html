@@ -106,17 +106,18 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
     <!-- Métricas -->
     <div class="metrics-row" id="mbox"></div>
 
-    <!-- Funil + Evolução -->
+    <!-- Fluxo de engajamento full width -->
+    <div class="chart-card full" style="margin-bottom:16px">
+      <div class="chart-title"><i class="ti ti-git-merge" aria-hidden="true"></i> Fluxo de engajamento</div>
+      <div id="sankey-wrap" style="width:100%;overflow:hidden"></div>
+    </div>
+
+    <!-- Evolução + Taxa + Tempo -->
     <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-title"><i class="ti ti-git-merge" aria-hidden="true"></i> Fluxo de engajamento</div>
-        <div id="sankey-wrap" style="width:100%;overflow:hidden"></div>
-      </div>
       <div class="chart-card">
         <div class="chart-title"><i class="ti ti-trending-up" aria-hidden="true"></i> Evolução de contatos por mês</div>
         <div class="chart-wrap"><canvas id="cE"></canvas></div>
       </div>
-    </div>
 
     <!-- Taxa de resposta + Tempo médio + Mapa -->
     <div class="charts-grid">
