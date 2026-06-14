@@ -25214,12 +25214,8 @@ async function verificarSenha() {
   }
 }
 
-// Verifica se já autenticou nesta sessão
-if(sessionStorage.getItem('autenticado')) {
-  document.getElementById('senha-overlay').style.display = 'none';
-} else {
-  document.getElementById('senha-input').focus();
-}
+// Senha removida — autenticação feita via Google na home
+document.getElementById('senha-overlay').style.display = 'none';
 </script>
 
 </body>
