@@ -1150,10 +1150,10 @@ function gerarProposta(id) {
   const p = dados.find(x=>String(x.id)===String(id));
   if (!p) return;
   const params = new URLSearchParams({
-    cliente: p.inst || '',
-    contato: p.nome || '',
-    email: p.email || '',
-    tel: p.tel || '',
+    'cli-nome': p.inst || '',
+    'cli-contato': p.nome || '',
+    'cli-email': p.email || '',
+    'cli-tel': p.tel || '',
   });
   window.location.href = '/Propostas/index.html?' + params.toString();
 }
