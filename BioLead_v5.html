@@ -1452,6 +1452,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharModal();});
 carregarDados();
 
 // ── Dashboard JS ──────────────────────────────────────────────────────────
+let _dashALL=[], _dashfiltrado=[], _dashSortCol='nome', _dashSortDir=1, _dashpag=1, _dashPOR_PAG=25;
+
 
 
 function _dashCarregarDados() {
@@ -1476,7 +1478,6 @@ function _dash_mapearStatus(status) {
   return 'nr';
 }
 
-let _dashPOR_PAG=25;
 let cE=null,cS=null;
 
 const statusLabel={reuniaoreal:'Reunião realizada',reuniaocanc:'Reunião cancelada',reuniao:'Reunião agendada',orcamento:'Orçamento enviado',respondeu:'Respondeu',sem:'Sem interesse',nc:'Não contatado',aguardando:'Aguardando',nr:'Sem retorno',desq:'Desqualificado'};
