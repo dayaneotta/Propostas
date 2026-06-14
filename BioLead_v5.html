@@ -40,7 +40,7 @@ header{background:linear-gradient(135deg,#065CA9 0%,#1484C6 35%,#1894D2 55%,#2DA
 .tab{padding:6px 16px;border-radius:7px;font-size:12px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-weight:500;position:relative}
 .tab.active{background:var(--bm-blue);color:#fff}
 .pane{display:none}
-.pane.active{display:block;height:calc(100vh - 90px);overflow-y:auto;padding-bottom:20px}
+.pane.active{display:block}
 /* ── stat pills ─────────────────────────────── */
 .stat-pill{display:inline-flex;flex-direction:column;align-items:center;padding:3px 10px;border-radius:var(--r-sm);background:var(--surface);border:.5px solid var(--border);min-width:52px}
 .stat-pill-val{font-size:17px;font-weight:700;color:var(--bm-blue);line-height:1.1}
@@ -97,10 +97,10 @@ td{padding:8px 12px;vertical-align:middle}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
 .modal{background:var(--surface);border-radius:var(--r);padding:1.5rem;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.15)}
 .modal h3{font-size:15px;font-weight:600;margin-bottom:1.25rem;color:var(--text)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px}
 .form-grid-3{display:grid;grid-template-columns:80px 1fr 1fr;gap:8px;margin-bottom:8px}
 .form-full{margin-bottom:8px}
-.form-section{margin-bottom:1rem}
+.form-section{margin-bottom:0.5rem}
 .form-section-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding-bottom:5px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:6px}
 .form-field{display:flex;flex-direction:column;gap:4px}
 .form-field label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:0}
@@ -114,7 +114,7 @@ textarea{resize:vertical;min-height:60px}
 .contato-bloco{background:#F0F7FC;border-radius:var(--r-sm);padding:10px;margin-bottom:8px}
 .contato-bloco h4{font-size:11px;font-weight:600;color:var(--bm-blue);margin-bottom:8px}
 .section-title{font-size:11px;font-weight:700;color:var(--bm-blue);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 6px;padding-bottom:4px;border-bottom:.5px solid var(--border)}
-.form-card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r);padding:1.1rem 1.5rem;box-shadow:0 1px 4px rgba(13,111,182,.06);margin-bottom:16px}
+.form-card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r);padding:0.6rem 1.2rem;box-shadow:0 1px 4px rgba(13,111,182,.06);margin-bottom:8px}
 .form-card h2{font-size:15px;font-weight:700;color:var(--bm-blue);margin-bottom:1rem}
 .import-info{background:#EAF4FA;border:.5px solid rgba(13,111,182,.2);border-radius:var(--r-sm);padding:10px;margin-bottom:10px;font-size:11px;color:var(--text2);line-height:1.7}
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bm-blue);color:#fff;padding:10px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:500;opacity:0;transition:opacity .3s;z-index:300;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.15)}
@@ -244,7 +244,7 @@ textarea{resize:vertical;min-height:60px}
   <!-- ADICIONAR -->
   <div id="pane-add" class="pane">
     <div class="form-card" style="max-width:860px;margin-left:auto;margin-right:auto">
-      <h2>Novo pesquisador</h2>
+      <h2 style="margin-bottom:8px;font-size:16px">Novo pesquisador</h2>
 
       <!-- Identificação -->
       <div class="form-section">
