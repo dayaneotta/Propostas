@@ -1472,60 +1472,6 @@ function mapearStatus(status) {
   return 'nr';
 }
 
-// Construir array DADOS compatível com o dashboard
-const DADOS = _dashCarregarDados().map(p => {
-  const sc = mapearStatus(p.status);
-  return {
-    nome: p.nome||'',
-    email: p.email||'',
-    linha: p.linha||'',
-    score: p.score||'MÉDIO',
-    inst: p.inst||'',
-    tel: p.tel||'',
-    lattes: p.lattes||'',
-    c1_raw: p.c1_raw||'',
-    c2_raw: p.c2_raw||'',
-    c3_raw: p.c3_raw||'',
-    c1_nota: p.c1_nota||'',
-    c2_nota: p.c2_nota||'',
-    c3_nota: p.c3_nota||'',
-    nota: p.c3_nota||p.c2_nota||p.c1_nota||p.desq_motivo||'',
-    instagram: p.instagram||'',
-    seguidor: '',
-    estado: p.estado||'',
-    desqualificado: p.desqualificado||false,
-    _status: p.status||'Novo',
-    _sc: sc
-  };
-});
-
-// Sobrescrever detectStatus para usar o mapeamento do BioLead
-function detectStatus(d) {
-  if (d._sc) return d._sc;
-  if (d.desqualificado) return 'desq';
-  const raws = [d.c1_raw, d.c2_raw, d.c3_raw].map(v=>(v||'').toLowerCase());
-  const rawAll = raws.join(' ');
-  const hasTooltip = !!(d.c1_nota||d.c2_nota||d.c3_nota);
-  const notas = [d.c1_nota||'', d.c2_nota||'', d.c3_nota||''].join(' ').toLowerCase();
-  const combined = rawAll + ' ' + notas;
-  if (/reuni[aã]o realizada|reuni[aã]o feita/.test(combined)) return 'reuniaoreal';
-  if (/cancel/.test(combined) && /reuni[aã]o/.test(combined)) return 'reuniaocanc';
-  if (/reuni[aã]o/.test(combined)) return 'reuniao';
-  if (/or[cç]amento|proposta/.test(combined)) return 'orcamento';
-  if (/sem interesse|n[aã]o (tem|possui) interesse/.test(combined)) return 'sem';
-  if (/respondeu|retornou/.test(combined)) return 'respondeu';
-  const temContato = raws.some(v => v && v !== '---' && v !== '***' && v.replace(/[\/\-\.\s]/g,'').length > 3);
-  if (!temContato) return 'nc';
-  return 'nr';
-}
-
-
-
-
-
-
-const _dashALL=DADOS.map(d=>({...d,sc:detectStatus(d)}));
-let _dashfiltrado=[..._dashALL],_dashSortCol='nome',_dashSortDir=1,_dashpag=1;
 let _dashPOR_PAG=25;
 let cE=null,cS=null;
 
@@ -1826,6 +1772,23 @@ function updateMetrics(){
 }
 
 function _dashInit(){
+  // Rebuild data from current BioLead dados
+  const DADOS = _dashCarregarDados().map(p => {
+    const sc = mapearStatus(p.status);
+    return {
+      nome: p.nome||'', email: p.email||'', linha: p.linha||'',
+      score: p.score||'MÉDIO', inst: p.inst||'', estado: p.estado||'',
+      tel: p.tel||'', lattes: p.lattes||'', instagram: p.instagram||'',
+      status: p.status||'Novo', c1_raw: p.c1_raw||'', c2_raw: p.c2_raw||'',
+      c3_raw: p.c3_raw||'', c1_nota: p.c1_nota||'', c2_nota: p.c2_nota||'',
+      c3_nota: p.c3_nota||'', desqualificado: p.desqualificado||false,
+      desq_motivo: p.desq_motivo||'', retorno_data: p.retorno_data||'',
+      sc
+    };
+  });
+  _dashALL = DADOS.map(d=>({...d,sc:detectStatus(d)}));
+  _dashfiltrado=[..._dashALL];
+
   document.getElementById('dt').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
   const estados=[...new Set(_dashALL.map(d=>d.estado))].sort();
   const sel=document.getElementById('f-estado');
