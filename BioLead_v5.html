@@ -871,7 +871,11 @@ function toast(msg) {
 
 function showTab(t) {
   if (t === 'dashboard') {
-    setTimeout(() => { try { _dashInit(); } catch(e) { console.error('Dashboard error:', e); } }, 100);
+    setTimeout(() => {
+      console.log('Dashboard init, dados length:', dados.length);
+      try { _dashInit(); console.log('Dashboard init OK'); } 
+      catch(e) { console.error('Dashboard error:', e.message, e.stack); }
+    }, 300);
   }
   ['lista','lembretes','add','import','dashboard'].forEach(id => {
     document.getElementById('pane-'+id).classList.toggle('active', id===t);
