@@ -884,7 +884,7 @@ function render() {
       <td><div class="lc">${latBtn}${igBtn}</div></td>
       <td style="white-space:nowrap">
         <button class="btn" style="padding:3px 8px;font-size:11px" onclick="abrirModal('${p.id}')">✏️</button>
-        <button class="btn" style="padding:3px 8px;font-size:11px;margin-left:3px;background:#0D4E8A;color:#fff;border-color:#0D4E8A" onclick="gerarProposta('${p.id}')" title="Gerar proposta">🧾</button>
+        <button class="btn" style="padding:3px 8px;font-size:11px;margin-left:3px;background:#fff;color:#0D4E8A;border-color:#0D4E8A" onclick="gerarProposta('${p.id}')" title="Gerar proposta">🧾</button>
         <button class="btn btn-danger" style="padding:3px 8px;font-size:11px;margin-left:3px" onclick="if(confirm('Remover ${p.nome.replace(/'/g,"\\'")}?'))remover('${p.id}')">✕</button>
       </td>
     </tr>`;
