@@ -182,7 +182,8 @@ td{padding:9px 13px;vertical-align:middle}
 .sp.orc{background:var(--purple-bg);color:var(--purple)}
 .sp.resp{background:var(--bm-light);color:var(--bm-blue)}
 .sp.sem{background:var(--coral-bg);color:var(--coral)}
-.sp.nc{background:#F1EFE8;color:#5F5E5A}
+.sp.nc{background:#E6F1FB;color:#185FA5}
+.sp.inativo{background:#F1EFE8;color:#5F5E5A}
 .sp.nr{background:#FAEEDA;color:#854F0B}
 .sp.aguardando{background:#FAEEDA;color:#854F0B}
 .sp.desq{background:var(--gray-bg);color:var(--gray);font-weight:600}
@@ -397,8 +398,8 @@ function mapearStatus(status) {
 // Construir array DADOS compatível com o dashboard
 let cE=null,cS=null;
 
-const statusLabel={reuniaoreal:'Reunião realizada',reuniaocanc:'Reunião cancelada',reuniao:'Reunião agendada',orcamento:'Orçamento enviado',respondeu:'Respondeu',sem:'Sem interesse',nc:'Não contatado',aguardando:'Aguardando',nr:'Sem retorno',desq:'Desqualificado'};
-const statusCls={reuniaoreal:'reun-real',reuniaocanc:'reun-canc',reuniao:'reun',orcamento:'orc',respondeu:'resp',sem:'sem',nc:'nc',aguardando:'aguardando',nr:'nr',desq:'desq'};
+const statusLabel={reuniaoreal:'Reunião realizada',reuniaocanc:'Reunião cancelada',reuniao:'Reunião agendada',orcamento:'Orçamento enviado',respondeu:'Respondeu',sem:'Sem interesse',nc:'Novo',inativo:'Inativo',aguardando:'Aguardando',nr:'Sem retorno',desq:'Desqualificado'};
+const statusCls={reuniaoreal:'reun-real',reuniaocanc:'reun-canc',reuniao:'reun',orcamento:'orc',respondeu:'resp',sem:'sem',nc:'nc',inativo:'inativo',aguardando:'aguardando',nr:'nr',desq:'desq'};
 
 function initials(n){const p=n.replace(/\*/g,'').trim().split(' ');return(p[0][0]+(p[1]?p[1][0]:'')).toUpperCase()}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -705,7 +706,8 @@ function detectStatus(d) {
   if (s === 'Respondeu — Sem retorno após interesse') return 'nr';
   if (s === 'Respondeu — Pediu informações' || s === 'Respondeu — Solicitou contato futuro') return 'respondeu';
   if (s === 'Aguardando') return 'aguardando';
-  if (s === 'Novo' || s === 'Inativo') return 'nc';
+  if (s === 'Inativo') return 'inativo';
+  if (s === 'Novo') return 'nc';
   return 'nr';
 }
 
