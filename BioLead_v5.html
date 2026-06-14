@@ -875,9 +875,8 @@ function showTab(t) {
       console.log('Dashboard init, dados length:', dados.length);
       try { 
         _dashInit(); 
-        console.log('Dashboard init OK');
-        console.log('_dashALL length:', _dashALL.length);
-        if(_dashALL.length > 0) console.log('First item:', JSON.stringify(_dashALL[0]));
+        console.log('Dashboard init OK, _dashALL:', _dashALL.length, '_dashfiltrado:', _dashfiltrado.length);
+        console.log('Sample:', _dashALL[0] ? _dashALL[0].nome + ' | ' + _dashALL[0].sc : 'empty');
       } 
       catch(e) { console.error('Dashboard error:', e.message, e.stack); }
     }, 300);
