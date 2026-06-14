@@ -583,8 +583,8 @@ function updateMetrics(){
   const ativos=filtrado.filter(d=>!d.desqualificado);
   const ta=ativos.length;
   const alto=ativos.filter(d=>d.score==='ALTO').length;
-  const reunAgend=ativos.filter(d=>d._sc==='reuniao').length;
-  const reunReal=ativos.filter(d=>d._sc==='reuniaoreal'||d.status==='Reunião realizada').length;
+  const reunAgend=ativos.filter(d=>d.sc==='reuniao').length;
+  const reunReal=ativos.filter(d=>d.sc==='reuniaoreal'||d.status==='Reunião realizada').length;
   const _todosTextos = d => [d.c1_raw,d.c2_raw,d.c3_raw,d.c1_nota,d.c2_nota,d.c3_nota,d.nota||''].join(' ');
   const reunRealOrc=ativos.filter(d=>{
     const textos = _todosTextos(d);
@@ -592,8 +592,8 @@ function updateMetrics(){
     const temOrc = /or[cç]amento/i.test(textos);
     return temReunReal && temOrc;
   }).length;
-  const reunCanc=ativos.filter(d=>d._sc==='reuniaocanc').length;
-  const orc=ativos.filter(d=>d._sc==='orcamento'||d.status==='Respondeu — Pediu orçamento').length;
+  const reunCanc=ativos.filter(d=>d.sc==='reuniaocanc').length;
+  const orc=ativos.filter(d=>d.sc==='orcamento'||d.status==='Respondeu — Pediu orçamento').length;
   const STATUS_RESPONDEU=['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   const resp=ativos.filter(d=>STATUS_RESPONDEU.includes(d.status||'')).length;
   const ests=new Set(filtrado.map(d=>d.estado)).size;
