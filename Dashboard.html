@@ -23,9 +23,10 @@
   --r:10px;--r-sm:6px;
 }
 body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
-.nav{display:flex;align-items:center;gap:8px;background:#fff;border-bottom:0.5px solid #E5E8EC;padding:8px 16px}
-.nav span{font-size:12px;color:#888;margin-right:4px}
-.nav a{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;background:#F8F9FB;border:0.5px solid #E5E8EC;font-size:12px;color:#444;text-decoration:none}
+.nav{display:flex;align-items:center;gap:2px;background:#EEF3F8;border-bottom:1px solid #dce6f0;padding:6px 16px}
+.nav span{font-size:9px;font-weight:700;letter-spacing:.08em;color:#8aa0b0;text-transform:uppercase;margin-right:10px;padding-right:10px;border-right:1px solid #dce6f0}
+.nav a{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:500;color:#5a7080;text-decoration:none;letter-spacing:.02em}
+.nav a:hover{background:rgba(26,115,200,0.08);color:#1A73C8}
 .page{padding:10px 12px;max-width:1400px;margin:0 auto}
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .page-title{font-size:18px;font-weight:600;color:var(--bm-blue)}
@@ -554,7 +555,7 @@ carregarEIniciar();
 </script>
 
 <script>
-document.getElementById('nav-dashboard').style.cssText += ';background:#E6F1FB;border-color:#B5D4F4;color:#0C447C;font-weight:500';
+document.getElementById('nav-dashboard').style.cssText += ';background:linear-gradient(135deg,rgba(13,78,138,0.12),rgba(46,196,165,0.12));color:#0D4E8A;font-weight:700;box-shadow:inset 0 0 0 1px rgba(13,78,138,0.15);border-radius:6px';
 </script>
 </body>
 </html>
