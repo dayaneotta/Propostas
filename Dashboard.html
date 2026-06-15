@@ -366,7 +366,7 @@ function updateMetrics() {
   parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-14, nCadastrados, '#0D4E8A', 'CADASTRADOS', ''));
   parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-14, nContatados, '#1A73C8', 'CONTATADOS', sp(nContatados,nCadastrados)+'% dos cadastrados'));
   parts.push(lbl(col[2]+nW+tx, yResp+hResp/2-14, nResponderam, '#2EC4A5', 'RESPONDERAM', sp(nResponderam,nContatados)+'% dos contatados'));
-  if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-14, nReuniaoAgend, '#1A8A78', 'REUNIÕES', sp(nReuniaoAgend,nResponderam)+'% dos resp.'));
+  if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-24, nReuniaoAgend, '#1A8A78', 'REUNIÕES', sp(nReuniaoAgend,nResponderam)+'% dos resp.'));
   if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-14, nOrcamento, '#6055B0', 'ORÇAMENTOS', sp(nOrcamento,nResponderam)+'% dos resp.'));
   if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
   if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
