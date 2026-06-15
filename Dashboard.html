@@ -283,9 +283,9 @@ function updateMetrics() {
   function sp(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
   function sh(n, maxN, maxH) { return Math.max(Math.round(Math.sqrt(n/maxN)*maxH), 5); }
 
-  var W=900, H=340, nW=4;
+  var W=900, H=300, nW=4;
   var col=[30,234,374,504,664];
-  var maxH=200, maxN=nCadastrados;
+  var maxH=170, maxN=nCadastrados;
 
   var hCad=sh(nCadastrados,maxN,maxH), hCont=sh(nContatados,maxN,maxH);
   var hResp=sh(nResponderam,maxN,maxH), hReu=sh(nReuniaoAgend,maxN,maxH);
@@ -299,7 +299,7 @@ function updateMetrics() {
   var totRes=hReu+hOrc+hSem+(nReuniaoAgend>0?8:0)+(nOrcamento>0?8:0);
   var yReu=cy-totRes/2, yOrc=yReu+hReu+8, ySem=yOrc+hOrc+8;
   var yNaoCont=yCad+hCad+10, ySemRet=yCont+hCont+10;
-  var totReun=hReal+(nReuniaoFut>0?hFut+8:0)+(nReuniaoCanc>0?hCanc+8:0);
+  var totReun=hReal+(nReuniaoFut>0?hFut+8:0);
   var yReal=cy-totReun/2, yFut=yReal+hReal+8, yCanc=yFut+(nReuniaoFut>0?hFut+8:0);
 
   function wave(x1,y1,h1,x2,y2,h2,fill,op){
@@ -351,7 +351,6 @@ function updateMetrics() {
   if(nSemInteresse>0) parts.push(wave(col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
   if(nReuniaoReal>0)  parts.push(wave(col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
   if(nReuniaoFut>0)   parts.push(wave(col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
-  if(nReuniaoCanc>0)  parts.push(wave(col[3],yReu+hReal+(nReuniaoFut>0?hFut:0),hCanc,col[4],yCanc,hCanc,'url(#sg2c)'));
 
   // Nodes
   parts.push(node(col[0],yCad,hCad,'#0D4E8A'));
@@ -362,7 +361,6 @@ function updateMetrics() {
   if(nSemInteresse>0) parts.push(node(col[3],ySem,hSem,'#A06060',0.5));
   if(nReuniaoReal>0)  parts.push(node(col[4],yReal,hReal,'#0B6E4F'));
   if(nReuniaoFut>0)   parts.push(node(col[4],yFut,hFut,'#C9923C'));
-  if(nReuniaoCanc>0)  parts.push(node(col[4],yCanc,hCanc,'#A06060',0.5));
 
   // Labels
   parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-14, nCadastrados, '#0D4E8A', 'CADASTRADOS', ''));
@@ -373,7 +371,6 @@ function updateMetrics() {
   if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
   if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
   if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
-  if(nReuniaoCanc>0)  parts.push(slbl(col[4]+nW+tx, yCanc+hCanc/2-6, nReuniaoCanc, '#904444', 'CANCELADAS', 0.6));
   if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
   if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
 
