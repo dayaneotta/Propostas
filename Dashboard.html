@@ -404,7 +404,7 @@ function updateMetrics() {
       {id:'sf6', pct:'a realizar', sub:nReuniaoFut+' reuniões agendadas para o futuro'},
     ];
     flows.forEach(function(f) {
-      var el = svgEl.getElementById(f.id);
+      var el = svgEl.querySelector('#'+f.id);
       if (!el) return;
       el.style.cursor = 'pointer';
       el.addEventListener('mouseenter', function(e) {
