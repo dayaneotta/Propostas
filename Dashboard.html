@@ -340,12 +340,6 @@ function updateMetrics() {
   var reunTotal = reunAgend + reunReal + reunCanc;
   var reunSub = reunReal+' realizadas · '+reunAgend+' agendadas'+(reunCanc?' · '+reunCanc+' canceladas':'');
 
-  // Cadência: leads com 2+ contatos registrados
-  var com2contatos = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim() && d.c2_raw && d.c2_raw.trim(); }).length;
-  var com3contatos = ativos.filter(function(d){ return d.c2_raw && d.c2_raw.trim() && d.c3_raw && d.c3_raw.trim(); }).length;
-  var cadenciaPct = nContatados > 0 ? Math.round(com2contatos/nContatados*100) : 0;
-  var cadenciaSub = com2contatos+' com 2+ contatos · '+com3contatos+' com 3 contatos';
-
   document.getElementById('mbox').innerHTML = [
     {cls:'',       icon:'ti-users',      label:'Total cadastrados',  val:t,              sub:ta+' ativos · '+desq+' desqualificados',   delta:deltaHtml(t,tAnterior)},
     {cls:'',       icon:'ti-star',       label:'Score alto',         val:alto,           sub:(ta?Math.round(alto/ta*100):0)+'% dos ativos contatáveis', delta:''},
@@ -364,6 +358,12 @@ function updateMetrics() {
   // ── Variáveis do funil — declaradas aqui para KPIs e Sankey ──
   var nCadastrados = ta;
   var nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
+
+  // Cadência: leads com 2+ contatos registrados — após nContatados
+  var com2contatos = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim() && d.c2_raw && d.c2_raw.trim(); }).length;
+  var com3contatos = ativos.filter(function(d){ return d.c2_raw && d.c2_raw.trim() && d.c3_raw && d.c3_raw.trim(); }).length;
+  var cadenciaPct = nContatados > 0 ? Math.round(com2contatos/nContatados*100) : 0;
+  var cadenciaSub = com2contatos+' com 2+ contatos · '+com3contatos+' com 3 contatos';
   var nResponderam = ativos.filter(function(d){ return STATUS_RESPONDEU.includes(d.status||''); }).length;
   var nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
   var nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
