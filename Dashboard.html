@@ -23,9 +23,10 @@
   --r:10px;--r-sm:6px;
 }
 body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
-.nav{display:flex;align-items:center;gap:8px;background:#fff;border-bottom:0.5px solid #E5E8EC;padding:8px 16px}
-.nav span{font-size:12px;color:#888;margin-right:4px}
-.nav a{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;background:#F8F9FB;border:0.5px solid #E5E8EC;font-size:12px;color:#444;text-decoration:none}
+.nav{display:flex;align-items:center;gap:2px;background:#EEF3F8;border-bottom:1px solid #dce6f0;padding:6px 16px}
+.nav span{font-size:9px;font-weight:700;letter-spacing:.08em;color:#8aa0b0;text-transform:uppercase;margin-right:10px;padding-right:10px;border-right:1px solid #dce6f0}
+.nav a{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:500;color:#5a7080;text-decoration:none;letter-spacing:.02em}
+.nav a:hover{background:rgba(26,115,200,0.08);color:#1A73C8}
 .page{padding:10px 12px;max-width:1400px;margin:0 auto}
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .page-title{font-size:18px;font-weight:600;color:var(--bm-blue)}
@@ -34,11 +35,11 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 
 /* Metric cards */
 .metrics-row{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;margin-bottom:14px}
-.mc{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r);padding:8px 10px;border-top:2.5px solid var(--bm-blue);min-width:0;overflow:hidden}
-.mc-label{font-size:9px;font-weight:700;letter-spacing:.04em;color:var(--text3);margin-bottom:4px;display:flex;align-items:center;gap:3px;text-transform:uppercase;white-space:nowrap}
+.mc{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r);padding:10px 10px;border-top:2.5px solid var(--bm-blue);min-width:0;overflow:hidden}
+.mc-label{font-size:8px;font-weight:700;letter-spacing:.07em;color:var(--text3);margin-bottom:4px;display:flex;align-items:center;gap:4px;text-transform:uppercase;white-space:nowrap;overflow:hidden}
 .mc-label i{font-size:11px}
-.mc-val{font-size:22px;font-weight:700;color:var(--bm-blue);line-height:1;margin-bottom:3px}
-.mc-sub{font-size:9px;color:var(--text3);white-space:normal;line-height:1.3}
+.mc-val{font-size:26px;font-weight:700;color:var(--bm-blue);line-height:1;margin-bottom:3px}
+.mc-sub{font-size:8px;color:#b8c8d4;white-space:normal;line-height:1.3}
 .mc.teal{border-top-color:var(--bm-teal)}.mc.teal .mc-val{color:var(--bm-teal)}
 .mc.green{border-top-color:#27a85a}.mc.green .mc-val{color:#27a85a}
 .mc.amber{border-top-color:#d97706}.mc.amber .mc-val{color:#d97706}
@@ -127,6 +128,10 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
         <div class="chart-title"><i class="ti ti-trending-up" aria-hidden="true"></i> Evolução de contatos por mês</div>
         <div class="chart-wrap"><canvas id="cE"></canvas></div>
       </div>
+      <div class="chart-card">
+        <div class="chart-title"><i class="ti ti-map-pin" aria-hidden="true"></i> Distribuição por estado</div>
+        <div class="chart-wrap" style="height:220px"><canvas id="cEstados"></canvas></div>
+      </div>
 
     <!-- Taxa de resposta + Tempo médio + Mapa -->
     <div class="charts-grid">
@@ -138,12 +143,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
         <div class="chart-title"><i class="ti ti-clock" aria-hidden="true"></i> Tempo médio entre contatos</div>
         <div id="tempo-content"></div>
       </div>
-    </div>
-
-    <!-- Distribuição por estado -->
-    <div class="chart-card full" style="margin-bottom:16px">
-      <div class="chart-title"><i class="ti ti-map-pin" aria-hidden="true"></i> Distribuição por estado</div>
-      <div class="chart-wrap" style="height:260px"><canvas id="cEstados"></canvas></div>
     </div>
 
   </div>
@@ -252,20 +251,28 @@ function updateMetrics() {
     {cls:'', icon:'ti-users', label:'Total', val:t, sub:ta+' ativos'},
     {cls:'', icon:'ti-star', label:'Score alto', val:alto, sub:(ta?Math.round(alto/ta*100):0)+'% dos ativos'},
     {cls:'amber', icon:'ti-calendar-event', label:'Reun. agendadas', val:reunAgend, sub:'aguardando realização'},
-    {cls:'green', icon:'ti-calendar-check', label:'Reun. realizadas', val:reunReal, sub:reunReal+' de '+reunAgend+' agendadas'},
+    {cls:'green', icon:'ti-calendar-check', label:'Reun. realizadas', val:reunReal, sub:'total de reuniões realizadas'},
     {cls:'red', icon:'ti-calendar-x', label:'Reun. canceladas', val:reunCanc, sub:'reagendamento pendente'},
     {cls:'green', icon:'ti-file-invoice', label:'Orçamentos', val:orc, sub:orcDireto+' diretos · '+orcPosReun+' pós-reunião'},
     {cls:'purple', icon:'ti-trophy', label:'Convertidos', val:conv, sub:'clientes confirmados'},
     {cls:'red', icon:'ti-ban', label:'Desqualificados', val:desq, sub:'fora do perfil'},
-  ].map(function(m) { return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px" aria-hidden="true"></i> '+m.label+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>'; }).join('');
+  ].map(function(m) {
+    var colors = {
+      '':'var(--bm-blue)', 'teal':'var(--bm-teal)', 'green':'#2A8A60',
+      'amber':'#C9923C', 'red':'#904444', 'purple':'#6055B0', 'gray':'#8aa0b0'
+    };
+    var c = colors[m.cls] || 'var(--bm-blue)';
+    return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px;color:'+c+'" aria-hidden="true"></i> '+m.label+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>';
+  }).join('');
 
   // Funil
-  // Sankey de engajamento
+  // Sankey de engajamento — gradiente Biomelting
   const STATUS_RESP_ALL = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   const nCadastrados = filtrado.length;
   const nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
   const nResponderam = ativos.filter(function(d){ return STATUS_RESP_ALL.includes(d.status||''); }).length;
   const nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
+  const nReuniaoFut = ativos.filter(function(d){ return d.status === 'Reunião agendada'; }).length;
   const nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
   const nReuniaoCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
   const nOrcamento = orcDireto + orcPosReun;
@@ -273,101 +280,102 @@ function updateMetrics() {
   const nSemRetorno = Math.max(0, nContatados - nResponderam);
   const nNaoContat = Math.max(0, nCadastrados - nContatados - desq);
 
-  function sankeyPct(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
+  function sp(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
+  function sh(n, maxN, maxH) { return Math.max(Math.round(Math.sqrt(n/maxN)*maxH), 5); }
 
-  // Use sqrt scale to soften extremes
-  function sqrtH(n, maxN, maxH) {
-    return Math.max(Math.round(Math.sqrt(n / maxN) * maxH), 6);
+  var W=900, H=300, nW=4;
+  var col=[30,234,374,504,664];
+  var maxH=170, maxN=nCadastrados;
+
+  var hCad=sh(nCadastrados,maxN,maxH), hCont=sh(nContatados,maxN,maxH);
+  var hResp=sh(nResponderam,maxN,maxH), hReu=sh(nReuniaoAgend,maxN,maxH);
+  var hReal=sh(nReuniaoReal,maxN,maxH), hCanc=sh(nReuniaoCanc,maxN,maxH), hFut=sh(nReuniaoFut,maxN,maxH);
+  var hOrc=sh(nOrcamento,maxN,maxH), hSem=sh(nSemInteresse,maxN,maxH);
+  var hSemRet=nSemRetorno>0?Math.max(Math.round(Math.cbrt(nSemRetorno/maxN)*maxH*0.4),4):0;
+  var hNaoCont=nNaoContat>0?Math.max(Math.round(Math.cbrt(nNaoContat/maxN)*maxH*0.4),4):0;
+
+  var cy=H/2;
+  var yCad=cy-hCad/2, yCont=cy-hCont/2, yResp=cy-hResp/2;
+  var totRes=hReu+hOrc+hSem+(nReuniaoAgend>0?8:0)+(nOrcamento>0?8:0);
+  var yReu=cy-totRes/2, yOrc=yReu+hReu+8, ySem=yOrc+hOrc+8;
+  var yNaoCont=yCad+hCad+10, ySemRet=yCont+hCont+10;
+  var totReun=hReal+(nReuniaoFut>0?hFut+22:0);
+  var yReal=cy-totReun/2, yFut=yReal+hReal+22, yCanc=yFut+(nReuniaoFut>0?hFut+22:0);
+
+  function wave(x1,y1,h1,x2,y2,h2,fill,op){
+    op=op||0.5;
+    var mx=(x1+x2)/2;
+    return '<path d="M'+(x1+nW)+' '+y1+' C'+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2
+      +' L'+x2+' '+(y2+h2)+' C'+mx+' '+(y2+h2)+','+mx+' '+(y1+h1)+','+(x1+nW)+' '+(y1+h1)+' Z"'
+      +' fill="'+fill+'" opacity="'+op+'"/>';
+  }
+  function node(x,y,h,color,op){
+    op=op||1;
+    return '<rect x="'+x+'" y="'+y+'" width="'+nW+'" height="'+h+'" rx="2" fill="'+color+'" opacity="'+op+'"/>';
+  }
+  function lbl(x,y,val,color,label,sub){
+    return '<text x="'+x+'" y="'+y+'" font-size="18" font-weight="700" fill="'+color+'" font-family="Segoe UI,sans-serif">'+val+'</text>'
+      +'<text x="'+x+'" y="'+(y+16)+'" font-size="8" font-weight="600" fill="'+color+'" font-family="Segoe UI,sans-serif" letter-spacing=".08em">'+label+'</text>'
+      +(sub?'<text x="'+x+'" y="'+(y+28)+'" font-size="8" fill="#9AABB8" font-family="Segoe UI,sans-serif">'+sub+'</text>':'');
+  }
+  function slbl(x,y,val,color,label,op){
+    op=op||1;
+    return '<text x="'+x+'" y="'+y+'" font-size="15" font-weight="700" fill="'+color+'" font-family="Segoe UI,sans-serif" opacity="'+op+'">'+val+'</text>'
+      +'<text x="'+x+'" y="'+(y+13)+'" font-size="8" font-weight="600" fill="'+color+'" font-family="Segoe UI,sans-serif" letter-spacing=".06em" opacity="'+op+'">'+label+'</text>';
+  }
+  function glbl(x,y,txt){
+    return '<text x="'+x+'" y="'+y+'" font-size="8" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+txt+'</text>';
   }
 
-  var W = 960, H = 360, nodeW = 12;
-  var col = [30, 220, 420, 620, 800];
-  var maxH = 240;
-  var maxN = nCadastrados;
+  var defs='<defs>'
+    +'<linearGradient id="sg01" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#0D4E8A" stop-opacity=".55"/><stop offset="100%" stop-color="#1A73C8" stop-opacity=".55"/></linearGradient>'
+    +'<linearGradient id="sg12" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1A73C8" stop-opacity=".5"/><stop offset="100%" stop-color="#2EC4A5" stop-opacity=".5"/></linearGradient>'
+    +'<linearGradient id="sg2a" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2EC4A5" stop-opacity=".45"/><stop offset="100%" stop-color="#1A8A78" stop-opacity=".45"/></linearGradient>'
+    +'<linearGradient id="sg2b" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2EC4A5" stop-opacity=".35"/><stop offset="100%" stop-color="#6055B0" stop-opacity=".35"/></linearGradient>'
+    +'<linearGradient id="sg2c" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#B8C8D4" stop-opacity=".2"/><stop offset="100%" stop-color="#A06060" stop-opacity=".2"/></linearGradient>'
+    +'<linearGradient id="sg3b" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#C9923C" stop-opacity=".45"/><stop offset="100%" stop-color="#B07A20" stop-opacity=".45"/></linearGradient>'
+    +'<linearGradient id="sg3a" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1A8A78" stop-opacity=".5"/><stop offset="100%" stop-color="#0B6E4F" stop-opacity=".5"/></linearGradient>'
+    +'<linearGradient id="sgneg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8AAABB" stop-opacity=".32"/><stop offset="100%" stop-color="#8AAABB" stop-opacity=".32"/></linearGradient>'
+    +'</defs>';
 
-  var hCad  = sqrtH(nCadastrados, maxN, maxH);
-  var hCont = sqrtH(nContatados,  maxN, maxH);
-  var hResp = sqrtH(nResponderam, maxN, maxH);
-  var hReu  = sqrtH(nReuniaoAgend, maxN, maxH);
-  var hReuReal = sqrtH(nReuniaoReal, maxN, maxH);
-  var hReuCanc = sqrtH(nReuniaoCanc, maxN, maxH);
-  var hOrc  = sqrtH(nOrcamento,   maxN, maxH);
-  var hSem  = sqrtH(nSemInteresse,maxN, maxH);
-  // sem retorno and nao contatado: even smaller (cube root)
-  var hSemRet  = nSemRetorno  > 0 ? Math.max(Math.round(Math.cbrt(nSemRetorno /maxN)*maxH*0.5), 4) : 0;
-  var hNaoCont = nNaoContat   > 0 ? Math.max(Math.round(Math.cbrt(nNaoContat  /maxN)*maxH*0.5), 4) : 0;
+  var tx=10;
+  var parts=['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
-  // Y positions — center main nodes
-  var centerY = H / 2;
-  var yCad  = centerY - hCad/2;
-  var yCont = centerY - hCont/2;
-  var yResp = centerY - hResp/2;
-
-  // Results: stack from center
-  var totalResults = hReu + hOrc + hSem + (nReuniaoAgend>0?8:0) + (nOrcamento>0?8:0);
-  var yReu  = centerY - totalResults/2;
-  var yReuReal = centerY - (hReuReal + (nReuniaoCanc>0?hReuCanc+8:0))/2;
-  var yReuCanc = yReuReal + hReuReal + 8;
-  var yOrc  = yReu + hReu + 8;
-  var ySem  = yOrc + hOrc + 8;
-
-  // Gray nodes below
-  var yNaoCont = yCad  + hCad  + 16;
-  var ySemRet  = yCont + hCont + 16;
-
-  function mkFlow(x1,y1,h1,x2,y2,h2,color,alpha) {
-    alpha = alpha || 0.55;
-    var mx = (x1+x2)/2;
-    return '<path d="M'+(x1+nodeW)+' '+y1+' C'+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2
-      +' L'+x2+' '+(y2+h2)+' C'+mx+' '+(y2+h2)+','+mx+' '+(y1+h1)+','+(x1+nodeW)+' '+(y1+h1)+' Z"'
-      +' fill="'+color+'" opacity="'+alpha+'"/>';
-  }
-
-  function mkNode(x,y,h,color,label,val,pctTxt) {
-    var tx = x + nodeW + 10;
-    var midY = y + h/2;
-    var labelTxt = label + (pctTxt ? ' · ' + pctTxt : '');
-    return '<rect x="'+x+'" y="'+y+'" width="'+nodeW+'" height="'+h+'" rx="4" fill="'+color+'"/>'
-      +'<text x="'+tx+'" y="'+(midY-7)+'" font-size="15" font-weight="700" fill="#1a2a3a" font-family="Segoe UI,sans-serif">'+val+'</text>'
-      +'<text x="'+tx+'" y="'+(midY+11)+'" font-size="11" font-weight="500" fill="'+color+'" font-family="Segoe UI,sans-serif">'+labelTxt+'</text>';
-  }
-
-  function mkGrayLabel(x,y,h,txt) {
-    return '<text x="'+(x+nodeW+8)+'" y="'+(y+h/2+5)+'" font-size="11" font-weight="500" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+txt+'</text>';
-  }
-
-  var parts = ['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">'];
-
-  // Main flows
-  parts.push(mkFlow(col[0],yCad,hCad, col[1],yCont,hCont, '#7BB8E0', 0.9));
-  parts.push(mkFlow(col[1],yCont,hCont, col[2],yResp,hResp, '#7DCECE', 0.9));
-  if(nReuniaoAgend>0) parts.push(mkFlow(col[2],yResp,hReu, col[3],yReu,hReu, '#D4C090', 0.9));
-  if(nOrcamento>0)    parts.push(mkFlow(col[2],yResp+hReu,hOrc, col[3],yOrc,hOrc, '#B8AEE0', 0.9));
-  if(nSemInteresse>0) parts.push(mkFlow(col[2],yResp+hReu+hOrc,hSem, col[3],ySem,hSem, '#E0AAAA', 0.55));
-  // Reunião → realizada / cancelada
-  if(nReuniaoReal>0) parts.push(mkFlow(col[3],yReu,hReuReal, col[4],yReuReal,hReuReal, '#88C8A8', 0.9));
-  if(nReuniaoCanc>0) parts.push(mkFlow(col[3],yReu+hReuReal,hReuCanc, col[4],yReuCanc,hReuCanc, '#E0AAAA', 0.55));
-
-  // Gray flows (discrete)
-  if(nNaoContat>0)  parts.push(mkFlow(col[0],yCad+hCad+4,hNaoCont, col[1],ySemRet+hSemRet+4,hNaoCont, '#8899A8', 0.25));
-  if(nSemRetorno>0) parts.push(mkFlow(col[1],yCont+hCont+4,hSemRet, col[2],yResp+hResp+4,hSemRet, '#8899A8', 0.2));
+  // Waves
+  parts.push(wave(col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)'));
+  if(nNaoContat>0) parts.push(wave(col[0],yCad+hCad+6,hNaoCont,col[1],ySemRet+hSemRet+6,hNaoCont,'url(#sgneg)'));
+  parts.push(wave(col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)'));
+  if(nSemRetorno>0) parts.push(wave(col[1],yCont+hCont+6,hSemRet,col[2],yResp+hResp+6,hSemRet,'url(#sgneg)'));
+  if(nReuniaoAgend>0) parts.push(wave(col[2],yResp,hReu,col[3],yReu,hReu,'url(#sg2a)'));
+  if(nOrcamento>0)    parts.push(wave(col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
+  if(nSemInteresse>0) parts.push(wave(col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
+  if(nReuniaoReal>0)  parts.push(wave(col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
+  if(nReuniaoFut>0)   parts.push(wave(col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
 
   // Nodes
-  parts.push(mkNode(col[0],yCad,hCad,'#1A73C8','cadastrados',nCadastrados,''));
-  parts.push(mkNode(col[1],yCont,hCont,'#8B6914','contatados',nContatados,sankeyPct(nContatados,nCadastrados)+'%'));
-  parts.push(mkNode(col[2],yResp,hResp,'#2D9EAA','responderam',nResponderam,sankeyPct(nResponderam,nContatados)+'%'));
-  if(nReuniaoAgend>0) parts.push(mkNode(col[3],yReu,hReu,'#8B6914','reuniões',nReuniaoAgend,sankeyPct(nReuniaoAgend,nResponderam)+'%'));
-  if(nOrcamento>0)    parts.push(mkNode(col[3],yOrc,hOrc,'#5448A8','orçamentos',nOrcamento,sankeyPct(nOrcamento,nResponderam)+'%'));
-  if(nSemInteresse>0) parts.push(mkNode(col[3],ySem,hSem,'#904444','s/ interesse',nSemInteresse,sankeyPct(nSemInteresse,nResponderam)+'%'));
-  if(nReuniaoReal>0) parts.push(mkNode(col[4],yReuReal,hReuReal,'#0B6E4F','realizadas',nReuniaoReal,sankeyPct(nReuniaoReal,nReuniaoAgend)+'%'));
-  if(nReuniaoCanc>0) parts.push(mkNode(col[4],yReuCanc,hReuCanc,'#904444','canceladas',nReuniaoCanc,sankeyPct(nReuniaoCanc,nReuniaoAgend)+'%'));
+  parts.push(node(col[0],yCad,hCad,'#0D4E8A'));
+  parts.push(node(col[1],yCont,hCont,'#1A73C8'));
+  parts.push(node(col[2],yResp,hResp,'#2EC4A5'));
+  if(nReuniaoAgend>0) parts.push(node(col[3],yReu,hReu,'#1A8A78'));
+  if(nOrcamento>0)    parts.push(node(col[3],yOrc,hOrc,'#6055B0'));
+  if(nSemInteresse>0) parts.push(node(col[3],ySem,hSem,'#A06060',0.5));
+  if(nReuniaoReal>0)  parts.push(node(col[4],yReal,hReal,'#0B6E4F'));
+  if(nReuniaoFut>0)   parts.push(node(col[4],yFut,hFut,'#C9923C'));
 
-  // Gray labels
-  if(nNaoContat>0)  parts.push(mkGrayLabel(col[1],ySemRet+hSemRet+4,hNaoCont,nNaoContat+' s/ contato'));
-  if(nSemRetorno>0) parts.push(mkGrayLabel(col[2],yResp+hResp+4,hSemRet,nSemRetorno+' s/ retorno'));
+  // Labels
+  parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-14, nCadastrados, '#0D4E8A', 'CADASTRADOS', ''));
+  parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-14, nContatados, '#1A73C8', 'CONTATADOS', sp(nContatados,nCadastrados)+'% dos cadastrados'));
+  parts.push(lbl(col[2]+nW+tx, yResp+hResp/2-14, nResponderam, '#2EC4A5', 'RESPONDERAM', sp(nResponderam,nContatados)+'% dos contatados'));
+  if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-14, nReuniaoAgend, '#1A8A78', 'REUNIÕES', sp(nReuniaoAgend,nResponderam)+'% dos resp.'));
+  if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-14, nOrcamento, '#6055B0', 'ORÇAMENTOS', sp(nOrcamento,nResponderam)+'% dos resp.'));
+  if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
+  if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
+  if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
+  if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
+  if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
 
   parts.push('</svg>');
-  document.getElementById('sankey-wrap').innerHTML = parts.join('');
+  document.getElementById('sankey-wrap').innerHTML=parts.join('');
 
 
   // Taxa de resposta
@@ -429,7 +437,11 @@ function updateMetrics() {
 }
 
 function updateCharts() {
-  // Evolução temporal - contatos por mês (usando c1_raw como data do 1º contato)
+  // Shared refined style
+  var refinedTicks = { color: '#8aa0b0', font: { family: 'Segoe UI, Arial, sans-serif', size: 10 } };
+  var refinedGrid = { color: 'rgba(13,78,138,0.06)', drawBorder: false };
+
+  // Evolução temporal
   const meses = {};
   ALL.forEach(d => {
     const dt = parseDataDash(d.c1_raw);
@@ -448,14 +460,53 @@ function updateCharts() {
       datasets: [{
         label: 'Novos contatos',
         data: values,
-        backgroundColor: 'rgba(26,115,200,0.7)',
-        borderRadius: 4,
+        backgroundColor: function(ctx) {
+          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 220);
+          g.addColorStop(0, 'rgba(26,115,200,0.78)');
+          g.addColorStop(1, 'rgba(46,196,165,0.55)');
+          return g;
+        },
+        borderRadius: 5,
+        borderSkipped: false,
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+      scales: {
+        y: { beginAtZero: true, grid: refinedGrid, ticks: refinedTicks, border: { display: false } },
+        x: { grid: { display: false }, ticks: refinedTicks, border: { display: false } }
+      }
+    }
+  });
+
+  // Distribuição por estado
+  const byEstado = {};
+  filtrado.forEach(d => { if (d.estado) byEstado[d.estado] = (byEstado[d.estado]||0)+1; });
+  const estadosSorted = Object.entries(byEstado).sort((a,b) => b[1]-a[1]);
+
+  if (cEstados) { try { cEstados.destroy(); } catch(e) {} cEstados = null; }
+  cEstados = new Chart(document.getElementById('cEstados'), {
+    type: 'bar',
+    data: {
+      labels: estadosSorted.map(([e]) => e),
+      datasets: [{
+        data: estadosSorted.map(([,n]) => n),
+        backgroundColor: estadosSorted.map(function(_,i) {
+          var t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0;
+          return gradC(t, 0.78);
+        }),
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: refinedGrid, ticks: refinedTicks, border: { display: false } },
+        x: { grid: { display: false }, ticks: refinedTicks, border: { display: false } }
+      }
     }
   });
 }
@@ -507,7 +558,7 @@ carregarEIniciar();
 </script>
 
 <script>
-document.getElementById('nav-dashboard').style.cssText += ';background:#E6F1FB;border-color:#B5D4F4;color:#0C447C;font-weight:500';
+document.getElementById('nav-dashboard').style.cssText += ';background:linear-gradient(135deg,rgba(13,78,138,0.12),rgba(46,196,165,0.12));color:#0D4E8A;font-weight:700;box-shadow:inset 0 0 0 1px rgba(13,78,138,0.15);border-radius:6px';
 </script>
 </body>
 </html>
