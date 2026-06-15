@@ -149,8 +149,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
       <button class="filter-chip active" onclick="setFiltro(0,this)">Todo o período</button>
     </div>
 
-    <!-- Alerta: leads sem contato -->
-    <div id="sem-contato-alert" style="display:none"></div>
 
     <!-- Métricas com delta -->
     <div class="metrics-row" id="mbox"></div>
@@ -338,24 +336,6 @@ function updateMetrics() {
     return '<span class="mc-delta down">↓ '+Math.abs(diff)+'</span>';
   }
 
-  // ── Alerta: leads sem 1º contato ──
-  var semContato = filtrado.filter(function(d){ return !d.desqualificado && (!d.c1_raw || !d.c1_raw.trim()); }).length;
-  var altosemContato = filtrado.filter(function(d){ return !d.desqualificado && d.score==='ALTO' && (!d.c1_raw || !d.c1_raw.trim()); }).length;
-  var alertEl = document.getElementById('sem-contato-alert');
-  if (semContato > 0) {
-    alertEl.style.display = '';
-    alertEl.innerHTML = '<div class="sem-contato-box">'
-      + '<div class="sem-contato-num">'+semContato+'</div>'
-      + '<div class="sem-contato-info">'
-      + '<div class="sem-contato-titulo">'+semContato+' '+( semContato===1 ? 'lead cadastrado ainda sem 1º contato' : 'leads cadastrados ainda sem 1º contato' )+'</div>'
-      + '<div class="sem-contato-sub">'+(altosemContato > 0 ? '⚠️ '+altosemContato+' com score ALTO — prioridade máxima.<br>' : '')
-      + 'Acesse o BioLead para iniciar o contato.</div>'
-      + '</div>'
-      + '<a href="/Propostas/BioLead_v5.html" class="sem-contato-btn">→ Abrir BioLead</a>'
-      + '</div>';
-  } else {
-    alertEl.style.display = 'none';
-  }
 
   var reunTotal = reunAgend + reunReal + reunCanc;
   var reunSub = reunReal+' realizadas · '+reunAgend+' agendadas'+(reunCanc?' · '+reunCanc+' canceladas':'');
