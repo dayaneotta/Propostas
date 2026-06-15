@@ -364,6 +364,7 @@ function updateMetrics() {
   // ── Variáveis do funil — declaradas aqui para KPIs e Sankey ──
   var nCadastrados = ta;
   var nContatados = ativos.filter(function(d){ return contatoValido(d.c1_raw); }).length;
+  window._dbgAtivos = ativos; // DEBUG — remover após verificar
 
   // Cadência: leads com 2+ contatos registrados — mesma lógica de validação do BioLead
   var com2contatos = ativos.filter(function(d){ return contatoValido(d.c1_raw) && contatoValido(d.c2_raw); }).length;
