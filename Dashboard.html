@@ -388,12 +388,13 @@ function updateMetrics() {
   parts.push('</svg>');
   document.getElementById('sankey-wrap').innerHTML=parts.join('');
 
-  // Tooltip on hover
-  var tip = document.getElementById('sankey-tip');
-  var tipPct = document.getElementById('sankey-tip-pct');
-  var tipSub = document.getElementById('sankey-tip-sub');
-  var svgEl = document.querySelector('#sankey-wrap svg');
-  if (svgEl) {
+  // Setup tooltip after SVG is rendered
+  setTimeout(function() {
+    var tip = document.getElementById('sankey-tip');
+    var tipPct = document.getElementById('sankey-tip-pct');
+    var tipSub = document.getElementById('sankey-tip-sub');
+    var svgEl = document.querySelector('#sankey-wrap svg');
+    if (!svgEl || !tip) return;
     var flows = [
       {id:'sf0', pct:sp(nContatados,nCadastrados)+'%', sub:nContatados+' de '+nCadastrados+' cadastrados contatados'},
       {id:'sf1', pct:sp(nResponderam,nContatados)+'%', sub:nResponderam+' de '+nContatados+' contatados responderam'},
@@ -428,7 +429,7 @@ function updateMetrics() {
         el.style.filter = '';
       });
     });
-  }
+  }, 200);
 
   if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
   if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
