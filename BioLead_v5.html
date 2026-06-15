@@ -717,8 +717,12 @@ function calcularLembretes() {
   return lembretes;
 }
 
+function semPrimeiroContato() {
+  return dados.filter(p => !p.desqualificado && p.status !== 'Desqualificado' && (!p.c1_raw || !p.c1_raw.trim()));
+}
+
 function renderBadge() {
-  const n = calcularLembretes().length;
+  const n = calcularLembretes().length + semPrimeiroContato().length;
   const badge = document.getElementById('badge-lembretes');
   if (n > 0) { badge.style.display='inline'; badge.textContent=n; }
   else badge.style.display='none';
@@ -726,8 +730,27 @@ function renderBadge() {
 
 function renderLembretes() {
   const lembretes = calcularLembretes();
+  const semContato = semPrimeiroContato();
   const painel = document.getElementById('painel-lembretes');
-  if (!lembretes.length) {
+
+  // ── Bloco: sem 1º contato ──
+  let htmlSemContato = '';
+  if (semContato.length) {
+    const altosSem = semContato.filter(p => p.score === 'ALTO');
+    htmlSemContato = `<div class="lembrete-card" style="border-color:#dc2626;background:#fff5f5;margin-bottom:12px">
+      <h3 style="color:#7f1d1d">🔴 Sem 1º contato (${semContato.length})</h3>
+      ${altosSem.length ? `<div style="font-size:11px;color:#991b1b;margin-bottom:8px;padding:4px 8px;background:#fee2e2;border-radius:4px">⚠️ ${altosSem.length} com score ALTO — prioridade máxima</div>` : ''}
+      ${semContato.map(p => `<div class="lembrete-item">
+        <div style="flex:1">
+          <div><strong><a href="#" onclick="abrirModal('${p.id}');return false;" style="color:#dc2626;text-decoration:underline;text-underline-offset:2px">${p.nome}</a></strong>${p.score === 'ALTO' ? ' <span style="font-size:9px;font-weight:700;background:#fee2e2;color:#dc2626;padding:1px 5px;border-radius:8px">ALTO</span>' : ''}</div>
+          ${p.inst ? `<div style="font-size:11px;color:var(--text3)">${p.inst}</div>` : ''}
+        </div>
+        <button class="btn" style="padding:2px 8px;font-size:11px;margin-left:8px" onclick="abrirModal('${p.id}')">✏️ Contatar</button>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  if (!lembretes.length && !semContato.length) {
     painel.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--text3)">✅ Nenhum lembrete pendente — tudo em dia!</div>';
     return;
   }
@@ -783,7 +806,7 @@ function renderLembretes() {
   if (proximos.length) {
     html += `<div class="lembrete-card hoje"><h3>🟡 Para hoje ou amanhã (${proximos.length})</h3>${proximos.map((l,i)=>itemLembrete(l,proximos[i-1])).join('')}</div>`;
   }
-  painel.innerHTML = html;
+  painel.innerHTML = htmlSemContato + html;
 }
 
 // ── Edição ────────────────────────────────────────────────────────────────────
