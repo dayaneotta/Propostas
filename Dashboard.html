@@ -119,7 +119,13 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
     <!-- Fluxo de engajamento full width -->
     <div class="chart-card full" style="margin-bottom:16px">
       <div class="chart-title"><i class="ti ti-git-merge" aria-hidden="true"></i> Fluxo de engajamento</div>
+      <div style="position:relative">
       <div id="sankey-wrap" style="width:100%;overflow:hidden"></div>
+      <div id="sankey-tip" style="display:none;position:absolute;background:#0D4E8A;color:#fff;font-size:11px;padding:8px 14px;border-radius:8px;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(13,78,138,.3);z-index:100;font-family:Segoe UI,sans-serif">
+        <div id="sankey-tip-pct" style="font-size:18px;font-weight:700;color:#2EC4A5;line-height:1"></div>
+        <div id="sankey-tip-sub" style="font-size:9px;color:rgba(255,255,255,0.7);margin-top:3px"></div>
+      </div>
+    </div>
     </div>
 
     <!-- Evolução + Taxa + Tempo -->
@@ -265,7 +271,6 @@ function updateMetrics() {
     return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px;color:'+c+'" aria-hidden="true"></i> '+m.label+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>';
   }).join('');
 
-  // Funil
   // Sankey de engajamento — gradiente Biomelting
   const STATUS_RESP_ALL = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   const nCadastrados = filtrado.length;
@@ -302,6 +307,12 @@ function updateMetrics() {
   var totReun=hReal+(nReuniaoFut>0?hFut+22:0);
   var yReal=cy-totReun/2, yFut=yReal+hReal+22, yCanc=yFut+(nReuniaoFut>0?hFut+22:0);
 
+  function waveId(id,x1,y1,h1,x2,y2,h2,fill,op){
+    op=op||0.5;var mx=(x1+x2)/2;
+    return '<path id="'+id+'" d="M'+(x1+nW)+' '+y1+' C'+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2
+      +' L'+x2+' '+(y2+h2)+' C'+mx+' '+(y2+h2)+','+mx+' '+(y1+h1)+','+(x1+nW)+' '+(y1+h1)+' Z"'
+      +' fill="'+fill+'" opacity="'+op+'" style="transition:opacity .15s,filter .15s"/>';
+  }
   function wave(x1,y1,h1,x2,y2,h2,fill,op){
     op=op||0.5;
     var mx=(x1+x2)/2;
@@ -342,15 +353,15 @@ function updateMetrics() {
   var parts=['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
   // Waves
-  parts.push(wave(col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)'));
-  if(nNaoContat>0) parts.push(wave(col[0],yCad+hCad+6,hNaoCont,col[1],ySemRet+hSemRet+6,hNaoCont,'url(#sgneg)'));
-  parts.push(wave(col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)'));
-  if(nSemRetorno>0) parts.push(wave(col[1],yCont+hCont+6,hSemRet,col[2],yResp+hResp+6,hSemRet,'url(#sgneg)'));
-  if(nReuniaoAgend>0) parts.push(wave(col[2],yResp,hReu,col[3],yReu,hReu,'url(#sg2a)'));
-  if(nOrcamento>0)    parts.push(wave(col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
-  if(nSemInteresse>0) parts.push(wave(col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
-  if(nReuniaoReal>0)  parts.push(wave(col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
-  if(nReuniaoFut>0)   parts.push(wave(col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
+  parts.push(waveId('sf0',col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)'));
+  if(nNaoContat>0) parts.push(wave(col[0],yCad+hCad+6,hNaoCont,col[1],ySemRet+hSemRet+6,hNaoCont,'url(#sgneg)',0.5));
+  parts.push(waveId('sf1',col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)'));
+  if(nSemRetorno>0) parts.push(wave(col[1],yCont+hCont+6,hSemRet,col[2],yResp+hResp+6,hSemRet,'url(#sgneg)',0.45));
+  if(nReuniaoAgend>0) parts.push(waveId('sf2',col[2],yResp,hReu,col[3],yReu,hReu,'url(#sg2a)'));
+  if(nOrcamento>0)    parts.push(waveId('sf3',col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
+  if(nSemInteresse>0) parts.push(waveId('sf4',col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
+  if(nReuniaoReal>0)  parts.push(waveId('sf5',col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
+  if(nReuniaoFut>0)   parts.push(waveId('sf6',col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
 
   // Nodes
   parts.push(node(col[0],yCad,hCad,'#0D4E8A'));
@@ -369,6 +380,56 @@ function updateMetrics() {
   if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-14, nReuniaoAgend, '#1A8A78', 'REUNIÕES', sp(nReuniaoAgend,nResponderam)+'% dos resp.'));
   if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-14, nOrcamento, '#6055B0', 'ORÇAMENTOS', sp(nOrcamento,nResponderam)+'% dos resp.'));
   if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
+  if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
+  if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
+  if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
+  if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
+
+  parts.push('</svg>');
+  document.getElementById('sankey-wrap').innerHTML=parts.join('');
+
+  // Tooltip on hover
+  var tip = document.getElementById('sankey-tip');
+  var tipPct = document.getElementById('sankey-tip-pct');
+  var tipSub = document.getElementById('sankey-tip-sub');
+  var svgEl = document.querySelector('#sankey-wrap svg');
+  if (svgEl) {
+    var flows = [
+      {id:'sf0', pct:sp(nContatados,nCadastrados)+'%', sub:nContatados+' de '+nCadastrados+' cadastrados contatados'},
+      {id:'sf1', pct:sp(nResponderam,nContatados)+'%', sub:nResponderam+' de '+nContatados+' contatados responderam'},
+      {id:'sf2', pct:sp(nReuniaoAgend,nResponderam)+'%', sub:nReuniaoAgend+' de '+nResponderam+' responderam agendaram reunião'},
+      {id:'sf3', pct:sp(nOrcamento,nResponderam)+'%', sub:nOrcamento+' de '+nResponderam+' responderam pediram orçamento'},
+      {id:'sf4', pct:sp(nSemInteresse,nResponderam)+'%', sub:nSemInteresse+' de '+nResponderam+' responderam sem interesse'},
+      {id:'sf5', pct:sp(nReuniaoReal,nReuniaoAgend)+'%', sub:nReuniaoReal+' de '+nReuniaoAgend+' reuniões realizadas'},
+      {id:'sf6', pct:'a realizar', sub:nReuniaoFut+' reuniões agendadas para o futuro'},
+    ];
+    flows.forEach(function(f) {
+      var el = svgEl.getElementById(f.id);
+      if (!el) return;
+      el.style.cursor = 'pointer';
+      el.addEventListener('mouseenter', function(e) {
+        tipPct.textContent = f.pct;
+        tipSub.textContent = f.sub;
+        tip.style.display = 'block';
+        el.style.opacity = '0.85';
+        el.style.filter = 'brightness(1.1)';
+      });
+      el.addEventListener('mousemove', function(e) {
+        var wrap = document.getElementById('sankey-wrap').parentElement;
+        var rect = wrap.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        tip.style.left = (x - tip.offsetWidth/2) + 'px';
+        tip.style.top = (y - tip.offsetHeight - 12) + 'px';
+      });
+      el.addEventListener('mouseleave', function() {
+        tip.style.display = 'none';
+        el.style.opacity = '';
+        el.style.filter = '';
+      });
+    });
+  }
+
   if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
   if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
   if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
