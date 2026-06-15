@@ -272,6 +272,7 @@ function updateMetrics() {
   const nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
   const nResponderam = ativos.filter(function(d){ return STATUS_RESP_ALL.includes(d.status||''); }).length;
   const nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
+  const nReuniaoFut = ativos.filter(function(d){ return d.status === 'Reunião agendada'; }).length;
   const nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
   const nReuniaoCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
   const nOrcamento = orcDireto + orcPosReun;
@@ -288,7 +289,7 @@ function updateMetrics() {
 
   var hCad=sh(nCadastrados,maxN,maxH), hCont=sh(nContatados,maxN,maxH);
   var hResp=sh(nResponderam,maxN,maxH), hReu=sh(nReuniaoAgend,maxN,maxH);
-  var hReal=sh(nReuniaoReal,maxN,maxH), hCanc=sh(nReuniaoCanc,maxN,maxH);
+  var hReal=sh(nReuniaoReal,maxN,maxH), hCanc=sh(nReuniaoCanc,maxN,maxH), hFut=sh(nReuniaoFut,maxN,maxH);
   var hOrc=sh(nOrcamento,maxN,maxH), hSem=sh(nSemInteresse,maxN,maxH);
   var hSemRet=nSemRetorno>0?Math.max(Math.round(Math.cbrt(nSemRetorno/maxN)*maxH*0.4),4):0;
   var hNaoCont=nNaoContat>0?Math.max(Math.round(Math.cbrt(nNaoContat/maxN)*maxH*0.4),4):0;
@@ -298,7 +299,8 @@ function updateMetrics() {
   var totRes=hReu+hOrc+hSem+(nReuniaoAgend>0?8:0)+(nOrcamento>0?8:0);
   var yReu=cy-totRes/2, yOrc=yReu+hReu+8, ySem=yOrc+hOrc+8;
   var yNaoCont=yCad+hCad+10, ySemRet=yCont+hCont+10;
-  var yReal=cy-(hReal+(nReuniaoCanc>0?hCanc+8:0))/2, yCanc=yReal+hReal+8;
+  var totReun=hReal+(nReuniaoFut>0?hFut+8:0)+(nReuniaoCanc>0?hCanc+8:0);
+  var yReal=cy-totReun/2, yFut=yReal+hReal+8, yCanc=yFut+(nReuniaoFut>0?hFut+8:0);
 
   function wave(x1,y1,h1,x2,y2,h2,fill,op){
     op=op||0.5;
@@ -322,7 +324,7 @@ function updateMetrics() {
       +'<text x="'+x+'" y="'+(y+13)+'" font-size="8" font-weight="600" fill="'+color+'" font-family="Segoe UI,sans-serif" letter-spacing=".06em" opacity="'+op+'">'+label+'</text>';
   }
   function glbl(x,y,txt){
-    return '<text x="'+x+'" y="'+y+'" font-size="8" fill="#B8C8D4" font-family="Segoe UI,sans-serif">'+txt+'</text>';
+    return '<text x="'+x+'" y="'+y+'" font-size="8" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+txt+'</text>';
   }
 
   var defs='<defs>'
@@ -331,8 +333,9 @@ function updateMetrics() {
     +'<linearGradient id="sg2a" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2EC4A5" stop-opacity=".45"/><stop offset="100%" stop-color="#1A8A78" stop-opacity=".45"/></linearGradient>'
     +'<linearGradient id="sg2b" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2EC4A5" stop-opacity=".35"/><stop offset="100%" stop-color="#6055B0" stop-opacity=".35"/></linearGradient>'
     +'<linearGradient id="sg2c" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#B8C8D4" stop-opacity=".2"/><stop offset="100%" stop-color="#A06060" stop-opacity=".2"/></linearGradient>'
+    +'<linearGradient id="sg3b" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#C9923C" stop-opacity=".45"/><stop offset="100%" stop-color="#B07A20" stop-opacity=".45"/></linearGradient>'
     +'<linearGradient id="sg3a" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1A8A78" stop-opacity=".5"/><stop offset="100%" stop-color="#0B6E4F" stop-opacity=".5"/></linearGradient>'
-    +'<linearGradient id="sgneg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#B8C8D4" stop-opacity=".15"/><stop offset="100%" stop-color="#B8C8D4" stop-opacity=".15"/></linearGradient>'
+    +'<linearGradient id="sgneg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8AAABB" stop-opacity=".32"/><stop offset="100%" stop-color="#8AAABB" stop-opacity=".32"/></linearGradient>'
     +'</defs>';
 
   var tx=10;
@@ -347,7 +350,8 @@ function updateMetrics() {
   if(nOrcamento>0)    parts.push(wave(col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
   if(nSemInteresse>0) parts.push(wave(col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
   if(nReuniaoReal>0)  parts.push(wave(col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
-  if(nReuniaoCanc>0)  parts.push(wave(col[3],yReu+hReal,hCanc,col[4],yCanc,hCanc,'url(#sg2c)'));
+  if(nReuniaoFut>0)   parts.push(wave(col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
+  if(nReuniaoCanc>0)  parts.push(wave(col[3],yReu+hReal+(nReuniaoFut>0?hFut:0),hCanc,col[4],yCanc,hCanc,'url(#sg2c)'));
 
   // Nodes
   parts.push(node(col[0],yCad,hCad,'#0D4E8A'));
@@ -357,6 +361,7 @@ function updateMetrics() {
   if(nOrcamento>0)    parts.push(node(col[3],yOrc,hOrc,'#6055B0'));
   if(nSemInteresse>0) parts.push(node(col[3],ySem,hSem,'#A06060',0.5));
   if(nReuniaoReal>0)  parts.push(node(col[4],yReal,hReal,'#0B6E4F'));
+  if(nReuniaoFut>0)   parts.push(node(col[4],yFut,hFut,'#C9923C'));
   if(nReuniaoCanc>0)  parts.push(node(col[4],yCanc,hCanc,'#A06060',0.5));
 
   // Labels
@@ -367,6 +372,7 @@ function updateMetrics() {
   if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-14, nOrcamento, '#6055B0', 'ORÇAMENTOS', sp(nOrcamento,nResponderam)+'% dos resp.'));
   if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
   if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
+  if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
   if(nReuniaoCanc>0)  parts.push(slbl(col[4]+nW+tx, yCanc+hCanc/2-6, nReuniaoCanc, '#904444', 'CANCELADAS', 0.6));
   if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
   if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
