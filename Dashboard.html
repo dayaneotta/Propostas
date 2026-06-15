@@ -290,6 +290,8 @@ function init() {
   document.getElementById('dash-content').style.display = '';
 }
 
+function contatoValido(v){ return v && v.trim().length > 3 && !/^[-*_]{2,}$/.test(v.trim()); }
+
 function updateMetrics() {
   const t = filtrado.length;
   const desq = filtrado.filter(d => d.desqualificado).length;
@@ -360,7 +362,6 @@ function updateMetrics() {
   var nContatados = ativos.filter(function(d){ return contatoValido(d.c1_raw); }).length;
 
   // Cadência: leads com 2+ contatos registrados — mesma lógica de validação do BioLead
-  function contatoValido(v){ return v && v.trim().length > 3 && !/^[-*_]{2,}$/.test(v.trim()); }
   var com2contatos = ativos.filter(function(d){ return contatoValido(d.c1_raw) && contatoValido(d.c2_raw); }).length;
   var com3contatos = ativos.filter(function(d){ return contatoValido(d.c2_raw) && contatoValido(d.c3_raw); }).length;
   var cadenciaPct = nContatados > 0 ? Math.round(com2contatos/nContatados*100) : 0;
