@@ -307,11 +307,12 @@ function updateMetrics() {
   var totReun=hReal+(nReuniaoFut>0?hFut+22:0);
   var yReal=cy-totReun/2, yFut=yReal+hReal+22, yCanc=yFut+(nReuniaoFut>0?hFut+22:0);
 
-  function waveId(id,x1,y1,h1,x2,y2,h2,fill,op){
+  function waveId(id,x1,y1,h1,x2,y2,h2,fill,op,noPtr){
     op=op||0.5;var mx=(x1+x2)/2;
+    var pe = noPtr ? 'none' : 'all';
     return '<path id="'+id+'" d="M'+(x1+nW)+' '+y1+' C'+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2
       +' L'+x2+' '+(y2+h2)+' C'+mx+' '+(y2+h2)+','+mx+' '+(y1+h1)+','+(x1+nW)+' '+(y1+h1)+' Z"'
-      +' fill="'+fill+'" opacity="'+op+'" style="transition:opacity .15s,filter .15s"/>';
+      +' fill="'+fill+'" opacity="'+op+'" style="transition:opacity .15s,filter .15s;pointer-events:'+pe+'"/>';
   }
   function wave(x1,y1,h1,x2,y2,h2,fill,op){
     op=op||0.5;
@@ -353,15 +354,15 @@ function updateMetrics() {
   var parts=['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
   // Waves
-  parts.push(waveId('sf0',col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)'));
+  parts.push(waveId('sfa',col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)',0.5,true));
   if(nNaoContat>0) parts.push(wave(col[0],yCad+hCad+6,hNaoCont,col[1],ySemRet+hSemRet+6,hNaoCont,'url(#sgneg)',0.5));
-  parts.push(waveId('sf1',col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)'));
+  parts.push(waveId('sfb',col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)',0.5,true));
   if(nSemRetorno>0) parts.push(wave(col[1],yCont+hCont+6,hSemRet,col[2],yResp+hResp+6,hSemRet,'url(#sgneg)',0.45));
-  if(nReuniaoAgend>0) parts.push(waveId('sf2',col[2],yResp,hReu,col[3],yReu,hReu,'url(#sg2a)'));
-  if(nOrcamento>0)    parts.push(waveId('sf3',col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
-  if(nSemInteresse>0) parts.push(waveId('sf4',col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
-  if(nReuniaoReal>0)  parts.push(waveId('sf5',col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
-  if(nReuniaoFut>0)   parts.push(waveId('sf6',col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
+  if(nReuniaoAgend>0) parts.push(waveId('sfc',col[2],yResp,hReu,col[3],yReu,hReu,'url(#sg2a)'));
+  if(nOrcamento>0)    parts.push(waveId('sfd',col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
+  if(nSemInteresse>0) parts.push(waveId('sfe',col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
+  if(nReuniaoReal>0)  parts.push(waveId('sff',col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
+  if(nReuniaoFut>0)   parts.push(waveId('sfg',col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
 
   // Nodes
   parts.push(node(col[0],yCad,hCad,'#0D4E8A'));
@@ -396,13 +397,13 @@ function updateMetrics() {
     var svgEl = document.querySelector('#sankey-wrap svg');
     if (!svgEl || !tip) return;
     var flows = [
-      {id:'sf0', pct:nCadastrados+' cadastrados', sub:nContatados+' contatados · '+sp(nContatados,nCadastrados)+'% do total'},
-      {id:'sf1', pct:nContatados+' contatados', sub:nResponderam+' responderam · '+sp(nResponderam,nContatados)+'% dos contatados'},
-      {id:'sf2', pct:nResponderam+' responderam', sub:nReuniaoAgend+' agendaram reunião · '+sp(nReuniaoAgend,nResponderam)+'% dos que responderam'},
-      {id:'sf3', pct:nResponderam+' responderam', sub:nOrcamento+' pediram orçamento · '+sp(nOrcamento,nResponderam)+'% dos que responderam'},
-      {id:'sf4', pct:nResponderam+' responderam', sub:nSemInteresse+' sem interesse · '+sp(nSemInteresse,nResponderam)+'% dos que responderam'},
-      {id:'sf5', pct:nReuniaoAgend+' reuniões', sub:nReuniaoReal+' realizadas · '+sp(nReuniaoReal,nReuniaoAgend)+'% das agendadas'},
-      {id:'sf6', pct:nReuniaoFut+' agendadas', sub:'a realizar — reuniões futuras'},
+      {id:'sfa', pct:nCadastrados+' cadastrados', sub:nContatados+' contatados · '+sp(nContatados,nCadastrados)+'% do total'},
+      {id:'sfb', pct:nContatados+' contatados', sub:nResponderam+' responderam · '+sp(nResponderam,nContatados)+'% dos contatados'},
+      {id:'sfc', pct:nResponderam+' responderam', sub:nReuniaoAgend+' agendaram reunião · '+sp(nReuniaoAgend,nResponderam)+'% dos que responderam'},
+      {id:'sfd', pct:nResponderam+' responderam', sub:nOrcamento+' pediram orçamento · '+sp(nOrcamento,nResponderam)+'% dos que responderam'},
+      {id:'sfe', pct:nResponderam+' responderam', sub:nSemInteresse+' sem interesse · '+sp(nSemInteresse,nResponderam)+'% dos que responderam'},
+      {id:'sff', pct:nReuniaoAgend+' reuniões', sub:nReuniaoReal+' realizadas · '+sp(nReuniaoReal,nReuniaoAgend)+'% das agendadas'},
+      {id:'sfg', pct:nReuniaoFut+' agendadas', sub:'a realizar — reuniões futuras'},
     ];
     // Add pointer-events only to the path being hovered using mouseover on SVG
     svgEl.addEventListener('mouseover', function(e) {
