@@ -399,9 +399,9 @@ function updateMetrics() {
     var svgEl = document.querySelector('#sankey-wrap svg');
     if (!svgEl || !tip) return;
     var flows = [
-      {id:'sfn0', pct:sp(nContatados,nCadastrados)+'% contatados', sub:nNaoContat+' sem contato'},
-      {id:'sfa', pct:sp(nResponderam,nContatados)+'% responderam', sub:'dos '+nContatados+' contatados'},
-      {id:'sfb', pct:sp(nContatados,nCadastrados)+'% contatados', sub:'dos '+nCadastrados+' cadastrados'},
+      {id:'sfn0', pct:nCadastrados+' cadastrados', sub:nNaoContat+' sem contato'},
+      {id:'sfa', pct:sp(nContatados,nCadastrados)+'% contatados', sub:'dos '+nCadastrados+' cadastrados'},
+      {id:'sfb', pct:sp(nResponderam,nContatados)+'% responderam', sub:'dos '+nContatados+' contatados'},
       {id:'sfc', pct:sp(nReuniaoAgend,nResponderam)+'% agendaram reunião', sub:'dos '+nResponderam+' que responderam'},
       {id:'sfd', pct:sp(nOrcamento,nResponderam)+'% pediram orçamento', sub:'dos '+nResponderam+' que responderam'},
       {id:'sfe', pct:sp(nSemInteresse,nResponderam)+'% sem interesse', sub:'dos '+nResponderam+' que responderam'},
