@@ -396,12 +396,12 @@ function updateMetrics() {
     var svgEl = document.querySelector('#sankey-wrap svg');
     if (!svgEl || !tip) return;
     var flows = [
-      {id:'sf0', pct:sp(nContatados,nCadastrados)+'%', sub:nContatados+' de '+nCadastrados+' cadastrados contatados'},
-      {id:'sf1', pct:sp(nResponderam,nContatados)+'%', sub:nResponderam+' de '+nContatados+' contatados responderam'},
-      {id:'sf2', pct:sp(nReuniaoAgend,nResponderam)+'%', sub:nReuniaoAgend+' de '+nResponderam+' responderam agendaram reunião'},
-      {id:'sf3', pct:sp(nOrcamento,nResponderam)+'%', sub:nOrcamento+' de '+nResponderam+' responderam pediram orçamento'},
-      {id:'sf4', pct:sp(nSemInteresse,nResponderam)+'%', sub:nSemInteresse+' de '+nResponderam+' responderam sem interesse'},
-      {id:'sf5', pct:sp(nReuniaoReal,nReuniaoAgend)+'%', sub:nReuniaoReal+' de '+nReuniaoAgend+' reuniões realizadas'},
+      {id:'sf0', pct:sp(nContatados,nCadastrados)+'%', sub:nContatados+' contatados de '+nCadastrados+' cadastrados'},
+      {id:'sf1', pct:sp(nResponderam,nContatados)+'%', sub:nResponderam+' responderam de '+nContatados+' contatados'},
+      {id:'sf2', pct:sp(nReuniaoAgend,nResponderam)+'%', sub:nReuniaoAgend+' agendaram reunião de '+nResponderam+' que responderam'},
+      {id:'sf3', pct:sp(nOrcamento,nResponderam)+'%', sub:nOrcamento+' pediram orçamento de '+nResponderam+' que responderam'},
+      {id:'sf4', pct:sp(nSemInteresse,nResponderam)+'%', sub:nSemInteresse+' sem interesse de '+nResponderam+' que responderam'},
+      {id:'sf5', pct:sp(nReuniaoReal,nReuniaoAgend)+'%', sub:nReuniaoReal+' reuniões realizadas de '+nReuniaoAgend+' agendadas'},
       {id:'sf6', pct:'a realizar', sub:nReuniaoFut+' reuniões agendadas para o futuro'},
     ];
     flows.forEach(function(f) {
