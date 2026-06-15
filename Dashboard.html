@@ -377,10 +377,13 @@ function updateMetrics() {
     return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px;color:'+c+'" aria-hidden="true"></i> '+m.label+(m.delta||'')+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>';
   }).join('');
 
-  // ── KPIs de conversão por etapa — mesmas variáveis do Sankey ──
-  var nReunFez = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
-  var nReunReal2 = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
-  var nConv2 = ativos.filter(function(d){ return d.status === 'Convertido'; }).length;
+  // ── Variáveis do funil — declaradas aqui para KPIs e Sankey ──
+  const nCadastrados = ta;
+  const nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
+  const nResponderam = ativos.filter(function(d){ return STATUS_RESPONDEU.includes(d.status||''); }).length;
+  const nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
+  const nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
+  const nConv2 = ativos.filter(function(d){ return d.status === 'Convertido'; }).length;
 
   function pct(a,b){ return b>0 ? Math.round(a/b*100) : 0; }
   function ckpiColor(v){ if(v>=60) return '#27a85a'; if(v>=30) return '#d97706'; return '#dc2626'; }
@@ -388,8 +391,8 @@ function updateMetrics() {
   var ckpiData = [
     {lbl:'Cadastrado → Contatado', val:pct(nContatados,nCadastrados)},
     {lbl:'Contatado → Respondeu', val:pct(nResponderam,nContatados)},
-    {lbl:'Respondeu → Reunião', val:pct(nReunFez,nResponderam)},
-    {lbl:'Reunião → Realizada', val:pct(nReunReal2,nReunFez)},
+    {lbl:'Respondeu → Reunião', val:pct(nReuniaoAgend,nResponderam)},
+    {lbl:'Reunião → Realizada', val:pct(nReuniaoReal,nReuniaoAgend)},
     {lbl:'Convertidos do total', val:pct(nConv2,nCadastrados)},
   ];
   document.getElementById('conv-kpis').innerHTML = ckpiData.map(function(k){
@@ -399,14 +402,8 @@ function updateMetrics() {
       +'<div class="ckpi-bar"><div class="ckpi-fill" style="width:'+k.val+'%;background:'+c+'"></div></div></div>';
   }).join('');
 
-  // Funil
   // Sankey de engajamento — gradiente Biomelting
-  const nCadastrados = ta; // base = ativos (desqualificados excluídos)
-  const nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
-  const nResponderam = ativos.filter(function(d){ return STATUS_RESPONDEU.includes(d.status||''); }).length;
-  const nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
   const nReuniaoFut = ativos.filter(function(d){ return d.status === 'Reunião agendada'; }).length;
-  const nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
   const nReuniaoCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
   const nOrcamento = orcDireto + orcPosReun;
   const nSemInteresse = ativos.filter(function(d){ return ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'].includes(d.status||''); }).length;
