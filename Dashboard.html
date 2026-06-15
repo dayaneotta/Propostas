@@ -365,15 +365,6 @@ function updateMetrics() {
   var nCadastrados = ta;
   var nContatados = ativos.filter(function(d){ return contatoValido(d.c1_raw); }).length;
 
-  // DEBUG — remover após verificar
-  var temC1 = ativos.filter(function(d){ return contatoValido(d.c1_raw); });
-  var temC2 = ativos.filter(function(d){ return contatoValido(d.c2_raw); });
-  console.log('DEBUG cadência:');
-  console.log('  nContatados (c1 válido):', temC1.length);
-  console.log('  com c2 válido:', temC2.length);
-  console.log('  c2_raw amostra (quem tem c1):', temC1.slice(0,5).map(function(d){ return JSON.stringify(d.c2_raw); }));
-  console.log('  c2_raw raw bytes ex:', temC1[0] && temC1[0].c2_raw ? [...temC1[0].c2_raw].map(function(ch){ return ch.charCodeAt(0); }) : 'vazio');
-
   // Cadência: leads com 2+ contatos registrados — mesma lógica de validação do BioLead
   var com2contatos = ativos.filter(function(d){ return contatoValido(d.c1_raw) && contatoValido(d.c2_raw); }).length;
   var com3contatos = ativos.filter(function(d){ return contatoValido(d.c2_raw) && contatoValido(d.c3_raw); }).length;
