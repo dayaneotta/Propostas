@@ -399,14 +399,14 @@ function updateMetrics() {
     var svgEl = document.querySelector('#sankey-wrap svg');
     if (!svgEl || !tip) return;
     var flows = [
-      {id:'sfn0', pct:nCadastrados+' cadastrados', sub:nContatados+' contatados · '+nNaoContat+' sem contato'},
-      {id:'sfa', pct:sp(nResponderam,nContatados)+'% responderam', sub:nResponderam+' de '+nContatados+' contatados responderam'},
-      {id:'sfb', pct:sp(nContatados,nCadastrados)+'% contatados', sub:nContatados+' de '+nCadastrados+' cadastrados foram contatados'},
-      {id:'sfc', pct:nResponderam+' responderam', sub:nReuniaoAgend+' agendaram reunião · '+sp(nReuniaoAgend,nResponderam)+'% dos que responderam'},
-      {id:'sfd', pct:nResponderam+' responderam', sub:nOrcamento+' pediram orçamento · '+sp(nOrcamento,nResponderam)+'% dos que responderam'},
-      {id:'sfe', pct:nResponderam+' responderam', sub:nSemInteresse+' sem interesse · '+sp(nSemInteresse,nResponderam)+'% dos que responderam'},
-      {id:'sff', pct:nReuniaoAgend+' reuniões', sub:nReuniaoReal+' realizadas · '+sp(nReuniaoReal,nReuniaoAgend)+'% das agendadas'},
-      {id:'sfg', pct:nReuniaoFut+' agendadas', sub:'a realizar — reuniões futuras'},
+      {id:'sfn0', pct:sp(nContatados,nCadastrados)+'% contatados', sub:nNaoContat+' sem contato'},
+      {id:'sfa', pct:sp(nResponderam,nContatados)+'% responderam', sub:'dos '+nContatados+' contatados'},
+      {id:'sfb', pct:sp(nContatados,nCadastrados)+'% contatados', sub:'dos '+nCadastrados+' cadastrados'},
+      {id:'sfc', pct:sp(nReuniaoAgend,nResponderam)+'% agendaram reunião', sub:'dos '+nResponderam+' que responderam'},
+      {id:'sfd', pct:sp(nOrcamento,nResponderam)+'% pediram orçamento', sub:'dos '+nResponderam+' que responderam'},
+      {id:'sfe', pct:sp(nSemInteresse,nResponderam)+'% sem interesse', sub:'dos '+nResponderam+' que responderam'},
+      {id:'sff', pct:sp(nReuniaoReal,nReuniaoAgend)+'% realizadas', sub:'das '+nReuniaoAgend+' reuniões agendadas'},
+      {id:'sfg', pct:'a realizar', sub:'reuniões agendadas para o futuro'},
     ];
     // Add pointer-events only to the path being hovered using mouseover on SVG
     svgEl.addEventListener('mouseover', function(e) {
