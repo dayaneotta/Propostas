@@ -113,6 +113,15 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .mc-delta.up{background:#dcfce7;color:#166534}
 .mc-delta.down{background:#fee2e2;color:#991b1b}
 .mc-delta.neutral{background:#f1f5f9;color:#64748b}
+
+.reun-estados-titulo{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin:12px 0 8px}
+.reun-estados-chips{display:flex;flex-wrap:wrap;gap:6px}
+.reun-chip{display:inline-flex;flex-direction:column;background:var(--bg);border:.5px solid var(--border);border-radius:20px;padding:4px 10px;min-width:52px}
+.reun-chip-top{display:flex;align-items:baseline;gap:5px}
+.reun-chip-estado{font-size:12px;font-weight:500;color:var(--text)}
+.reun-chip-num{font-size:13px;font-weight:700;color:#0B6E4F}
+.reun-chip-bar{height:3px;border-radius:2px;background:rgba(26,138,120,0.18);margin-top:3px;overflow:hidden}
+.reun-chip-fill{height:100%;border-radius:2px;background:#1A8A78}
 </style>
 </head>
 <body>
@@ -172,6 +181,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
       <div class="chart-card">
         <div class="chart-title"><i class="ti ti-map-pin" aria-hidden="true"></i> Distribuição por estado</div>
         <div class="chart-wrap" style="height:220px"><canvas id="cEstados"></canvas></div>
+        <div class="reun-estados-titulo">Estados com reuniões</div>
+        <div class="reun-estados-chips" id="reun-estados-chips"></div>
       </div>
     </div>
 
@@ -563,6 +574,33 @@ function updateMetrics() {
       scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
     }
   });
+
+  // ── Chips de estados com reuniões ──
+  var reunByEstado = {};
+  filtrado.forEach(function(d) {
+    if (!d.estado) return;
+    if (['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''))
+      reunByEstado[d.estado] = (reunByEstado[d.estado]||0) + 1;
+  });
+  var reunEstados = Object.entries(reunByEstado).sort(function(a,b){ return b[1]-a[1]; });
+  var maxReun = reunEstados.length ? reunEstados[0][1] : 1;
+  var chipsEl = document.getElementById('reun-estados-chips');
+  if (chipsEl) {
+    if (reunEstados.length === 0) {
+      chipsEl.innerHTML = '<span style="font-size:11px;color:var(--text3)">Nenhuma reunião registrada no período</span>';
+    } else {
+      chipsEl.innerHTML = reunEstados.map(function(item) {
+        var pct = Math.round(item[1]/maxReun*100);
+        return '<div class="reun-chip">'
+          +'<div class="reun-chip-top">'
+          +'<span class="reun-chip-estado">'+item[0]+'</span>'
+          +'<span class="reun-chip-num">'+item[1]+'</span>'
+          +'</div>'
+          +'<div class="reun-chip-bar"><div class="reun-chip-fill" style="width:'+pct+'%"></div></div>'
+          +'</div>';
+      }).join('');
+    }
+  }
 }
 
 function updateCharts() {
