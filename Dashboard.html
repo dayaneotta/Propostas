@@ -314,9 +314,9 @@ function updateMetrics() {
     return '<rect x="'+x+'" y="'+y+'" width="'+nW+'" height="'+h+'" rx="2" fill="'+color+'" opacity="'+op+'"/>';
   }
   function lbl(x,y,val,color,label,sub){
-    return '<text x="'+x+'" y="'+y+'" font-size="18" font-weight="700" fill="'+color+'" font-family="Segoe UI,sans-serif">'+val+'</text>'
-      +'<text x="'+x+'" y="'+(y+16)+'" font-size="8" font-weight="600" fill="'+color+'" font-family="Segoe UI,sans-serif" letter-spacing=".08em">'+label+'</text>'
-      +(sub?'<text x="'+x+'" y="'+(y+28)+'" font-size="8" fill="#9AABB8" font-family="Segoe UI,sans-serif">'+sub+'</text>':'');
+    return '<text x="'+x+'" y="'+(y+13)+'" font-size="17" font-weight="700" fill="'+color+'" font-family="Segoe UI,sans-serif">'+val+'</text>'
+      +'<text x="'+(x+22)+'" y="'+y+'" font-size="7" font-weight="600" fill="'+color+'" font-family="Segoe UI,sans-serif" letter-spacing=".08em" dominant-baseline="text-before-edge">'+label+'</text>'
+      +(sub?'<text x="'+(x+22)+'" y="'+(y+13)+'" font-size="7" fill="#9AABB8" font-family="Segoe UI,sans-serif" font-style="italic">'+sub+'</text>':'');
   }
   function slbl(x,y,val,color,label,op){
     op=op||1;
