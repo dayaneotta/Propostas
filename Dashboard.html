@@ -34,7 +34,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .loading{text-align:center;padding:60px;color:var(--text3);font-size:15px}
 
 /* Metric cards */
-.metrics-row{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.metrics-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:14px}
 .mc{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r);padding:10px 10px;border-top:2.5px solid var(--bm-blue);min-width:0;overflow:hidden}
 .mc-label{font-size:8px;font-weight:700;letter-spacing:.07em;color:var(--text3);margin-bottom:4px;display:flex;align-items:center;gap:4px;text-transform:uppercase;white-space:nowrap;overflow:hidden}
 .mc-label i{font-size:11px}
@@ -357,15 +357,18 @@ function updateMetrics() {
     alertEl.style.display = 'none';
   }
 
+  var reunTotal = reunAgend + reunReal + reunCanc;
+  var reunSub = reunReal+' realizadas · '+reunAgend+' agendadas'+(reunCanc?' · '+reunCanc+' canceladas':'');
+  var taxaRespPct = ta ? Math.round(resp/ta*100) : 0;
+  var taxaRespAnteriorPct = taxaRespAnterior;
+
   document.getElementById('mbox').innerHTML = [
-    {cls:'', icon:'ti-users', label:'Total', val:t, sub:ta+' ativos', delta:deltaHtml(t,tAnterior)},
-    {cls:'', icon:'ti-star', label:'Score alto', val:alto, sub:(ta?Math.round(alto/ta*100):0)+'% dos ativos', delta:''},
-    {cls:'amber', icon:'ti-calendar-event', label:'Reun. agendadas', val:reunAgend, sub:'aguardando realização', delta:''},
-    {cls:'green', icon:'ti-calendar-check', label:'Reun. realizadas', val:reunReal, sub:'total de reuniões realizadas', delta:''},
-    {cls:'red', icon:'ti-calendar-x', label:'Reun. canceladas', val:reunCanc, sub:'reagendamento pendente', delta:''},
-    {cls:'green', icon:'ti-file-invoice', label:'Orçamentos', val:orc, sub:orcDireto+' diretos · '+orcPosReun+' pós-reunião', delta:''},
-    {cls:'purple', icon:'ti-trophy', label:'Convertidos', val:conv, sub:'clientes confirmados', delta:deltaHtml(conv,convAnterior)},
-    {cls:'red', icon:'ti-ban', label:'Desqualificados', val:desq, sub:'fora do perfil', delta:''},
+    {cls:'',       icon:'ti-users',      label:'Total cadastrados',  val:t,           sub:ta+' ativos · '+desq+' desqualificados',   delta:deltaHtml(t,tAnterior)},
+    {cls:'red',    icon:'ti-mail-off',   label:'Sem 1º contato',     val:semContato,  sub:altosemContato+' com score alto',           delta:''},
+    {cls:'',       icon:'ti-star',       label:'Score alto',         val:alto,        sub:(ta?Math.round(alto/ta*100):0)+'% dos ativos contatáveis', delta:''},
+    {cls:'teal',   icon:'ti-mail-check', label:'Taxa de resposta',   val:taxaRespPct+'%', sub:resp+' responderam de '+ta+' contatados', delta:deltaHtml(taxaRespPct,taxaRespAnteriorPct)},
+    {cls:'amber',  icon:'ti-calendar',   label:'Reuniões',           val:reunTotal,   sub:reunSub,                                    delta:''},
+    {cls:'purple', icon:'ti-trophy',     label:'Convertidos',        val:conv,        sub:'clientes confirmados',                     delta:deltaHtml(conv,convAnterior)},
   ].map(function(m) {
     var colors = {
       '':'var(--bm-blue)', 'teal':'var(--bm-teal)', 'green':'#2A8A60',
