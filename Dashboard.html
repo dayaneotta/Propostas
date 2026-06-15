@@ -476,7 +476,9 @@ function updateMetrics() {
   if(nSemInteresse>0) parts.push(wave(col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
   if(nReuniaoReal>0)  parts.push(wave(col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
   if(nReuniaoFut>0)   parts.push(wave(col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
-  if(nReuniaoCanc>0)  parts.push(wave(col[3],yReu+hReal+(nReuniaoFut>0?hFut+GAP:0),hCancReun,col[4],yReal+hReal+(nReuniaoFut>0?hFut+GAP:0)+GAP,hCancReun,'url(#sgneg)'));
+  var yCancOrig = yReu+hReal+(nReuniaoFut>0?hFut+GAP:0);
+  var yCancDest = yReal+hReal+(nReuniaoFut>0?hFut+GAP:0)+GAP;
+  if(nReuniaoCanc>0)  parts.push(wave(col[3],yCancOrig,hCancReun,col[4],yCancDest,hCancReun,'url(#sgneg)'));
 
   // Nodes
   parts.push(node(col[0],yCad,hCad,'#0D4E8A'));
@@ -487,7 +489,7 @@ function updateMetrics() {
   if(nSemInteresse>0) parts.push(node(col[3],ySem,hSem,'#A06060',0.5));
   if(nReuniaoReal>0)  parts.push(node(col[4],yReal,hReal,'#0B6E4F'));
   if(nReuniaoFut>0)   parts.push(node(col[4],yFut,hFut,'#C9923C'));
-  if(nReuniaoCanc>0)  parts.push(node(col[4],yReal+hReal+(nReuniaoFut>0?hFut+GAP:0)+GAP,hCancReun,'#8AAABB',0.6));
+  if(nReuniaoCanc>0)  parts.push(node(col[4],yCancDest,hCancReun,'#8AAABB',0.6));
 
   // Labels
   parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-16, nCadastrados, '#0D4E8A', 'ATIVOS', ''));
@@ -498,7 +500,7 @@ function updateMetrics() {
   if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
   if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-16, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
   if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-16, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
-  if(nReuniaoCanc>0)  parts.push(glbl(col[4]+nW+tx, yReal+hReal+(nReuniaoFut>0?hFut+GAP:0)+GAP+hCancReun/2+10, nReuniaoCanc+' canceladas'));
+  if(nReuniaoCanc>0)  parts.push(glbl(col[4]+nW+tx, yCancDest+hCancReun/2+10, nReuniaoCanc+' canceladas'));
   if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
   if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
 
