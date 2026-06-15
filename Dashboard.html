@@ -354,27 +354,33 @@ function updateMetrics() {
   var parts=['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
   // Waves
-  parts.push(waveId('sfa',col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)'));
+  parts.push(wave(col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)'));
   if(nNaoContat>0) parts.push(wave(col[0],yCad+hCad+6,hNaoCont,col[1],ySemRet+hSemRet+6,hNaoCont,'url(#sgneg)',0.5));
-  parts.push(waveId('sfb',col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)'));
+  parts.push(wave(col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)'));
   if(nSemRetorno>0) parts.push(wave(col[1],yCont+hCont+6,hSemRet,col[2],yResp+hResp+6,hSemRet,'url(#sgneg)',0.45));
-  if(nReuniaoAgend>0) parts.push(waveId('sfc',col[2],yResp,hReu,col[3],yReu,hReu,'url(#sg2a)'));
-  if(nOrcamento>0)    parts.push(waveId('sfd',col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
-  if(nSemInteresse>0) parts.push(waveId('sfe',col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
-  if(nReuniaoReal>0)  parts.push(waveId('sff',col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
-  if(nReuniaoFut>0)   parts.push(waveId('sfg',col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
+  if(nReuniaoAgend>0) parts.push(wave(col[2],yResp,hReu,col[3],yReu,hReu,'url(#sg2a)'));
+  if(nOrcamento>0)    parts.push(wave(col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
+  if(nSemInteresse>0) parts.push(wave(col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
+  if(nReuniaoReal>0)  parts.push(wave(col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
+  if(nReuniaoFut>0)   parts.push(wave(col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
 
   // Nodes
   parts.push(node(col[0],yCad,hCad,'#0D4E8A'));
-  // Invisible hover area over cadastrados node and label
-  parts.push('<rect id="sfn0" x="'+(col[0]-4)+'" y="'+(yCad-5)+'" width="'+(col[1]-col[0]+10)+'" height="'+(hCad+10)+'" fill="transparent" style="cursor:pointer;pointer-events:all"/>');
+  // Hover rects over nodes (transparent, on top)
+  parts.push('<rect id="hn0" x="'+(col[0]-2)+'" y="'+(yCad-4)+'" width="160" height="'+(hCad+8)+'" fill="transparent" style="cursor:pointer"/>');
   parts.push(node(col[1],yCont,hCont,'#1A73C8'));
+  parts.push('<rect id="hn1" x="'+(col[1]-2)+'" y="'+(yCont-4)+'" width="160" height="'+(hCont+8)+'" fill="transparent" style="cursor:pointer"/>');
   parts.push(node(col[2],yResp,hResp,'#2EC4A5'));
+  parts.push('<rect id="hn2" x="'+(col[2]-2)+'" y="'+(yResp-4)+'" width="160" height="'+(hResp+8)+'" fill="transparent" style="cursor:pointer"/>');
   if(nReuniaoAgend>0) parts.push(node(col[3],yReu,hReu,'#1A8A78'));
+  if(nReuniaoAgend>0) parts.push('<rect id="hn3" x="'+(col[3]-2)+'" y="'+(yReu-4)+'" width="160" height="'+(hReu+8)+'" fill="transparent" style="cursor:pointer"/>');
   if(nOrcamento>0)    parts.push(node(col[3],yOrc,hOrc,'#6055B0'));
+  if(nOrcamento>0)    parts.push('<rect id="hn4" x="'+(col[3]-2)+'" y="'+(yOrc-4)+'" width="160" height="'+(hOrc+8)+'" fill="transparent" style="cursor:pointer"/>');
   if(nSemInteresse>0) parts.push(node(col[3],ySem,hSem,'#A06060',0.5));
   if(nReuniaoReal>0)  parts.push(node(col[4],yReal,hReal,'#0B6E4F'));
+  if(nReuniaoReal>0)  parts.push('<rect id="hn5" x="'+(col[4]-2)+'" y="'+(yReal-4)+'" width="160" height="'+(hReal+8)+'" fill="transparent" style="cursor:pointer"/>');
   if(nReuniaoFut>0)   parts.push(node(col[4],yFut,hFut,'#C9923C'));
+  if(nReuniaoFut>0)   parts.push('<rect id="hn6" x="'+(col[4]-2)+'" y="'+(yFut-4)+'" width="160" height="'+(hFut+8)+'" fill="transparent" style="cursor:pointer"/>');
 
   // Labels
   parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-14, nCadastrados, '#0D4E8A', 'CADASTRADOS', ''));
@@ -399,14 +405,13 @@ function updateMetrics() {
     var svgEl = document.querySelector('#sankey-wrap svg');
     if (!svgEl || !tip) return;
     var flows = [
-      {id:'sfn0', pct:nNaoContat+' sem contato',                             sub:'de '+nCadastrados+' cadastrados'},
-      {id:'sfa',  pct:sp(nContatados,nCadastrados)+'% dos cadastrados',       sub:''},
-      {id:'sfb',  pct:sp(nResponderam,nContatados)+'% dos contatados',        sub:''},
-      {id:'sfc',  pct:sp(nReuniaoAgend,nResponderam)+'% dos que responderam', sub:''},
-      {id:'sfd',  pct:sp(nOrcamento,nResponderam)+'% dos que responderam',    sub:''},
-      {id:'sfe',  pct:sp(nSemInteresse,nResponderam)+'% dos que responderam', sub:''},
-      {id:'sff',  pct:sp(nReuniaoReal,nReuniaoAgend)+'% das reuniões',        sub:''},
-      {id:'sfg',  pct:sp(nReuniaoFut,nReuniaoAgend)+'% das reuniões',         sub:'a realizar'},
+      {id:'hn0', pct:nCadastrados+' cadastrados',  sub:nNaoContat+' sem contato'},
+      {id:'hn1', pct:sp(nContatados,nCadastrados)+'% dos cadastrados', sub:''},
+      {id:'hn2', pct:sp(nResponderam,nContatados)+'% dos contatados', sub:''},
+      {id:'hn3', pct:sp(nReuniaoAgend,nResponderam)+'% dos que responderam', sub:''},
+      {id:'hn4', pct:sp(nOrcamento,nResponderam)+'% dos que responderam', sub:''},
+      {id:'hn5', pct:sp(nReuniaoReal,nReuniaoAgend)+'% das reuniões', sub:''},
+      {id:'hn6', pct:sp(nReuniaoFut,nReuniaoAgend)+'% das reuniões', sub:'a realizar'},
     ];
     // Add pointer-events only to the path being hovered using mouseover on SVG
     svgEl.addEventListener('mouseover', function(e) {
