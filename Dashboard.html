@@ -376,9 +376,8 @@ function updateMetrics() {
   }).join('');
 
   // ── KPIs de conversão por etapa ──
-  var STATUS_RESP_ALL = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   var nContatados2 = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
-  var nResp2 = ativos.filter(function(d){ return STATUS_RESP_ALL.includes(d.status||''); }).length;
+  var nResp2 = ativos.filter(function(d){ return STATUS_RESPONDEU.includes(d.status||''); }).length;
   var nReunFez = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
   var nReunReal2 = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
   var nConv2 = ativos.filter(function(d){ return d.status === 'Convertido'; }).length;
@@ -402,10 +401,9 @@ function updateMetrics() {
 
   // Funil
   // Sankey de engajamento — gradiente Biomelting
-  const STATUS_RESP_ALL = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   const nCadastrados = filtrado.length;
   const nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
-  const nResponderam = ativos.filter(function(d){ return STATUS_RESP_ALL.includes(d.status||''); }).length;
+  const nResponderam = ativos.filter(function(d){ return STATUS_RESPONDEU.includes(d.status||''); }).length;
   const nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
   const nReuniaoFut = ativos.filter(function(d){ return d.status === 'Reunião agendada'; }).length;
   const nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
