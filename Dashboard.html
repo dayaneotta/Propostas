@@ -299,8 +299,8 @@ function updateMetrics() {
   var totRes=hReu+hOrc+hSem+(nReuniaoAgend>0?8:0)+(nOrcamento>0?8:0);
   var yReu=cy-totRes/2, yOrc=yReu+hReu+8, ySem=yOrc+hOrc+8;
   var yNaoCont=yCad+hCad+10, ySemRet=yCont+hCont+10;
-  var totReun=hReal+(nReuniaoFut>0?hFut+8:0);
-  var yReal=cy-totReun/2, yFut=yReal+hReal+8, yCanc=yFut+(nReuniaoFut>0?hFut+8:0);
+  var totReun=hReal+(nReuniaoFut>0?hFut+22:0);
+  var yReal=cy-totReun/2, yFut=yReal+hReal+22, yCanc=yFut+(nReuniaoFut>0?hFut+22:0);
 
   function wave(x1,y1,h1,x2,y2,h2,fill,op){
     op=op||0.5;
