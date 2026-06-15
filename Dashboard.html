@@ -413,9 +413,9 @@ function updateMetrics() {
   function sp(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
   function sh(n, maxN, maxH) { return Math.max(Math.round(Math.sqrt(n/maxN)*maxH), 5); }
 
-  var W=900, H=200, nW=6;
+  var W=900, H=250, nW=6;
   var col=[30,234,374,504,664];
-  var maxH=110, maxN=nCadastrados;
+  var maxH=100, maxN=nCadastrados;
 
   var hCad=sh(nCadastrados,maxN,maxH), hCont=sh(nContatados,maxN,maxH);
   var hResp=sh(nResponderam,maxN,maxH), hReu=sh(nReuniaoAgend,maxN,maxH);
@@ -424,13 +424,15 @@ function updateMetrics() {
   var hSemRet=nSemRetorno>0?Math.max(Math.round(Math.cbrt(nSemRetorno/maxN)*maxH*0.4),4):0;
   var hNaoCont=nNaoContat>0?Math.max(Math.round(Math.cbrt(nNaoContat/maxN)*maxH*0.4),4):0;
 
+  // Gap dinâmico: garante espaço mínimo para o label (32px por nó)
+  var GAP = 32;
   var cy=H/2;
   var yCad=cy-hCad/2, yCont=cy-hCont/2, yResp=cy-hResp/2;
-  var totRes=hReu+hOrc+hSem+(nReuniaoAgend>0?6:0)+(nOrcamento>0?6:0);
-  var yReu=cy-totRes/2, yOrc=yReu+hReu+6, ySem=yOrc+hOrc+6;
+  var totRes=hReu+hOrc+hSem+(nReuniaoAgend>0?GAP:0)+(nOrcamento>0?GAP:0);
+  var yReu=cy-totRes/2, yOrc=yReu+hReu+GAP, ySem=yOrc+hOrc+GAP;
   var yNaoCont=yCad+hCad+10, ySemRet=yCont+hCont+10;
-  var totReun=hReal+(nReuniaoFut>0?hFut+16:0);
-  var yReal=cy-totReun/2, yFut=yReal+hReal+16, yCanc=yFut+(nReuniaoFut>0?hFut+16:0);
+  var totReun=hReal+(nReuniaoFut>0?hFut+GAP:0);
+  var yReal=cy-totReun/2, yFut=yReal+hReal+GAP, yCanc=yFut+(nReuniaoFut>0?hFut+GAP:0);
 
   function wave(x1,y1,h1,x2,y2,h2,fill,op){
     op=op||0.5;
