@@ -483,6 +483,7 @@ function normalizarContato(p) {
     status: String(p.status || ''),
     retorno_data: normalizarData(p.retorno_data),
     retorno_obs: String(p.retorno_obs || ''),
+    dataCadastro: p.dataCadastro ? String(p.dataCadastro) : null,
   };
 }
 
@@ -948,8 +949,10 @@ function atualizarCards() {
   const agora = new Date();
   const semanaAtras = new Date(agora); semanaAtras.setDate(agora.getDate()-7);
   const semana = dados.filter(p => {
-    if (!p.dataCadastro) return false;
-    return new Date(p.dataCadastro) >= semanaAtras;
+    // usa dataCadastro se disponível, senão c1_raw como proxy
+    var dt = p.dataCadastro || p.c1_raw;
+    if (!dt) return false;
+    try { return new Date(dt.replace(/^"+|"+$/g,'')) >= semanaAtras; } catch(e) { return false; }
   }).length;
   document.getElementById('s-total').textContent = dados.length;
   document.getElementById('s-semana').textContent = semana;
