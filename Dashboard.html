@@ -378,12 +378,12 @@ function updateMetrics() {
   }).join('');
 
   // ── Variáveis do funil — declaradas aqui para KPIs e Sankey ──
-  const nCadastrados = ta;
-  const nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
-  const nResponderam = ativos.filter(function(d){ return STATUS_RESPONDEU.includes(d.status||''); }).length;
-  const nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
-  const nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
-  const nConv2 = ativos.filter(function(d){ return d.status === 'Convertido'; }).length;
+  var nCadastrados = ta;
+  var nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
+  var nResponderam = ativos.filter(function(d){ return STATUS_RESPONDEU.includes(d.status||''); }).length;
+  var nReuniaoAgend = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
+  var nReuniaoReal = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
+  var nConv2 = ativos.filter(function(d){ return d.status === 'Convertido'; }).length;
 
   function pct(a,b){ return b>0 ? Math.round(a/b*100) : 0; }
   function ckpiColor(v){ if(v>=60) return '#27a85a'; if(v>=30) return '#d97706'; return '#dc2626'; }
@@ -403,12 +403,12 @@ function updateMetrics() {
   }).join('');
 
   // Sankey de engajamento — gradiente Biomelting
-  const nReuniaoFut = ativos.filter(function(d){ return d.status === 'Reunião agendada'; }).length;
-  const nReuniaoCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
-  const nOrcamento = orcDireto + orcPosReun;
-  const nSemInteresse = ativos.filter(function(d){ return ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'].includes(d.status||''); }).length;
-  const nSemRetorno = Math.max(0, nContatados - nResponderam);
-  const nNaoContat = Math.max(0, nCadastrados - nContatados);
+  var nReuniaoFut = ativos.filter(function(d){ return d.status === 'Reunião agendada'; }).length;
+  var nReuniaoCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
+  var nOrcamento = orcDireto + orcPosReun;
+  var nSemInteresse = ativos.filter(function(d){ return ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'].includes(d.status||''); }).length;
+  var nSemRetorno = Math.max(0, nContatados - nResponderam);
+  var nNaoContat = Math.max(0, nCadastrados - nContatados);
 
   function sp(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
   function sh(n, maxN, maxH) { return Math.max(Math.round(Math.sqrt(n/maxN)*maxH), 5); }
