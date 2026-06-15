@@ -143,10 +143,10 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
     <!-- Filtro de período -->
     <div class="filter-bar">
       <span class="filter-bar-label">Período:</span>
-      <button class="filter-chip active" onclick="setFiltro(30,this)">Últimos 30 dias</button>
+      <button class="filter-chip" onclick="setFiltro(30,this)">Últimos 30 dias</button>
       <button class="filter-chip" onclick="setFiltro(90,this)">3 meses</button>
       <button class="filter-chip" onclick="setFiltro(180,this)">6 meses</button>
-      <button class="filter-chip" onclick="setFiltro(0,this)">Todo o período</button>
+      <button class="filter-chip active" onclick="setFiltro(0,this)">Todo o período</button>
     </div>
 
     <!-- Alerta: leads sem contato -->
@@ -244,7 +244,7 @@ function carregarDados() {
   return window._dashDados || [];
 }
 
-let filtroDias = 30;
+let filtroDias = 0;
 
 function setFiltro(dias, btn) {
   filtroDias = dias;
