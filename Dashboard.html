@@ -86,6 +86,33 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .site-header img{height:52px;background:#fff;border-radius:8px;padding:4px 8px}
 .site-header-divider{width:1px;height:36px;background:rgba(255,255,255,0.3)}
 .site-header-title{font-size:15px;font-style:italic;color:rgba(255,255,255,0.9);font-family:'Segoe UI',Arial,sans-serif;font-weight:400;letter-spacing:.02em}
+
+/* ── FILTRO DE PERÍODO ── */
+.filter-bar{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.filter-bar-label{font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-right:4px}
+.filter-chip{border:.5px solid var(--border);border-radius:20px;padding:4px 11px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;background:var(--surface);transition:all .15s}
+.filter-chip:hover{background:var(--bm-light);color:var(--bm-mid);border-color:var(--bm-mid)}
+.filter-chip.active{background:var(--bm-blue);color:#fff;border-color:var(--bm-blue)}
+/* ── ALERTA: SEM CONTATO ── */
+.sem-contato-box{background:linear-gradient(135deg,#fff5f5 0%,#fff 100%);border:.5px solid rgba(220,38,38,.25);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:16px}
+.sem-contato-num{font-size:38px;font-weight:700;color:#dc2626;line-height:1;min-width:52px;text-align:center}
+.sem-contato-info{flex:1}
+.sem-contato-titulo{font-size:13px;font-weight:700;color:#7f1d1d;margin-bottom:3px}
+.sem-contato-sub{font-size:11px;color:#991b1b;line-height:1.5}
+.sem-contato-btn{background:#dc2626;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;white-space:nowrap}
+.sem-contato-btn:hover{background:#b91c1c}
+/* ── KPIs DE CONVERSÃO ── */
+.conv-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px;padding-top:14px;border-top:.5px solid var(--border)}
+.ckpi{text-align:center}
+.ckpi-val{font-size:18px;font-weight:700}
+.ckpi-lbl{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;line-height:1.3}
+.ckpi-bar{height:4px;border-radius:2px;background:#EAF4FA;margin-top:5px;overflow:hidden}
+.ckpi-fill{height:100%;border-radius:2px}
+/* ── DELTA NOS CARDS ── */
+.mc-delta{display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;margin-left:4px;vertical-align:middle}
+.mc-delta.up{background:#dcfce7;color:#166534}
+.mc-delta.down{background:#fee2e2;color:#991b1b}
+.mc-delta.neutral{background:#f1f5f9;color:#64748b}
 </style>
 </head>
 <body>
@@ -113,27 +140,44 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 
   <div id="dash-content" style="display:none">
 
-    <!-- Métricas -->
+    <!-- Filtro de período -->
+    <div class="filter-bar">
+      <span class="filter-bar-label">Período:</span>
+      <button class="filter-chip active" onclick="setFiltro(30,this)">Últimos 30 dias</button>
+      <button class="filter-chip" onclick="setFiltro(90,this)">3 meses</button>
+      <button class="filter-chip" onclick="setFiltro(180,this)">6 meses</button>
+      <button class="filter-chip" onclick="setFiltro(0,this)">Todo o período</button>
+    </div>
+
+    <!-- Alerta: leads sem contato -->
+    <div id="sem-contato-alert" style="display:none"></div>
+
+    <!-- Métricas com delta -->
     <div class="metrics-row" id="mbox"></div>
 
-    <!-- Fluxo de engajamento full width -->
+    <!-- Fluxo de engajamento + KPIs de conversão -->
     <div class="chart-card full" style="margin-bottom:16px">
       <div class="chart-title"><i class="ti ti-git-merge" aria-hidden="true"></i> Fluxo de engajamento</div>
       <div id="sankey-wrap" style="width:100%;overflow:hidden"></div>
+      <div class="conv-kpis" id="conv-kpis"></div>
     </div>
 
-    <!-- Evolução + Taxa + Tempo -->
+    <!-- Evolução mensal (com tendência) + Distribuição por estado -->
     <div class="charts-grid">
       <div class="chart-card">
-        <div class="chart-title"><i class="ti ti-trending-up" aria-hidden="true"></i> Evolução de contatos por mês</div>
+        <div class="chart-title">
+          <i class="ti ti-trending-up" aria-hidden="true"></i> Evolução de contatos por mês
+          <span id="tendencia-badge" style="margin-left:8px"></span>
+        </div>
         <div class="chart-wrap"><canvas id="cE"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><i class="ti ti-map-pin" aria-hidden="true"></i> Distribuição por estado</div>
         <div class="chart-wrap" style="height:220px"><canvas id="cEstados"></canvas></div>
       </div>
+    </div>
 
-    <!-- Taxa de resposta + Tempo médio + Mapa -->
+    <!-- Taxa de resposta + Tempo médio -->
     <div class="charts-grid">
       <div class="chart-card">
         <div class="chart-title"><i class="ti ti-mail-check" aria-hidden="true"></i> Taxa de resposta</div>
@@ -200,6 +244,30 @@ function carregarDados() {
   return window._dashDados || [];
 }
 
+let filtroDias = 30;
+
+function setFiltro(dias, btn) {
+  filtroDias = dias;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  aplicarFiltro();
+}
+
+function aplicarFiltro() {
+  if (filtroDias === 0) {
+    filtrado = [...ALL];
+  } else {
+    const limite = new Date();
+    limite.setDate(limite.getDate() - filtroDias);
+    filtrado = ALL.filter(d => {
+      const dt = parseDataDash(d.c1_raw);
+      return !dt || dt >= limite;
+    });
+  }
+  updateMetrics();
+  updateCharts();
+}
+
 function init() {
   document.getElementById('dash-dt').textContent = 'Atualizado em ' + new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'});
 
@@ -219,8 +287,7 @@ function init() {
   DADOS.map(d => ({...d, sc: detectStatus(d)})).forEach(d => ALL.push(d));
   filtrado = [...ALL];
 
-  updateMetrics();
-  updateCharts();
+  aplicarFiltro();
 
   document.getElementById('dash-content').style.display = '';
 }
@@ -247,22 +314,90 @@ function updateMetrics() {
   const conv = ativos.filter(d => d.status === 'Convertido').length;
   const taxaResp = ta ? Math.round(resp/ta*100) : 0;
 
+  // ── Calcular período anterior para delta ──
+  var agora = new Date();
+  var periodoAnterior = filtrado.filter(function(d) {
+    if (filtroDias === 0) return false;
+    var dt = parseDataDash(d.c1_raw);
+    if (!dt) return false;
+    var limiteAtual = new Date(); limiteAtual.setDate(limiteAtual.getDate() - filtroDias);
+    var limiteAnterior = new Date(); limiteAnterior.setDate(limiteAnterior.getDate() - filtroDias * 2);
+    return dt >= limiteAnterior && dt < limiteAtual;
+  });
+  var tAnterior = periodoAnterior.length;
+  var ativoAnterior = periodoAnterior.filter(function(d){ return !d.desqualificado; });
+  var convAnterior = ativoAnterior.filter(function(d){ return d.status === 'Convertido'; }).length;
+  var respAnterior = ativoAnterior.filter(function(d){ return STATUS_RESPONDEU.includes(d.status||''); }).length;
+  var taxaRespAnterior = ativoAnterior.length ? Math.round(respAnterior/ativoAnterior.length*100) : 0;
+
+  function deltaHtml(atual, anterior) {
+    if (filtroDias === 0 || anterior === 0) return '';
+    var diff = atual - anterior;
+    if (diff === 0) return '<span class="mc-delta neutral">= mesmo</span>';
+    if (diff > 0) return '<span class="mc-delta up">↑ '+diff+'</span>';
+    return '<span class="mc-delta down">↓ '+Math.abs(diff)+'</span>';
+  }
+
+  // ── Alerta: leads sem 1º contato ──
+  var semContato = filtrado.filter(function(d){ return !d.desqualificado && (!d.c1_raw || !d.c1_raw.trim()); }).length;
+  var altosemContato = filtrado.filter(function(d){ return !d.desqualificado && d.score==='ALTO' && (!d.c1_raw || !d.c1_raw.trim()); }).length;
+  var alertEl = document.getElementById('sem-contato-alert');
+  if (semContato > 0) {
+    alertEl.style.display = '';
+    alertEl.innerHTML = '<div class="sem-contato-box">'
+      + '<div class="sem-contato-num">'+semContato+'</div>'
+      + '<div class="sem-contato-info">'
+      + '<div class="sem-contato-titulo">'+semContato+' '+( semContato===1 ? 'lead cadastrado ainda sem 1º contato' : 'leads cadastrados ainda sem 1º contato' )+'</div>'
+      + '<div class="sem-contato-sub">'+(altosemContato > 0 ? '⚠️ '+altosemContato+' com score ALTO — prioridade máxima.<br>' : '')
+      + 'Acesse o BioLead para iniciar o contato.</div>'
+      + '</div>'
+      + '<a href="/Propostas/BioLead_v5.html" class="sem-contato-btn">→ Abrir BioLead</a>'
+      + '</div>';
+  } else {
+    alertEl.style.display = 'none';
+  }
+
   document.getElementById('mbox').innerHTML = [
-    {cls:'', icon:'ti-users', label:'Total', val:t, sub:ta+' ativos'},
-    {cls:'', icon:'ti-star', label:'Score alto', val:alto, sub:(ta?Math.round(alto/ta*100):0)+'% dos ativos'},
-    {cls:'amber', icon:'ti-calendar-event', label:'Reun. agendadas', val:reunAgend, sub:'aguardando realização'},
-    {cls:'green', icon:'ti-calendar-check', label:'Reun. realizadas', val:reunReal, sub:'total de reuniões realizadas'},
-    {cls:'red', icon:'ti-calendar-x', label:'Reun. canceladas', val:reunCanc, sub:'reagendamento pendente'},
-    {cls:'green', icon:'ti-file-invoice', label:'Orçamentos', val:orc, sub:orcDireto+' diretos · '+orcPosReun+' pós-reunião'},
-    {cls:'purple', icon:'ti-trophy', label:'Convertidos', val:conv, sub:'clientes confirmados'},
-    {cls:'red', icon:'ti-ban', label:'Desqualificados', val:desq, sub:'fora do perfil'},
+    {cls:'', icon:'ti-users', label:'Total', val:t, sub:ta+' ativos', delta:deltaHtml(t,tAnterior)},
+    {cls:'', icon:'ti-star', label:'Score alto', val:alto, sub:(ta?Math.round(alto/ta*100):0)+'% dos ativos', delta:''},
+    {cls:'amber', icon:'ti-calendar-event', label:'Reun. agendadas', val:reunAgend, sub:'aguardando realização', delta:''},
+    {cls:'green', icon:'ti-calendar-check', label:'Reun. realizadas', val:reunReal, sub:'total de reuniões realizadas', delta:''},
+    {cls:'red', icon:'ti-calendar-x', label:'Reun. canceladas', val:reunCanc, sub:'reagendamento pendente', delta:''},
+    {cls:'green', icon:'ti-file-invoice', label:'Orçamentos', val:orc, sub:orcDireto+' diretos · '+orcPosReun+' pós-reunião', delta:''},
+    {cls:'purple', icon:'ti-trophy', label:'Convertidos', val:conv, sub:'clientes confirmados', delta:deltaHtml(conv,convAnterior)},
+    {cls:'red', icon:'ti-ban', label:'Desqualificados', val:desq, sub:'fora do perfil', delta:''},
   ].map(function(m) {
     var colors = {
       '':'var(--bm-blue)', 'teal':'var(--bm-teal)', 'green':'#2A8A60',
       'amber':'#C9923C', 'red':'#904444', 'purple':'#6055B0', 'gray':'#8aa0b0'
     };
     var c = colors[m.cls] || 'var(--bm-blue)';
-    return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px;color:'+c+'" aria-hidden="true"></i> '+m.label+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>';
+    return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px;color:'+c+'" aria-hidden="true"></i> '+m.label+(m.delta||'')+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>';
+  }).join('');
+
+  // ── KPIs de conversão por etapa ──
+  var STATUS_RESP_ALL = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
+  var nContatados2 = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
+  var nResp2 = ativos.filter(function(d){ return STATUS_RESP_ALL.includes(d.status||''); }).length;
+  var nReunFez = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
+  var nReunReal2 = ativos.filter(function(d){ return d.status === 'Reunião realizada'; }).length;
+  var nConv2 = ativos.filter(function(d){ return d.status === 'Convertido'; }).length;
+
+  function pct(a,b){ return b>0 ? Math.round(a/b*100) : 0; }
+  function ckpiColor(v){ if(v>=60) return '#27a85a'; if(v>=30) return '#d97706'; return '#dc2626'; }
+
+  var ckpiData = [
+    {lbl:'Cadastrado → Contatado', val:pct(nContatados2,ta)},
+    {lbl:'Contatado → Respondeu', val:pct(nResp2,nContatados2)},
+    {lbl:'Respondeu → Reunião', val:pct(nReunFez,nResp2)},
+    {lbl:'Reunião → Realizada', val:pct(nReunReal2,nReunFez)},
+    {lbl:'Convertidos do total', val:pct(nConv2,ta)},
+  ];
+  document.getElementById('conv-kpis').innerHTML = ckpiData.map(function(k){
+    var c = ckpiColor(k.val);
+    return '<div class="ckpi"><div class="ckpi-val" style="color:'+c+'">'+k.val+'%</div>'
+      +'<div class="ckpi-lbl">'+k.lbl+'</div>'
+      +'<div class="ckpi-bar"><div class="ckpi-fill" style="width:'+k.val+'%;background:'+c+'"></div></div></div>';
   }).join('');
 
   // Funil
@@ -451,6 +586,25 @@ function updateCharts() {
   });
   const labels = Object.keys(meses).sort().slice(-12);
   const values = labels.map(k => meses[k]);
+
+  // ── Tendência: comparar últimos 2 meses ──
+  var sortedKeys = Object.keys(meses).sort();
+  if (sortedKeys.length >= 2) {
+    var last = meses[sortedKeys[sortedKeys.length-1]];
+    var prev = meses[sortedKeys[sortedKeys.length-2]];
+    var tBadge = document.getElementById('tendencia-badge');
+    if (tBadge) {
+      if (last > prev) {
+        var pctUp = Math.round((last-prev)/prev*100);
+        tBadge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:#dcfce7;color:#166534">↑ '+pctUp+'% vs mês anterior</span>';
+      } else if (last < prev) {
+        var pctDn = Math.round((prev-last)/prev*100);
+        tBadge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:#fee2e2;color:#991b1b">↓ '+pctDn+'% vs mês anterior</span>';
+      } else {
+        tBadge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:#f1f5f9;color:#64748b">= mesmo volume</span>';
+      }
+    }
+  }
 
   if (cE) cE.destroy();
   cE = new Chart(document.getElementById('cE'), {
