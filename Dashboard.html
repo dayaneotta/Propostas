@@ -418,10 +418,11 @@ function updateMetrics() {
 
   // Gap dinâmico: garante espaço mínimo para o label (32px por nó)
   var GAP = 32;
+  var GAP_REUN = 44; // gap maior entre reuniões e orçamentos para acomodar 3 linhas de label
   var cy=H/2;
   var yCad=cy-hCad/2, yCont=cy-hCont/2, yResp=cy-hResp/2;
-  var totRes=hReu+hOrc+hSem+(nReuniaoAgend>0?GAP:0)+(nOrcamento>0?GAP:0);
-  var yReu=cy-totRes/2, yOrc=yReu+hReu+GAP, ySem=yOrc+hOrc+GAP;
+  var totRes=hReu+hOrc+hSem+GAP_REUN+(nOrcamento>0?GAP:0);
+  var yReu=cy-totRes/2, yOrc=yReu+hReu+GAP_REUN, ySem=yOrc+hOrc+GAP;
   var yNaoCont=yCad+hCad+10, ySemRet=yCont+hCont+10;
   var totReun=hReal+(nReuniaoFut>0?hFut+GAP:0);
   var yReal=cy-totReun/2, yFut=yReal+hReal+GAP, yCanc=yFut+(nReuniaoFut>0?hFut+GAP:0);
@@ -497,7 +498,7 @@ function updateMetrics() {
   if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
   if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-16, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
   if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-16, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
-  if(nReuniaoCanc>0)  parts.push(glbl(col[4]+nW+tx, yFut+hFut+GAP+hCancReun/2+10, nReuniaoCanc+' canceladas'));
+  if(nReuniaoCanc>0)  parts.push(glbl(col[4]+nW+tx, yFut+hFut+GAP+hCancReun/2+10, nReuniaoCanc+' reuniões canceladas'));
   if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
   if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
 
