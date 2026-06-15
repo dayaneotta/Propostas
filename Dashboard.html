@@ -35,10 +35,10 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 /* Metric cards */
 .metrics-row{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;margin-bottom:14px}
 .mc{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r);padding:8px 10px;border-top:2.5px solid var(--bm-blue);min-width:0;overflow:hidden}
-.mc-label{font-size:9px;font-weight:700;letter-spacing:.04em;color:var(--text3);margin-bottom:4px;display:flex;align-items:center;gap:3px;text-transform:uppercase;white-space:nowrap}
+.mc-label{font-size:8px;font-weight:700;letter-spacing:.07em;color:var(--text3);margin-bottom:4px;display:flex;align-items:center;gap:4px;text-transform:uppercase;white-space:nowrap;overflow:hidden}
 .mc-label i{font-size:11px}
 .mc-val{font-size:22px;font-weight:700;color:var(--bm-blue);line-height:1;margin-bottom:3px}
-.mc-sub{font-size:9px;color:var(--text3);white-space:normal;line-height:1.3}
+.mc-sub{font-size:8px;color:#b8c8d4;white-space:normal;line-height:1.3}
 .mc.teal{border-top-color:var(--bm-teal)}.mc.teal .mc-val{color:var(--bm-teal)}
 .mc.green{border-top-color:#27a85a}.mc.green .mc-val{color:#27a85a}
 .mc.amber{border-top-color:#d97706}.mc.amber .mc-val{color:#d97706}
@@ -255,7 +255,14 @@ function updateMetrics() {
     {cls:'green', icon:'ti-file-invoice', label:'Orçamentos', val:orc, sub:orcDireto+' diretos · '+orcPosReun+' pós-reunião'},
     {cls:'purple', icon:'ti-trophy', label:'Convertidos', val:conv, sub:'clientes confirmados'},
     {cls:'red', icon:'ti-ban', label:'Desqualificados', val:desq, sub:'fora do perfil'},
-  ].map(function(m) { return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px" aria-hidden="true"></i> '+m.label+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>'; }).join('');
+  ].map(function(m) {
+    var colors = {
+      '':'var(--bm-blue)', 'teal':'var(--bm-teal)', 'green':'#2A8A60',
+      'amber':'#C9923C', 'red':'#904444', 'purple':'#6055B0', 'gray':'#8aa0b0'
+    };
+    var c = colors[m.cls] || 'var(--bm-blue)';
+    return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px;color:'+c+'" aria-hidden="true"></i> '+m.label+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>';
+  }).join('');
 
   // Funil
   // Sankey de engajamento — gradiente Biomelting
