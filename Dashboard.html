@@ -413,9 +413,9 @@ function updateMetrics() {
   function sp(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
   function sh(n, maxN, maxH) { return Math.max(Math.round(Math.sqrt(n/maxN)*maxH), 5); }
 
-  var W=900, H=300, nW=4;
+  var W=900, H=200, nW=6;
   var col=[30,234,374,504,664];
-  var maxH=170, maxN=nCadastrados;
+  var maxH=110, maxN=nCadastrados;
 
   var hCad=sh(nCadastrados,maxN,maxH), hCont=sh(nContatados,maxN,maxH);
   var hResp=sh(nResponderam,maxN,maxH), hReu=sh(nReuniaoAgend,maxN,maxH);
@@ -426,11 +426,11 @@ function updateMetrics() {
 
   var cy=H/2;
   var yCad=cy-hCad/2, yCont=cy-hCont/2, yResp=cy-hResp/2;
-  var totRes=hReu+hOrc+hSem+(nReuniaoAgend>0?8:0)+(nOrcamento>0?8:0);
-  var yReu=cy-totRes/2, yOrc=yReu+hReu+8, ySem=yOrc+hOrc+8;
+  var totRes=hReu+hOrc+hSem+(nReuniaoAgend>0?6:0)+(nOrcamento>0?6:0);
+  var yReu=cy-totRes/2, yOrc=yReu+hReu+6, ySem=yOrc+hOrc+6;
   var yNaoCont=yCad+hCad+10, ySemRet=yCont+hCont+10;
-  var totReun=hReal+(nReuniaoFut>0?hFut+22:0);
-  var yReal=cy-totReun/2, yFut=yReal+hReal+22, yCanc=yFut+(nReuniaoFut>0?hFut+22:0);
+  var totReun=hReal+(nReuniaoFut>0?hFut+16:0);
+  var yReal=cy-totReun/2, yFut=yReal+hReal+16, yCanc=yFut+(nReuniaoFut>0?hFut+16:0);
 
   function wave(x1,y1,h1,x2,y2,h2,fill,op){
     op=op||0.5;
@@ -444,9 +444,9 @@ function updateMetrics() {
     return '<rect x="'+x+'" y="'+y+'" width="'+nW+'" height="'+h+'" rx="2" fill="'+color+'" opacity="'+op+'"/>';
   }
   function lbl(x,y,val,color,label,sub){
-    return '<text x="'+x+'" y="'+y+'" font-size="18" font-weight="700" fill="'+color+'" font-family="Segoe UI,sans-serif">'+val+'</text>'
-      +'<text x="'+x+'" y="'+(y+16)+'" font-size="8" font-weight="600" fill="'+color+'" font-family="Segoe UI,sans-serif" letter-spacing=".08em">'+label+'</text>'
-      +(sub?'<text x="'+x+'" y="'+(y+28)+'" font-size="8" fill="#9AABB8" font-family="Segoe UI,sans-serif">'+sub+'</text>':'');
+    return '<text x="'+x+'" y="'+y+'" font-size="22" font-weight="700" fill="'+color+'" font-family="Segoe UI,sans-serif">'+val+'</text>'
+      +'<text x="'+x+'" y="'+(y+18)+'" font-size="7" font-weight="700" fill="'+color+'" opacity=".55" font-family="Segoe UI,sans-serif" letter-spacing=".1em">'+label+'</text>'
+      +(sub?'<text x="'+x+'" y="'+(y+30)+'" font-size="7" fill="#9AABB8" font-family="Segoe UI,sans-serif">'+sub+'</text>':'');
   }
   function slbl(x,y,val,color,label,op){
     op=op||1;
@@ -493,14 +493,14 @@ function updateMetrics() {
   if(nReuniaoFut>0)   parts.push(node(col[4],yFut,hFut,'#C9923C'));
 
   // Labels
-  parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-14, nCadastrados, '#0D4E8A', 'ATIVOS', ''));
-  parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-14, nContatados, '#1A73C8', 'CONTATADOS', sp(nContatados,nCadastrados)+'% dos cadastrados'));
-  parts.push(lbl(col[2]+nW+tx, yResp+hResp/2-14, nResponderam, '#2EC4A5', 'RESPONDERAM', sp(nResponderam,nContatados)+'% dos contatados'));
-  if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-24, nReuniaoAgend, '#1A8A78', 'REUNIÕES', sp(nReuniaoAgend,nResponderam)+'% dos resp.'));
-  if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-14, nOrcamento, '#6055B0', 'ORÇAMENTOS', sp(nOrcamento,nResponderam)+'% dos resp.'));
+  parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-16, nCadastrados, '#0D4E8A', 'ATIVOS', ''));
+  parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-16, nContatados, '#1A73C8', 'CONTATADOS', sp(nContatados,nCadastrados)+'% dos cadastrados'));
+  parts.push(lbl(col[2]+nW+tx, yResp+hResp/2-16, nResponderam, '#2EC4A5', 'RESPONDERAM', sp(nResponderam,nContatados)+'% dos contatados'));
+  if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-16, nReuniaoAgend, '#1A8A78', 'REUNIÕES', sp(nReuniaoAgend,nResponderam)+'% dos resp.'));
+  if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-16, nOrcamento, '#6055B0', 'ORÇAMENTOS', sp(nOrcamento,nResponderam)+'% dos resp.'));
   if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
-  if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
-  if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
+  if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-16, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
+  if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-16, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
   if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
   if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
 
