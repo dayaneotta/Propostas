@@ -354,9 +354,9 @@ function updateMetrics() {
   var parts=['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
   // Waves
-  parts.push(waveId('sfa',col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)',0.5,true));
+  parts.push(waveId('sfa',col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)'));
   if(nNaoContat>0) parts.push(wave(col[0],yCad+hCad+6,hNaoCont,col[1],ySemRet+hSemRet+6,hNaoCont,'url(#sgneg)',0.5));
-  parts.push(waveId('sfb',col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)',0.5,true));
+  parts.push(waveId('sfb',col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)'));
   if(nSemRetorno>0) parts.push(wave(col[1],yCont+hCont+6,hSemRet,col[2],yResp+hResp+6,hSemRet,'url(#sgneg)',0.45));
   if(nReuniaoAgend>0) parts.push(waveId('sfc',col[2],yResp,hReu,col[3],yReu,hReu,'url(#sg2a)'));
   if(nOrcamento>0)    parts.push(waveId('sfd',col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
@@ -366,6 +366,8 @@ function updateMetrics() {
 
   // Nodes
   parts.push(node(col[0],yCad,hCad,'#0D4E8A'));
+  // Invisible hover area over cadastrados node and label
+  parts.push('<rect id="sfn0" x="'+(col[0]-4)+'" y="'+(yCad-5)+'" width="'+(col[1]-col[0]+10)+'" height="'+(hCad+10)+'" fill="transparent" style="cursor:pointer;pointer-events:all"/>');
   parts.push(node(col[1],yCont,hCont,'#1A73C8'));
   parts.push(node(col[2],yResp,hResp,'#2EC4A5'));
   if(nReuniaoAgend>0) parts.push(node(col[3],yReu,hReu,'#1A8A78'));
@@ -397,8 +399,9 @@ function updateMetrics() {
     var svgEl = document.querySelector('#sankey-wrap svg');
     if (!svgEl || !tip) return;
     var flows = [
-      {id:'sfa', pct:nCadastrados+' cadastrados', sub:nContatados+' contatados · '+sp(nContatados,nCadastrados)+'% do total'},
-      {id:'sfb', pct:nContatados+' contatados', sub:nResponderam+' responderam · '+sp(nResponderam,nContatados)+'% dos contatados'},
+      {id:'sfn0', pct:nCadastrados+' cadastrados', sub:nContatados+' contatados · '+nNaoContat+' sem contato'},
+      {id:'sfa', pct:sp(nContatados,nCadastrados)+'% contatados', sub:nContatados+' de '+nCadastrados+' cadastrados foram contatados'},
+      {id:'sfb', pct:sp(nResponderam,nContatados)+'% responderam', sub:nResponderam+' de '+nContatados+' contatados responderam'},
       {id:'sfc', pct:nResponderam+' responderam', sub:nReuniaoAgend+' agendaram reunião · '+sp(nReuniaoAgend,nResponderam)+'% dos que responderam'},
       {id:'sfd', pct:nResponderam+' responderam', sub:nOrcamento+' pediram orçamento · '+sp(nOrcamento,nResponderam)+'% dos que responderam'},
       {id:'sfe', pct:nResponderam+' responderam', sub:nSemInteresse+' sem interesse · '+sp(nSemInteresse,nResponderam)+'% dos que responderam'},
