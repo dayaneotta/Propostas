@@ -290,7 +290,11 @@ function init() {
   document.getElementById('dash-content').style.display = '';
 }
 
-function contatoValido(v){ return v && v.trim().length > 3 && !/^[-*_]{2,}$/.test(v.trim()); }
+function contatoValido(v){
+  if (!v) return false;
+  var s = v.trim().replace(/^"+|"+$/g, '').trim(); // remove aspas escapadas do Google Sheets
+  return s.length > 3 && !/^[-*_]{2,}$/.test(s);
+}
 
 function updateMetrics() {
   const t = filtrado.length;
@@ -362,12 +366,13 @@ function updateMetrics() {
   var nContatados = ativos.filter(function(d){ return contatoValido(d.c1_raw); }).length;
 
   // DEBUG — remover após verificar
+  var temC1 = ativos.filter(function(d){ return contatoValido(d.c1_raw); });
+  var temC2 = ativos.filter(function(d){ return contatoValido(d.c2_raw); });
   console.log('DEBUG cadência:');
-  console.log('  ativos.length:', ativos.length);
-  console.log('  nContatados:', nContatados);
-  console.log('  amostra c1_raw:', ativos.slice(0,3).map(function(d){ return JSON.stringify(d.c1_raw); }));
-  console.log('  amostra c2_raw:', ativos.slice(0,3).map(function(d){ return JSON.stringify(d.c2_raw); }));
-  console.log('  contatoValido test:', contatoValido, typeof contatoValido);
+  console.log('  nContatados (c1 válido):', temC1.length);
+  console.log('  com c2 válido:', temC2.length);
+  console.log('  c2_raw amostra (quem tem c1):', temC1.slice(0,5).map(function(d){ return JSON.stringify(d.c2_raw); }));
+  console.log('  c2_raw raw bytes ex:', temC1[0] && temC1[0].c2_raw ? [...temC1[0].c2_raw].map(function(ch){ return ch.charCodeAt(0); }) : 'vazio');
 
   // Cadência: leads com 2+ contatos registrados — mesma lógica de validação do BioLead
   var com2contatos = ativos.filter(function(d){ return contatoValido(d.c1_raw) && contatoValido(d.c2_raw); }).length;
