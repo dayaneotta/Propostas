@@ -350,7 +350,7 @@ function updateMetrics() {
   var _atv = filtrado.filter(function(d){ return !d.desqualificado; });
   var _nCont = _atv.filter(function(d){ return contatoValido(d.c1_raw); }).length;
   var com2contatos = _atv.filter(function(d){ return contatoValido(d.c1_raw) && contatoValido(d.c2_raw); }).length;
-  var com3contatos = _atv.filter(function(d){ return contatoValido(d.c2_raw) && contatoValido(d.c3_raw); }).length;
+  var com3contatos = _atv.filter(function(d){ return contatoValido(d.c1_raw) && contatoValido(d.c2_raw) && contatoValido(d.c3_raw); }).length;
   var cadenciaPct = _nCont > 0 ? Math.round(com2contatos/_nCont*100) : 0;
   var cadenciaSub = com2contatos+' com 2+ contatos · '+com3contatos+' com 3 contatos';
 
