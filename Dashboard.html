@@ -172,7 +172,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
       <div class="chart-card">
         <div class="chart-title"><i class="ti ti-map-pin" aria-hidden="true"></i> Distribuição por estado</div>
         <div class="chart-wrap" style="height:220px"><canvas id="cEstados"></canvas></div>
-        <div id="estados-legenda" style="margin-top:8px"></div>
       </div>
     </div>
 
@@ -542,70 +541,28 @@ function updateMetrics() {
     '<div class="tempo-val">' + contC1C2 + ' <span style="font-size:11px;font-weight:400;color:var(--text3)">de ' + ta + '</span></div></div>';
 
   // Distribuição por estado - gráfico de barras
-  const byEstado = {}, reunByEstado = {};
-  filtrado.forEach(d => {
-    if (!d.estado) return;
-    byEstado[d.estado] = (byEstado[d.estado]||0) + 1;
-    if (['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''))
-      reunByEstado[d.estado] = (reunByEstado[d.estado]||0) + 1;
-  });
+  const byEstado = {};
+  filtrado.forEach(d => { if (d.estado) byEstado[d.estado] = (byEstado[d.estado]||0)+1; });
   const estadosSorted = Object.entries(byEstado).sort((a,b) => b[1]-a[1]);
   if (cEstados) { try { cEstados.destroy(); } catch(e) {} cEstados = null; }
   cEstados = new Chart(document.getElementById('cEstados'), {
     type: 'bar',
     data: {
       labels: estadosSorted.map(([e]) => e),
-      datasets: [
-        {
-          label: 'Leads ativos',
-          data: estadosSorted.map(([e]) => byEstado[e]||0),
-          backgroundColor: 'rgba(26,115,200,0.22)',
-          hoverBackgroundColor: 'rgba(26,115,200,0.38)',
-          borderRadius: 4,
-          borderSkipped: false,
-          order: 2,
-        },
-        {
-          label: 'Reuniões',
-          data: estadosSorted.map(([e]) => reunByEstado[e]||0),
-          backgroundColor: 'rgba(26,138,120,0.88)',
-          hoverBackgroundColor: 'rgba(26,138,120,1)',
-          borderRadius: 4,
-          borderSkipped: false,
-          order: 1,
-        }
-      ]
+      datasets: [{
+        label: 'Pesquisadores',
+        data: estadosSorted.map(([,n]) => n),
+        backgroundColor: estadosSorted.map((_,i) => { const t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0; return gradC(t, 0.82); }),
+        hoverBackgroundColor: estadosSorted.map((_,i) => { const t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0; return gradC(t, 1); }),
+        borderRadius: 4,
+      }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            afterBody: function(items) {
-              var idx = items[0].dataIndex;
-              var e = estadosSorted[idx][0];
-              var total = byEstado[e]||0;
-              var reun = reunByEstado[e]||0;
-              var pct = total > 0 ? Math.round(reun/total*100) : 0;
-              return 'Taxa de reunião: ' + pct + '%';
-            }
-          }
-        }
-      },
-      grouped: false,
-      scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1, color: '#8aa0b0', font: { size: 10 } }, grid: { color: 'rgba(13,78,138,0.06)' } },
-        x: { grid: { display: false }, ticks: { color: '#8aa0b0', font: { size: 10 } } }
-      }
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
     }
   });
-  var legendaEl = document.getElementById('estados-legenda');
-  if (legendaEl) legendaEl.innerHTML =
-    '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:11px;color:var(--text2)">'
-    +'<span style="width:10px;height:10px;border-radius:2px;background:rgba(26,115,200,0.35);display:inline-block"></span>Leads ativos</span>'
-    +'<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)">'
-    +'<span style="width:10px;height:10px;border-radius:2px;background:rgba(26,138,120,0.88);display:inline-block"></span>Reuniões</span>';
 }
 
 function updateCharts() {
