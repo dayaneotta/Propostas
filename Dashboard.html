@@ -396,13 +396,13 @@ function updateMetrics() {
     var svgEl = document.querySelector('#sankey-wrap svg');
     if (!svgEl || !tip) return;
     var flows = [
-      {id:'sf0', pct:sp(nContatados,nCadastrados)+'%', sub:nContatados+' contatados de '+nCadastrados+' cadastrados'},
-      {id:'sf1', pct:sp(nResponderam,nContatados)+'%', sub:nResponderam+' responderam de '+nContatados+' contatados'},
-      {id:'sf2', pct:sp(nReuniaoAgend,nResponderam)+'%', sub:nReuniaoAgend+' agendaram reunião de '+nResponderam+' que responderam'},
-      {id:'sf3', pct:sp(nOrcamento,nResponderam)+'%', sub:nOrcamento+' pediram orçamento de '+nResponderam+' que responderam'},
-      {id:'sf4', pct:sp(nSemInteresse,nResponderam)+'%', sub:nSemInteresse+' sem interesse de '+nResponderam+' que responderam'},
-      {id:'sf5', pct:sp(nReuniaoReal,nReuniaoAgend)+'%', sub:nReuniaoReal+' reuniões realizadas de '+nReuniaoAgend+' agendadas'},
-      {id:'sf6', pct:'a realizar', sub:nReuniaoFut+' reuniões agendadas para o futuro'},
+      {id:'sf0', pct:nCadastrados+' cadastrados', sub:nContatados+' contatados · '+sp(nContatados,nCadastrados)+'% do total'},
+      {id:'sf1', pct:nContatados+' contatados', sub:nResponderam+' responderam · '+sp(nResponderam,nContatados)+'% dos contatados'},
+      {id:'sf2', pct:nResponderam+' responderam', sub:nReuniaoAgend+' agendaram reunião · '+sp(nReuniaoAgend,nResponderam)+'% dos que responderam'},
+      {id:'sf3', pct:nResponderam+' responderam', sub:nOrcamento+' pediram orçamento · '+sp(nOrcamento,nResponderam)+'% dos que responderam'},
+      {id:'sf4', pct:nResponderam+' responderam', sub:nSemInteresse+' sem interesse · '+sp(nSemInteresse,nResponderam)+'% dos que responderam'},
+      {id:'sf5', pct:nReuniaoAgend+' reuniões', sub:nReuniaoReal+' realizadas · '+sp(nReuniaoReal,nReuniaoAgend)+'% das agendadas'},
+      {id:'sf6', pct:nReuniaoFut+' agendadas', sub:'a realizar — reuniões futuras'},
     ];
     // Add pointer-events only to the path being hovered using mouseover on SVG
     svgEl.addEventListener('mouseover', function(e) {
