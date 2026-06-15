@@ -283,9 +283,9 @@ function updateMetrics() {
   function sp(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
   function sh(n, maxN, maxH) { return Math.max(Math.round(Math.sqrt(n/maxN)*maxH), 5); }
 
-  var W=900, H=300, nW=4;
+  var W=900, H=340, nW=4;
   var col=[30,234,374,504,664];
-  var maxH=170, maxN=nCadastrados;
+  var maxH=200, maxN=nCadastrados;
 
   var hCad=sh(nCadastrados,maxN,maxH), hCont=sh(nContatados,maxN,maxH);
   var hResp=sh(nResponderam,maxN,maxH), hReu=sh(nReuniaoAgend,maxN,maxH);
