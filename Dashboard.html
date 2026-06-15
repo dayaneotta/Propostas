@@ -433,7 +433,11 @@ function updateMetrics() {
 }
 
 function updateCharts() {
-  // Evolução temporal - contatos por mês (usando c1_raw como data do 1º contato)
+  // Shared refined style
+  var refinedTicks = { color: '#8aa0b0', font: { family: 'Segoe UI, Arial, sans-serif', size: 10 } };
+  var refinedGrid = { color: 'rgba(13,78,138,0.06)', drawBorder: false };
+
+  // Evolução temporal
   const meses = {};
   ALL.forEach(d => {
     const dt = parseDataDash(d.c1_raw);
@@ -452,14 +456,53 @@ function updateCharts() {
       datasets: [{
         label: 'Novos contatos',
         data: values,
-        backgroundColor: 'rgba(26,115,200,0.7)',
-        borderRadius: 4,
+        backgroundColor: function(ctx) {
+          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 220);
+          g.addColorStop(0, 'rgba(26,115,200,0.78)');
+          g.addColorStop(1, 'rgba(46,196,165,0.55)');
+          return g;
+        },
+        borderRadius: 5,
+        borderSkipped: false,
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+      scales: {
+        y: { beginAtZero: true, grid: refinedGrid, ticks: refinedTicks, border: { display: false } },
+        x: { grid: { display: false }, ticks: refinedTicks, border: { display: false } }
+      }
+    }
+  });
+
+  // Distribuição por estado
+  const byEstado = {};
+  filtrado.forEach(d => { if (d.estado) byEstado[d.estado] = (byEstado[d.estado]||0)+1; });
+  const estadosSorted = Object.entries(byEstado).sort((a,b) => b[1]-a[1]);
+
+  if (cEstados) { try { cEstados.destroy(); } catch(e) {} cEstados = null; }
+  cEstados = new Chart(document.getElementById('cEstados'), {
+    type: 'bar',
+    data: {
+      labels: estadosSorted.map(([e]) => e),
+      datasets: [{
+        data: estadosSorted.map(([,n]) => n),
+        backgroundColor: estadosSorted.map(function(_,i) {
+          var t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0;
+          return gradC(t, 0.78);
+        }),
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: refinedGrid, ticks: refinedTicks, border: { display: false } },
+        x: { grid: { display: false }, ticks: refinedTicks, border: { display: false } }
+      }
     }
   });
 }
