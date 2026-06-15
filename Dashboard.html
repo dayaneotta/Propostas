@@ -375,13 +375,13 @@ function updateMetrics() {
 
   // Labels
   parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-14, nCadastrados, '#0D4E8A', 'CADASTRADOS', ''));
-  parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-14, nContatados, '#1A73C8', 'CONTATADOS', sp(nContatados,nCadastrados)+'% dos cadastrados'));
-  parts.push(lbl(col[2]+nW+tx, yResp+hResp/2-14, nResponderam, '#2EC4A5', 'RESPONDERAM', sp(nResponderam,nContatados)+'% dos contatados'));
-  if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-14, nReuniaoAgend, '#1A8A78', 'REUNIÕES', sp(nReuniaoAgend,nResponderam)+'% dos resp.'));
-  if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-14, nOrcamento, '#6055B0', 'ORÇAMENTOS', sp(nOrcamento,nResponderam)+'% dos resp.'));
+  parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-14, nContatados, '#1A73C8', 'CONTATADOS', ''));
+  parts.push(lbl(col[2]+nW+tx, yResp+hResp/2-14, nResponderam, '#2EC4A5', 'RESPONDERAM', ''));
+  if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-14, nReuniaoAgend, '#1A8A78', 'REUNIÕES', ''));
+  if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-14, nOrcamento, '#6055B0', 'ORÇAMENTOS', ''));
   if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
-  if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
-  if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
+  if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', ''));
+  if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', ''));
   if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
   if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
 
@@ -404,35 +404,42 @@ function updateMetrics() {
       {id:'sf5', pct:sp(nReuniaoReal,nReuniaoAgend)+'%', sub:nReuniaoReal+' reuniões realizadas de '+nReuniaoAgend+' agendadas'},
       {id:'sf6', pct:'a realizar', sub:nReuniaoFut+' reuniões agendadas para o futuro'},
     ];
-    flows.forEach(function(f) {
-      var el = svgEl.querySelector('#'+f.id);
-      if (!el) return;
-      el.style.cursor = 'pointer';
-      el.addEventListener('mouseenter', function(e) {
+    // Add pointer-events only to the path being hovered using mouseover on SVG
+    svgEl.addEventListener('mouseover', function(e) {
+      var target = e.target;
+      var f = flows.find(function(fl) { return target.id === fl.id; });
+      if (f) {
         tipPct.textContent = f.pct;
         tipSub.textContent = f.sub;
         tip.style.display = 'block';
-        el.style.opacity = '0.85';
-        el.style.filter = 'brightness(1.1)';
-      });
-      el.addEventListener('mousemove', function(e) {
+        target.style.opacity = '0.82';
+        target.style.filter = 'brightness(1.12)';
+      }
+    });
+    svgEl.addEventListener('mousemove', function(e) {
+      var target = e.target;
+      var f = flows.find(function(fl) { return target.id === fl.id; });
+      if (f) {
         var wrap = document.getElementById('sankey-wrap').parentElement;
         var rect = wrap.getBoundingClientRect();
         var x = e.clientX - rect.left;
         var y = e.clientY - rect.top;
         tip.style.left = (x - tip.offsetWidth/2) + 'px';
         tip.style.top = (y - tip.offsetHeight - 12) + 'px';
-      });
-      el.addEventListener('mouseleave', function() {
+      }
+    });
+    svgEl.addEventListener('mouseout', function(e) {
+      var target = e.target;
+      if (flows.find(function(fl) { return target.id === fl.id; })) {
         tip.style.display = 'none';
-        el.style.opacity = '';
-        el.style.filter = '';
-      });
+        target.style.opacity = '';
+        target.style.filter = '';
+      }
     });
   }, 200);
 
-  if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
-  if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
+  if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#0B6E4F', 'REALIZADAS', ''));
+  if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-14, nReuniaoFut, '#C9923C', 'AGENDADAS', ''));
   if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
   if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
 
