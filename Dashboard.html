@@ -260,7 +260,7 @@ function updateMetrics() {
   ].map(function(m) { return '<div class="mc '+m.cls+'"><div class="mc-label"><i class="ti '+m.icon+'" style="font-size:12px" aria-hidden="true"></i> '+m.label+'</div><div class="mc-val">'+m.val+'</div><div class="mc-sub">'+m.sub+'</div></div>'; }).join('');
 
   // Funil
-  // Sankey de engajamento
+  // Sankey de engajamento — design sofisticado
   const STATUS_RESP_ALL = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   const nCadastrados = filtrado.length;
   const nContatados = ativos.filter(function(d){ return d.c1_raw && d.c1_raw.trim(); }).length;
@@ -273,98 +273,91 @@ function updateMetrics() {
   const nSemRetorno = Math.max(0, nContatados - nResponderam);
   const nNaoContat = Math.max(0, nCadastrados - nContatados - desq);
 
-  function sankeyPct(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
+  function sp(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
+  function sh(n, maxN, maxH) { return Math.max(Math.round(Math.sqrt(n/maxN)*maxH), 5); }
 
-  // Use sqrt scale to soften extremes
-  function sqrtH(n, maxN, maxH) {
-    return Math.max(Math.round(Math.sqrt(n / maxN) * maxH), 6);
+  var W=900, H=300, nW=4;
+  var col=[30,230,370,500,660];
+  var maxH=170, maxN=nCadastrados;
+
+  var hCad=sh(nCadastrados,maxN,maxH), hCont=sh(nContatados,maxN,maxH);
+  var hResp=sh(nResponderam,maxN,maxH), hReu=sh(nReuniaoAgend,maxN,maxH);
+  var hReal=sh(nReuniaoReal,maxN,maxH), hCanc=sh(nReuniaoCanc,maxN,maxH);
+  var hOrc=sh(nOrcamento,maxN,maxH), hSem=sh(nSemInteresse,maxN,maxH);
+  var hSemRet=nSemRetorno>0?Math.max(Math.round(Math.cbrt(nSemRetorno/maxN)*maxH*0.4),4):0;
+  var hNaoCont=nNaoContat>0?Math.max(Math.round(Math.cbrt(nNaoContat/maxN)*maxH*0.4),4):0;
+
+  var cy=H/2;
+  var yCad=cy-hCad/2, yCont=cy-hCont/2, yResp=cy-hResp/2;
+  var totRes=hReu+hOrc+hSem+(nReuniaoAgend>0?8:0)+(nOrcamento>0?8:0);
+  var yReu=cy-totRes/2, yOrc=yReu+hReu+8, ySem=yOrc+hOrc+8;
+  var yNaoCont=yCad+hCad+10, ySemRet=yCont+hCont+10;
+  var yReal=cy-(hReal+(nReuniaoCanc>0?hCanc+8:0))/2, yCanc=yReal+hReal+8;
+
+  function wave(x1,y1,h1,x2,y2,h2,fill,op){
+    op=op||0.45;
+    var mx=(x1+x2)/2;
+    return '<path d="M'+(x1+nW)+' '+y1+' C'+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2
+      +' L'+x2+' '+(y2+h2)+' C'+mx+' '+(y2+h2)+','+mx+' '+(y1+h1)+','+(x1+nW)+' '+(y1+h1)+' Z"'
+      +' fill="'+fill+'" opacity="'+op+'"/>';
   }
 
-  var W = 960, H = 260, nodeW = 12;
-  var col = [30, 220, 420, 620, 800];
-  var maxH = 170;
-  var maxN = nCadastrados;
+  function node(x,y,h,color){ return '<rect x="'+x+'" y="'+y+'" width="'+nW+'" height="'+h+'" rx="2" fill="'+color+'"/>'; }
 
-  var hCad  = sqrtH(nCadastrados, maxN, maxH);
-  var hCont = sqrtH(nContatados,  maxN, maxH);
-  var hResp = sqrtH(nResponderam, maxN, maxH);
-  var hReu  = sqrtH(nReuniaoAgend, maxN, maxH);
-  var hReuReal = sqrtH(nReuniaoReal, maxN, maxH);
-  var hReuCanc = sqrtH(nReuniaoCanc, maxN, maxH);
-  var hOrc  = sqrtH(nOrcamento,   maxN, maxH);
-  var hSem  = sqrtH(nSemInteresse,maxN, maxH);
-  // sem retorno and nao contatado: even smaller (cube root)
-  var hSemRet  = nSemRetorno  > 0 ? Math.max(Math.round(Math.cbrt(nSemRetorno /maxN)*maxH*0.5), 4) : 0;
-  var hNaoCont = nNaoContat   > 0 ? Math.max(Math.round(Math.cbrt(nNaoContat  /maxN)*maxH*0.5), 4) : 0;
-
-  // Y positions — center main nodes
-  var centerY = H / 2;
-  var yCad  = centerY - hCad/2;
-  var yCont = centerY - hCont/2;
-  var yResp = centerY - hResp/2;
-
-  // Results: stack from center
-  var totalResults = hReu + hOrc + hSem + (nReuniaoAgend>0?8:0) + (nOrcamento>0?8:0);
-  var yReu  = centerY - totalResults/2;
-  var yReuReal = centerY - (hReuReal + (nReuniaoCanc>0?hReuCanc+8:0))/2;
-  var yReuCanc = yReuReal + hReuReal + 8;
-  var yOrc  = yReu + hReu + 8;
-  var ySem  = yOrc + hOrc + 8;
-
-  // Gray nodes below
-  var yNaoCont = yCad  + hCad  + 16;
-  var ySemRet  = yCont + hCont + 16;
-
-  function mkFlow(x1,y1,h1,x2,y2,h2,color,alpha) {
-    alpha = alpha || 0.55;
-    var mx = (x1+x2)/2;
-    return '<path d="M'+(x1+nodeW)+' '+y1+' C'+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2
-      +' L'+x2+' '+(y2+h2)+' C'+mx+' '+(y2+h2)+','+mx+' '+(y1+h1)+','+(x1+nodeW)+' '+(y1+h1)+' Z"'
-      +' fill="'+color+'" opacity="'+alpha+'"/>';
+  function lbl(x,y,val,color,label,sub){
+    return '<text x="'+x+'" y="'+y+'" font-size="18" font-weight="700" fill="'+color+'" font-family="Segoe UI,sans-serif">'+val+'</text>'
+      +'<text x="'+x+'" y="'+(y+16)+'" font-size="8" font-weight="600" fill="'+color+'" font-family="Segoe UI,sans-serif" letter-spacing=".08em">'+label+'</text>'
+      +(sub?'<text x="'+x+'" y="'+(y+28)+'" font-size="8" fill="#9AABB8" font-family="Segoe UI,sans-serif">'+sub+'</text>':'');
   }
 
-  function mkNode(x,y,h,color,label,val,pctTxt) {
-    var tx = x + nodeW + 10;
-    var midY = y + h/2;
-    var labelTxt = label + (pctTxt ? ' · ' + pctTxt : '');
-    return '<rect x="'+x+'" y="'+y+'" width="'+nodeW+'" height="'+h+'" rx="4" fill="'+color+'"/>'
-      +'<text x="'+tx+'" y="'+(midY-7)+'" font-size="15" font-weight="700" fill="#1a2a3a" font-family="Segoe UI,sans-serif">'+val+'</text>'
-      +'<text x="'+tx+'" y="'+(midY+11)+'" font-size="11" font-weight="500" fill="'+color+'" font-family="Segoe UI,sans-serif">'+labelTxt+'</text>';
-  }
+  function glbl(x,y,txt){ return '<text x="'+x+'" y="'+y+'" font-size="9" fill="#B8C8D4" font-family="Segoe UI,sans-serif">'+txt+'</text>'; }
 
-  function mkGrayLabel(x,y,h,txt) {
-    return '<text x="'+(x+nodeW+8)+'" y="'+(y+h/2+5)+'" font-size="11" font-weight="500" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+txt+'</text>';
-  }
+  // Gradient defs
+  var defs = '<defs>'
+    +'<linearGradient id="sg01" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1A73C8" stop-opacity=".5"/><stop offset="100%" stop-color="#2D9EAA" stop-opacity=".5"/></linearGradient>'
+    +'<linearGradient id="sg12" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2D9EAA" stop-opacity=".45"/><stop offset="100%" stop-color="#8B7830" stop-opacity=".45"/></linearGradient>'
+    +'<linearGradient id="sg2a" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8B7830" stop-opacity=".45"/><stop offset="100%" stop-color="#8B7830" stop-opacity=".45"/></linearGradient>'
+    +'<linearGradient id="sg2b" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6055B0" stop-opacity=".4"/><stop offset="100%" stop-color="#6055B0" stop-opacity=".4"/></linearGradient>'
+    +'<linearGradient id="sg2c" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#A06060" stop-opacity=".2"/><stop offset="100%" stop-color="#A06060" stop-opacity=".2"/></linearGradient>'
+    +'<linearGradient id="sg3a" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2A8A60" stop-opacity=".45"/><stop offset="100%" stop-color="#2A8A60" stop-opacity=".45"/></linearGradient>'
+    +'<linearGradient id="sgneg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#B8C8D4" stop-opacity=".18"/><stop offset="100%" stop-color="#B8C8D4" stop-opacity=".18"/></linearGradient>'
+    +'</defs>';
 
-  var parts = ['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">'];
+  var parts = ['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
-  // Main flows
-  parts.push(mkFlow(col[0],yCad,hCad, col[1],yCont,hCont, '#7BB8E0', 0.9));
-  parts.push(mkFlow(col[1],yCont,hCont, col[2],yResp,hResp, '#7DCECE', 0.9));
-  if(nReuniaoAgend>0) parts.push(mkFlow(col[2],yResp,hReu, col[3],yReu,hReu, '#D4C090', 0.9));
-  if(nOrcamento>0)    parts.push(mkFlow(col[2],yResp+hReu,hOrc, col[3],yOrc,hOrc, '#B8AEE0', 0.9));
-  if(nSemInteresse>0) parts.push(mkFlow(col[2],yResp+hReu+hOrc,hSem, col[3],ySem,hSem, '#E0AAAA', 0.55));
-  // Reunião → realizada / cancelada
-  if(nReuniaoReal>0) parts.push(mkFlow(col[3],yReu,hReuReal, col[4],yReuReal,hReuReal, '#88C8A8', 0.9));
-  if(nReuniaoCanc>0) parts.push(mkFlow(col[3],yReu+hReuReal,hReuCanc, col[4],yReuCanc,hReuCanc, '#E0AAAA', 0.55));
-
-  // Gray flows (discrete)
-  if(nNaoContat>0)  parts.push(mkFlow(col[0],yCad+hCad+4,hNaoCont, col[1],ySemRet+hSemRet+4,hNaoCont, '#8899A8', 0.25));
-  if(nSemRetorno>0) parts.push(mkFlow(col[1],yCont+hCont+4,hSemRet, col[2],yResp+hResp+4,hSemRet, '#8899A8', 0.2));
+  // Waves
+  parts.push(wave(col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)'));
+  parts.push(wave(col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)'));
+  if(nReuniaoAgend>0) parts.push(wave(col[2],yResp,hReu,col[3],yReu,hReu,'url(#sg2a)'));
+  if(nOrcamento>0)    parts.push(wave(col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
+  if(nSemInteresse>0) parts.push(wave(col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
+  if(nNaoContat>0)    parts.push(wave(col[0],yCad+hCad+6,hNaoCont,col[1],ySemRet+hSemRet+6,hNaoCont,'url(#sgneg)'));
+  if(nSemRetorno>0)   parts.push(wave(col[1],yCont+hCont+6,hSemRet,col[2],yResp+hResp+6,hSemRet,'url(#sgneg)'));
+  if(nReuniaoReal>0)  parts.push(wave(col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
+  if(nReuniaoCanc>0)  parts.push(wave(col[3],yReu+hReal,hCanc,col[4],yCanc,hCanc,'url(#sg2c)'));
 
   // Nodes
-  parts.push(mkNode(col[0],yCad,hCad,'#1A73C8','cadastrados',nCadastrados,''));
-  parts.push(mkNode(col[1],yCont,hCont,'#8B6914','contatados',nContatados,sankeyPct(nContatados,nCadastrados)+'%'));
-  parts.push(mkNode(col[2],yResp,hResp,'#2D9EAA','responderam',nResponderam,sankeyPct(nResponderam,nContatados)+'%'));
-  if(nReuniaoAgend>0) parts.push(mkNode(col[3],yReu,hReu,'#8B6914','reuniões',nReuniaoAgend,sankeyPct(nReuniaoAgend,nResponderam)+'%'));
-  if(nOrcamento>0)    parts.push(mkNode(col[3],yOrc,hOrc,'#5448A8','orçamentos',nOrcamento,sankeyPct(nOrcamento,nResponderam)+'%'));
-  if(nSemInteresse>0) parts.push(mkNode(col[3],ySem,hSem,'#904444','s/ interesse',nSemInteresse,sankeyPct(nSemInteresse,nResponderam)+'%'));
-  if(nReuniaoReal>0) parts.push(mkNode(col[4],yReuReal,hReuReal,'#0B6E4F','realizadas',nReuniaoReal,sankeyPct(nReuniaoReal,nReuniaoAgend)+'%'));
-  if(nReuniaoCanc>0) parts.push(mkNode(col[4],yReuCanc,hReuCanc,'#904444','canceladas',nReuniaoCanc,sankeyPct(nReuniaoCanc,nReuniaoAgend)+'%'));
+  parts.push(node(col[0],yCad,hCad,'#1A73C8'));
+  parts.push(node(col[1],yCont,hCont,'#2D9EAA'));
+  parts.push(node(col[2],yResp,hResp,'#8B7830'));
+  if(nReuniaoAgend>0) parts.push(node(col[3],yReu,hReu,'#8B7830'));
+  if(nOrcamento>0)    parts.push(node(col[3],yOrc,hOrc,'#6055B0'));
+  if(nSemInteresse>0) parts.push('<rect x="'+col[3]+'" y="'+ySem+'" width="'+nW+'" height="'+hSem+'" rx="2" fill="#A06060" opacity=".6"/>');
+  if(nReuniaoReal>0)  parts.push(node(col[4],yReal,hReal,'#2A8A60'));
+  if(nReuniaoCanc>0)  parts.push('<rect x="'+col[4]+'" y="'+yCanc+'" width="'+nW+'" height="'+hCanc+'" rx="2" fill="#A06060" opacity=".6"/>');
 
-  // Gray labels
-  if(nNaoContat>0)  parts.push(mkGrayLabel(col[1],ySemRet+hSemRet+4,hNaoCont,nNaoContat+' s/ contato'));
-  if(nSemRetorno>0) parts.push(mkGrayLabel(col[2],yResp+hResp+4,hSemRet,nSemRetorno+' s/ retorno'));
+  // Labels
+  var tx=10;
+  parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-14, nCadastrados, '#1A73C8', 'CADASTRADOS', ''));
+  parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-14, nContatados, '#2D9EAA', 'CONTATADOS', sp(nContatados,nCadastrados)+'% dos cadastrados'));
+  parts.push(lbl(col[2]+nW+tx, yResp+hResp/2-14, nResponderam, '#8B7830', 'RESPONDERAM', sp(nResponderam,nContatados)+'% dos contatados'));
+  if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-14, nReuniaoAgend, '#8B7830', 'REUNIÕES', sp(nReuniaoAgend,nResponderam)+'% dos resp.'));
+  if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-14, nOrcamento, '#6055B0', 'ORÇAMENTOS', sp(nOrcamento,nResponderam)+'% dos resp.'));
+  if(nSemInteresse>0) parts.push('<text x="'+(col[3]+nW+tx)+'" y="'+(ySem+hSem/2-4)+'" font-size="14" font-weight="700" fill="#904444" font-family="Segoe UI,sans-serif" opacity=".65">'+nSemInteresse+'</text><text x="'+(col[3]+nW+tx)+'" y="'+(ySem+hSem/2+10)+'" font-size="8" fill="#904444" font-family="Segoe UI,sans-serif" opacity=".65" letter-spacing=".05em">S/ INTERESSE</text>');
+  if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-14, nReuniaoReal, '#2A8A60', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
+  if(nReuniaoCanc>0)  parts.push('<text x="'+(col[4]+nW+tx)+'" y="'+(yCanc+hCanc/2-4)+'" font-size="14" font-weight="700" fill="#904444" font-family="Segoe UI,sans-serif" opacity=".65">'+nReuniaoCanc+'</text><text x="'+(col[4]+nW+tx)+'" y="'+(yCanc+hCanc/2+10)+'" font-size="8" fill="#904444" font-family="Segoe UI,sans-serif" opacity=".65" letter-spacing=".05em">CANCELADAS</text>');
+  if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+20, nSemRetorno+' sem retorno'));
+  if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+20, nNaoContat+' sem contato'));
 
   parts.push('</svg>');
   document.getElementById('sankey-wrap').innerHTML = parts.join('');
