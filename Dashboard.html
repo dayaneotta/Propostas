@@ -170,7 +170,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 
     <!-- Desdobramentos de Responderam — card separado, visível só quando expandido -->
     <div id="desdobramentos-card" class="chart-card full" style="margin-bottom:16px;display:none">
-      <div class="chart-title"><i class="ti ti-list-details" aria-hidden="true"></i> Desdobramentos de responderam</div>
+      <div class="chart-title"><i class="ti ti-list-details" aria-hidden="true"></i> Tipo de resposta</div>
       <div id="desdobramentos-wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px 32px;margin-top:4px"></div>
     </div>
 
@@ -485,7 +485,7 @@ function updateMetrics() {
 
   // Label Responderam — clicável
   var respSeta = '';
-  var respHint = window._sankeyExpandido ? '− recolher' : 'ver desdobramentos ›';
+  var respHint = window._sankeyExpandido ? '− recolher' : 'ver tipo de resposta ›';
   parts.push(
     '<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2-16)+'" font-size="22" font-weight="700" fill="#2EC4A5" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+nResponderam+'</text>'
     +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+2)+'" font-size="7" font-weight="700" fill="#2EC4A5" opacity=".55" font-family="Segoe UI,sans-serif" letter-spacing=".1em" style="cursor:pointer" onclick="toggleSankeyExpandido()">RESPONDERAM</text>'
