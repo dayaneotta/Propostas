@@ -120,12 +120,9 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 
 .reun-estados-titulo{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin:12px 0 8px}
 .reun-estados-chips{display:flex;flex-wrap:wrap;gap:6px}
-.reun-chip{display:inline-flex;flex-direction:column;background:var(--bg);border:.5px solid var(--border);border-radius:20px;padding:4px 10px;min-width:52px}
-.reun-chip-top{display:flex;align-items:baseline;gap:5px}
+.reun-chip{display:inline-flex;align-items:center;background:var(--bg);border:.5px solid var(--border);border-radius:20px;padding:4px 10px;gap:8px}
 .reun-chip-estado{font-size:12px;font-weight:500;color:var(--text)}
-.reun-chip-num{font-size:13px;font-weight:700;color:#0D4E8A}
-.reun-chip-bar{height:3px;border-radius:2px;background:rgba(13,78,138,0.12);margin-top:3px;overflow:hidden}
-.reun-chip-fill{height:100%;border-radius:2px;background:#0D4E8A}
+.reun-chip-num{font-size:13px;font-weight:500;color:var(--text)}
 </style>
 </head>
 <body>
@@ -646,28 +643,33 @@ function updateMetrics() {
     }
   });
 
-  // ── Chips de estados com reuniões ──
+  // ── Chips de estados com reuniões realizadas + alto score ──
   var reunByEstado = {};
+  var reunAltoByEstado = {};
   filtrado.forEach(function(d) {
     if (!d.estado) return;
-    if (d.status === 'Reunião realizada' || d.status === 'Convertido')
+    if (d.status === 'Reunião realizada' || d.status === 'Convertido') {
       reunByEstado[d.estado] = (reunByEstado[d.estado]||0) + 1;
+      if ((d.score||'').toUpperCase() === 'ALTO')
+        reunAltoByEstado[d.estado] = (reunAltoByEstado[d.estado]||0) + 1;
+    }
   });
   var reunEstados = Object.entries(reunByEstado).sort(function(a,b){ return b[1]-a[1]; });
-  var maxReun = reunEstados.length ? reunEstados[0][1] : 1;
   var chipsEl = document.getElementById('reun-estados-chips');
   if (chipsEl) {
     if (reunEstados.length === 0) {
-      chipsEl.innerHTML = '<span style="font-size:11px;color:var(--text3)">Nenhuma reunião registrada no período</span>';
+      chipsEl.innerHTML = '<span style="font-size:11px;color:var(--text3)">Nenhuma reunião realizada no período</span>';
     } else {
       chipsEl.innerHTML = reunEstados.map(function(item) {
-        var pct = Math.round(item[1]/maxReun*100);
-        return '<div class="reun-chip">'
-          +'<div class="reun-chip-top">'
-          +'<span class="reun-chip-estado">'+item[0]+'</span>'
-          +'<span class="reun-chip-num">'+item[1]+'</span>'
-          +'</div>'
-          +'<div class="reun-chip-bar"><div class="reun-chip-fill" style="width:'+pct+'%"></div></div>'
+        var uf = item[0];
+        var total = item[1];
+        var alto = reunAltoByEstado[uf] || 0;
+        var altoColor = alto > 0 ? '#0D4E8A' : 'var(--text3)';
+        return '<div class="reun-chip" style="flex-direction:row;align-items:center;gap:8px;padding:4px 10px;border-radius:20px">'
+          +'<span class="reun-chip-estado">'+uf+'</span>'
+          +'<span class="reun-chip-num" style="color:var(--text);font-size:13px">'+total+'</span>'
+          +'<span style="width:1px;height:12px;background:var(--border);display:inline-block"></span>'
+          +'<span style="font-size:12px;font-weight:700;color:'+altoColor+'">'+alto+' ★</span>'
           +'</div>';
       }).join('');
     }
