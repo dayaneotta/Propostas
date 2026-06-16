@@ -125,7 +125,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .reun-chip-num{font-size:13px;font-weight:500;color:var(--text)}
 
 /* Taxa por instituição */
-.inst-chart-wrap{position:relative;height:220px}
+.inst-chart-wrap{position:relative;height:480px}
 .tm-taxa{font-size:13px;font-weight:500;margin-top:2px}
 .tm-leads{font-size:10px;margin-top:1px;opacity:.75}
 </style>
@@ -203,16 +203,32 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
       </div>
     </div>
 
-    <!-- Tempo médio + Taxa por instituição -->
-    <div class="charts-grid">
+    <!-- Tempo médio (coluna única) -->
+    <div class="charts-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
       <div class="chart-card">
         <div class="chart-title"><i class="ti ti-clock" aria-hidden="true"></i> Tempo médio entre contatos</div>
         <div id="tempo-content"></div>
       </div>
+      <!-- Heatmap de atividade por dia da semana -->
       <div class="chart-card">
-        <div class="chart-title"><i class="ti ti-school" aria-hidden="true"></i> Respostas por instituição</div>
-        <div class="inst-chart-wrap"><canvas id="inst-content"></canvas></div>
+        <div class="chart-title"><i class="ti ti-calendar-week" aria-hidden="true"></i> Atividade por dia da semana
+          <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3)" id="heatmap-sub"></span>
+        </div>
+        <div id="heatmap-content"></div>
       </div>
+    </div>
+
+    <!-- Respostas por instituição — full width, 100% empilhado -->
+    <div class="chart-card full" style="margin-bottom:16px">
+      <div class="chart-title" style="flex-wrap:wrap;gap:8px">
+        <i class="ti ti-school" aria-hidden="true"></i> Respostas por instituição
+        <span style="font-size:10px;font-weight:400;color:var(--text3)">ordenado por taxa de resposta</span>
+        <div style="margin-left:auto;display:flex;gap:12px;font-size:11px;font-weight:400;color:var(--text2);align-items:center">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#2EC4A5;display:inline-block"></span>Respondeu</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#D9ECF7;border:.5px solid #aacce0;display:inline-block"></span>Não respondeu</span>
+        </div>
+      </div>
+      <div class="inst-chart-wrap"><canvas id="inst-content"></canvas></div>
     </div>
 
   </div>
@@ -695,15 +711,14 @@ function updateMetrics() {
   var instList = Object.entries(byInst)
     .map(function(e){ return { inst: e[0], total: e[1].total, resp: e[1].resp, taxa: e[1].total > 0 ? Math.round(e[1].resp/e[1].total*100) : 0 }; })
     .filter(function(e){ return e.resp >= 1; })
-    .sort(function(a,b){ return b.resp - a.resp || b.taxa - a.taxa; })
-    .slice(0, 10);
+    .sort(function(a,b){ return a.taxa - b.taxa || a.resp - b.resp; })
+    .slice(-12);
 
   var instCanvas = document.getElementById('inst-content');
   if (instCanvas) {
     if (window._cInst) { try { window._cInst.destroy(); } catch(e){} }
-    var refinedTicksI = { color: '#8aa0b0', font: { family: 'Segoe UI, Arial, sans-serif', size: 10 } };
+    var refinedTicksI = { color: '#8aa0b0', font: { family: 'Segoe UI, Arial, sans-serif', size: 11 } };
 
-    // Gradiente Biomelting contínuo por taxa
     function bmColorInst(taxa) {
       var t = Math.max(0, Math.min(1, taxa/100));
       var stops = [[0,[13,78,138]],[0.35,[26,115,200]],[0.65,[37,162,190]],[1,[46,196,165]]];
@@ -712,24 +727,36 @@ function updateMetrics() {
           var r=(t-stops[i][0])/(stops[i+1][0]-stops[i][0]);
           var lerp=function(a,b){return Math.round(a+(b-a)*r);};
           var c0=stops[i][1],c1=stops[i+1][1];
-          return 'rgba('+lerp(c0[0],c1[0])+','+lerp(c0[1],c1[1])+','+lerp(c0[2],c1[2])+',0.82)';
+          return 'rgba('+lerp(c0[0],c1[0])+','+lerp(c0[1],c1[1])+','+lerp(c0[2],c1[2])+',0.88)';
         }
       }
-      return 'rgba(46,196,165,0.82)';
+      return 'rgba(46,196,165,0.88)';
     }
 
     window._cInst = new Chart(instCanvas, {
       type: 'bar',
       data: {
         labels: instList.map(function(d){ return d.inst; }),
-        datasets: [{
-          data: instList.map(function(d){ return d.resp; }),
-          backgroundColor: instList.map(function(d){ return bmColorInst(d.taxa); }),
-          hoverBackgroundColor: instList.map(function(d){ return bmColorInst(d.taxa).replace('0.82','1'); }),
-          borderRadius: 4,
-          borderSkipped: false,
-          barThickness: 14,
-        }]
+        datasets: [
+          {
+            label: 'Respondeu',
+            data: instList.map(function(d){ return d.taxa; }),
+            backgroundColor: instList.map(function(d){ return bmColorInst(d.taxa); }),
+            hoverBackgroundColor: instList.map(function(d){ return bmColorInst(d.taxa).replace('0.88','1'); }),
+            borderRadius: 0,
+            borderSkipped: false,
+            stack: 'a',
+          },
+          {
+            label: 'Não respondeu',
+            data: instList.map(function(d){ return 100 - d.taxa; }),
+            backgroundColor: '#D9ECF7',
+            hoverBackgroundColor: '#c0ddf0',
+            borderRadius: 0,
+            borderSkipped: false,
+            stack: 'a',
+          }
+        ]
       },
       options: {
         indexAxis: 'y',
@@ -737,30 +764,110 @@ function updateMetrics() {
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: '#ffffff',
+            borderColor: 'rgba(13,78,138,0.18)',
+            borderWidth: 1,
+            titleColor: '#1a2a3a',
+            bodyColor: '#4a6070',
+            footerColor: '#8aa0b0',
+            titleFont: { family: 'Segoe UI, Arial, sans-serif', size: 12, weight: '600' },
+            bodyFont: { family: 'Segoe UI, Arial, sans-serif', size: 11 },
+            footerFont: { family: 'Segoe UI, Arial, sans-serif', size: 10 },
+            padding: 10,
+            cornerRadius: 6,
+            displayColors: true,
+            boxWidth: 8, boxHeight: 8, boxPadding: 4,
             callbacks: {
-              label: function(item) {
+              title: function(items){ return items[0].label; },
+              label: function(item){
                 var d = instList[item.dataIndex];
-                return [d.resp+' responderam', 'Taxa: '+d.taxa+'% · '+d.total+' leads'];
-              }
+                if (item.datasetIndex === 0) return ' Respondeu: '+d.resp+' ('+d.taxa+'%)';
+                return ' Não respondeu: '+(d.total-d.resp)+' ('+(100-d.taxa)+'%)';
+              },
+              footer: function(items){ return 'Total: '+instList[items[0].dataIndex].total+' leads'; }
             }
           }
         },
         scales: {
           x: {
-            min: 0,
-            grid: { color: 'rgba(13,78,138,0.06)', drawBorder: false, drawOnChartArea: true },
-            ticks: { ...refinedTicksI, stepSize: 1, maxTicksLimit: 6 },
+            stacked: true, min: 0, max: 100,
+            grid: { color: 'rgba(13,78,138,0.06)' },
+            ticks: { color: '#8aa0b0', font: { family: 'Segoe UI, Arial, sans-serif', size: 10 }, callback: function(v){ return v+'%'; } },
             border: { display: false }
           },
           y: {
+            stacked: true,
             grid: { display: false },
-            ticks: { ...refinedTicksI, crossAlign: 'far' },
+            ticks: { color: '#4a6070', font: { family: 'Segoe UI, Arial, sans-serif', size: 11, weight: '500' }, crossAlign: 'far' },
             border: { display: false }
           }
         }
       }
     });
   }
+
+  // ── Heatmap de atividade por dia da semana ──
+  (function() {
+    var dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    var contatosPorDia = [0,0,0,0,0,0,0];
+    var respostasPorDia = [0,0,0,0,0,0,0];
+    var STATUS_RESP_HM = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
+
+    filtrado.filter(function(d){ return !d.desqualificado; }).forEach(function(d) {
+      [d.c1_raw, d.c2_raw, d.c3_raw].forEach(function(raw, idx) {
+        var dt = parseDataDash(raw);
+        if (!dt) return;
+        var dow = dt.getDay();
+        contatosPorDia[dow]++;
+        if (idx === 0 && STATUS_RESP_HM.includes(d.status||'')) respostasPorDia[dow]++;
+      });
+    });
+
+    var totalContatos = contatosPorDia.reduce(function(s,v){ return s+v; }, 0);
+    var totalRespostas = respostasPorDia.reduce(function(s,v){ return s+v; }, 0);
+
+    var subEl = document.getElementById('heatmap-sub');
+    if (subEl) subEl.textContent = totalContatos + ' contatos · ' + totalRespostas + ' respostas';
+
+    var hmEl = document.getElementById('heatmap-content');
+    if (!hmEl) return;
+
+    var maxC = Math.max.apply(null, contatosPorDia) || 1;
+    var maxR = Math.max.apply(null, respostasPorDia) || 1;
+
+    function bmAlpha(val, max, minA, maxA) {
+      return minA + (val / max) * (maxA - minA);
+    }
+
+    var rows = dias.map(function(dia, i) {
+      var c = contatosPorDia[i];
+      var r = respostasPorDia[i];
+      var taxa = c > 0 ? Math.round(r/c*100) : 0;
+      var alphaC = c > 0 ? bmAlpha(c, maxC, 0.12, 0.88) : 0.05;
+      var alphaR = r > 0 ? bmAlpha(r, maxR, 0.15, 0.92) : 0.05;
+      var isMelhor = c === maxC;
+      return '<div style="display:grid;grid-template-columns:36px 1fr 1fr 44px;align-items:center;gap:8px;padding:7px 0;border-bottom:.5px solid rgba(13,78,138,0.07)">'
+        + '<div style="font-size:11px;font-weight:'+(isMelhor?'600':'400')+';color:'+(isMelhor?'#1A73C8':'#4a6070')+'">'+dia+'</div>'
+        + '<div style="position:relative;height:18px;border-radius:4px;background:rgba(13,78,138,0.06);overflow:hidden">'
+          + '<div style="position:absolute;left:0;top:0;bottom:0;width:'+(c>0?Math.round(c/maxC*100):0)+'%;background:rgba(26,115,200,'+alphaC+');border-radius:4px;transition:width .4s"></div>'
+          + '<span style="position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:10px;color:#1a2a3a;font-weight:500">'+c+(c>0?' contatos':'')+'</span>'
+        + '</div>'
+        + '<div style="position:relative;height:18px;border-radius:4px;background:rgba(46,196,165,0.06);overflow:hidden">'
+          + '<div style="position:absolute;left:0;top:0;bottom:0;width:'+(r>0?Math.round(r/maxR*100):0)+'%;background:rgba(46,196,165,'+alphaR+');border-radius:4px;transition:width .4s"></div>'
+          + '<span style="position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:10px;color:#1a2a3a;font-weight:500">'+r+(r>0?' respostas':'')+'</span>'
+        + '</div>'
+        + '<div style="text-align:right;font-size:11px;font-weight:600;color:'+(taxa>=50?'#2EC4A5':taxa>=30?'#1A73C8':'#8aa0b0')+'">'+(c>0?taxa+'%':'—')+'</div>'
+        + '</div>';
+    });
+
+    hmEl.innerHTML = '<div style="display:grid;grid-template-columns:36px 1fr 1fr 44px;gap:8px;padding:0 0 6px;border-bottom:.5px solid rgba(13,78,138,0.12);margin-bottom:2px">'
+      + '<div></div>'
+      + '<div style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8aa0b0">Contatos enviados</div>'
+      + '<div style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8aa0b0">Respostas recebidas</div>'
+      + '<div style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8aa0b0;text-align:right">Taxa</div>'
+      + '</div>'
+      + rows.join('');
+  })();
 }
 
 function updateCharts() {
