@@ -484,8 +484,8 @@ function updateMetrics() {
   parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-16,  nContatados, '#1A73C8','CONTATADOS', sp(nContatados,nCadastrados)+'% dos ativos'));
 
   // Label Responderam — clicável
-  var respSeta = window._sankeyExpandido ? ' ↑' : ' ↓';
-  var respHint = window._sankeyExpandido ? 'recolher' : 'ver desdobramentos';
+  var respSeta = '';
+  var respHint = window._sankeyExpandido ? '− recolher' : 'ver desdobramentos ›';
   parts.push(
     '<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2-16)+'" font-size="22" font-weight="700" fill="#2EC4A5" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+nResponderam+respSeta+'</text>'
     +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+2)+'" font-size="7" font-weight="700" fill="#2EC4A5" opacity=".55" font-family="Segoe UI,sans-serif" letter-spacing=".1em" style="cursor:pointer" onclick="toggleSankeyExpandido()">RESPONDERAM</text>'
