@@ -489,7 +489,7 @@ function updateMetrics() {
   parts.push(
     '<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2-16)+'" font-size="22" font-weight="700" fill="#2EC4A5" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+nResponderam+'</text>'
     +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+2)+'" font-size="7" font-weight="700" fill="#2EC4A5" opacity=".55" font-family="Segoe UI,sans-serif" letter-spacing=".1em" style="cursor:pointer" onclick="toggleSankeyExpandido()">RESPONDERAM</text>'
-    +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+14)+'" font-size="7" fill="#2EC4A5" opacity=".9" font-family="Segoe UI,sans-serif" style="cursor:pointer;text-decoration:underline" onclick="toggleSankeyExpandido()">'+sp(nResponderam,nContatados)+'% dos contatados · '+respHint+'</text>'
+    +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+14)+'" font-size="7" fill="#2EC4A5" opacity=".9" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+sp(nResponderam,nContatados)+'% dos contatados · '+respHint+'</text>'
   );
 
   if(nConv2>0) parts.push(lbl(col[3]+nW+tx, yConv+hConv/2-16, nConv2, '#27a85a','CONVERTIDOS', sp(nConv2,nCadastrados)+'% do total'));
