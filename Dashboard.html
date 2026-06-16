@@ -578,7 +578,7 @@ function updateMetrics() {
     '<div class="tempo-item"><div class="tempo-label">Pesquisadores c/ 2+ contatos</div>' +
     '<div class="tempo-val">' + contC1C2 + ' <span style="font-size:11px;font-weight:400;color:var(--text3)">de ' + ta + '</span></div></div>';
 
-  // Distribuição por estado — barras empilhadas alto/médio, cores Biomelting
+  // Distribuição por estado — barras sobrepostas (total atrás, alto score na frente)
   const byEstado = {};
   filtrado.forEach(d => { if (d.estado && !d.desqualificado) byEstado[d.estado] = (byEstado[d.estado]||0)+1; });
   const estadosSorted = Object.entries(byEstado).sort((a,b) => b[1]-a[1]);
@@ -593,20 +593,26 @@ function updateMetrics() {
       labels: estadosSorted.map(([e]) => e),
       datasets: [
         {
-          label: 'Médio',
-          data: estadosSorted.map(([e,n]) => n - (byEstadoAlto[e]||0)),
+          label: 'Total',
+          data: estadosSorted.map(([,n]) => n),
           backgroundColor: 'rgba(13,78,138,0.15)',
-          hoverBackgroundColor: 'rgba(13,78,138,0.25)',
+          hoverBackgroundColor: 'rgba(13,78,138,0.22)',
           borderRadius: 4,
           borderSkipped: false,
+          barPercentage: 0.85,
+          categoryPercentage: 0.8,
+          order: 2,
         },
         {
-          label: 'Alto',
+          label: 'Alto score',
           data: estadosSorted.map(([e]) => byEstadoAlto[e]||0),
-          backgroundColor: 'rgba(46,196,165,0.82)',
+          backgroundColor: 'rgba(46,196,165,0.88)',
           hoverBackgroundColor: '#2EC4A5',
           borderRadius: 4,
           borderSkipped: false,
+          barPercentage: 0.5,
+          categoryPercentage: 0.8,
+          order: 1,
         }
       ]
     },
@@ -615,19 +621,23 @@ function updateMetrics() {
       plugins: {
         legend: { display: false },
         tooltip: {
+          mode: 'index',
+          intersect: false,
           callbacks: {
             title: function(items){ return items[0].label; },
-            label: function(item){ return item.dataset.label + ': ' + item.raw; },
-            afterBody: function(items){
-              var total = items.reduce(function(s,i){ return s+i.raw; },0);
-              return 'Total: ' + total;
+            label: function(item){
+              if (item.dataset.label === 'Total') return 'Total: ' + item.raw;
+              var idx = item.dataIndex;
+              var total = estadosSorted[idx][1];
+              var pct = total > 0 ? Math.round(item.raw/total*100) : 0;
+              return 'Alto score: ' + item.raw + ' (' + pct + '%)';
             }
           }
         }
       },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: refinedTicksE, border: { display: false } },
-        y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(13,78,138,0.05)', drawBorder: false }, ticks: { ...refinedTicksE, stepSize: 1 }, border: { display: false } }
+        x: { grid: { display: false }, ticks: refinedTicksE, border: { display: false } },
+        y: { beginAtZero: true, grid: { color: 'rgba(13,78,138,0.05)', drawBorder: false }, ticks: { ...refinedTicksE, stepSize: 1 }, border: { display: false } }
       }
     }
   });
