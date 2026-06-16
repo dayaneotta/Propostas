@@ -125,7 +125,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .reun-chip-num{font-size:13px;font-weight:500;color:var(--text)}
 
 /* Taxa por instituição */
-.inst-chart-wrap{position:relative;height:480px}
+.inst-chart-wrap{position:relative;height:320px}
 .tm-taxa{font-size:13px;font-weight:500;margin-top:2px}
 .tm-leads{font-size:10px;margin-top:1px;opacity:.75}
 </style>
@@ -750,28 +750,28 @@ function updateMetrics() {
             data: instList.map(function(d){ return d.taxaPos; }),
             backgroundColor: 'rgba(46,196,165,0.88)',
             hoverBackgroundColor: 'rgba(46,196,165,1)',
-            borderRadius: 0, borderSkipped: false, stack: 'a',
+            borderRadius: 0, borderSkipped: false, stack: 'a', barThickness: 20,
           },
           {
             label: 'Neutra',
             data: instList.map(function(d){ return d.taxaNeu; }),
             backgroundColor: 'rgba(26,115,200,0.72)',
             hoverBackgroundColor: 'rgba(26,115,200,0.92)',
-            borderRadius: 0, borderSkipped: false, stack: 'a',
+            borderRadius: 0, borderSkipped: false, stack: 'a', barThickness: 20,
           },
           {
             label: 'Negativa',
             data: instList.map(function(d){ return d.taxaNeg; }),
             backgroundColor: 'rgba(90,127,168,0.65)',
             hoverBackgroundColor: 'rgba(90,127,168,0.88)',
-            borderRadius: 0, borderSkipped: false, stack: 'a',
+            borderRadius: 0, borderSkipped: false, stack: 'a', barThickness: 20,
           },
           {
             label: 'Não respondeu',
             data: instList.map(function(d){ return d.taxaNR; }),
             backgroundColor: '#D9ECF7',
             hoverBackgroundColor: '#c0ddf0',
-            borderRadius: 0, borderSkipped: false, stack: 'a',
+            borderRadius: 0, borderSkipped: false, stack: 'a', barThickness: 20,
           }
         ]
       },
