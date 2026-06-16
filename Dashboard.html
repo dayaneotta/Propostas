@@ -579,9 +579,8 @@ function updateMetrics() {
 
   var distTotal = so1 + so2 + so3;
   var distHtml = distTotal > 0 ? (
-    '<div class="tempo-item" style="margin-top:6px;border-top:.5px solid var(--border);padding-top:12px;border-bottom:none">'
-    + '<div class="tempo-label" style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)">Distribuição por nº de contatos</div>'
-    + '</div>'
+    '<div style="margin-top:14px;padding-top:12px;border-top:.5px solid var(--border)">'
+    + '<div class="chart-title" style="margin-bottom:8px"><i class="ti ti-users" aria-hidden="true"></i> Distribuição por nº de contatos</div>'
     + [
         { n: so1, label: '1 contato'  },
         { n: so2, label: '2 contatos' },
@@ -593,6 +592,7 @@ function updateMetrics() {
           + ' <span style="font-size:11px;font-weight:400;color:var(--text3)">pesquisadores</span>'
           + '</div></div>';
       }).join('')
+    + '</div>'
   ) : '';
 
   document.getElementById('tempo-content').innerHTML =
