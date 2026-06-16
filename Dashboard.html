@@ -223,8 +223,10 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
       <div class="chart-title" style="flex-wrap:wrap;gap:8px">
         <i class="ti ti-school" aria-hidden="true"></i> Respostas por instituição
         <span style="font-size:10px;font-weight:400;color:var(--text3)">ordenado por taxa de resposta</span>
-        <div style="margin-left:auto;display:flex;gap:12px;font-size:11px;font-weight:400;color:var(--text2);align-items:center">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#2EC4A5;display:inline-block"></span>Respondeu</span>
+        <div style="margin-left:auto;display:flex;gap:12px;font-size:11px;font-weight:400;color:var(--text2);align-items:center;flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:rgba(46,196,165,0.88);display:inline-block"></span>Positiva</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:rgba(26,115,200,0.72);display:inline-block"></span>Neutra</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:rgba(90,127,168,0.65);display:inline-block"></span>Negativa</span>
           <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#D9ECF7;border:.5px solid #aacce0;display:inline-block"></span>Não respondeu</span>
         </div>
       </div>
@@ -697,21 +699,40 @@ function updateMetrics() {
     }
   }
 
-  // ── Barras horizontais — taxa de resposta por instituição ──
-  var STATUS_RESPONDEU_INST = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
+  // ── Barras horizontais 100% empilhadas — qualidade de resposta por instituição ──
+  // Segmentos no gradiente Biomelting:
+  // Positiva  → teal   (#2EC4A5) ponta "quente" do gradiente
+  // Neutra    → azul médio (#1A73C8) meio do gradiente
+  // Negativa  → azul escuro dessaturado (#5a7fa8) extremidade fria
+  // Não resp. → cinza azulado (#D9ECF7) fora do gradiente, neutro
+  var STATUS_POS  = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
+  var STATUS_NEU  = ['Respondeu — Sem retorno após interesse'];
+  var STATUS_NEG  = ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'];
+
   var byInst = {};
   ativos.forEach(function(d) {
     if (!d.inst) return;
     d.inst.split(' / ').map(function(s){ return s.trim(); }).filter(Boolean).forEach(function(inst) {
-      if (!byInst[inst]) byInst[inst] = { total: 0, resp: 0 };
+      if (!byInst[inst]) byInst[inst] = { total: 0, pos: 0, neu: 0, neg: 0 };
       byInst[inst].total++;
-      if (STATUS_RESPONDEU_INST.includes(d.status||'')) byInst[inst].resp++;
+      var st = d.status || '';
+      if (STATUS_POS.includes(st)) byInst[inst].pos++;
+      else if (STATUS_NEU.includes(st)) byInst[inst].neu++;
+      else if (STATUS_NEG.includes(st)) byInst[inst].neg++;
     });
   });
+
   var instList = Object.entries(byInst)
-    .map(function(e){ return { inst: e[0], total: e[1].total, resp: e[1].resp, taxa: e[1].total > 0 ? Math.round(e[1].resp/e[1].total*100) : 0 }; })
-    .filter(function(e){ return e.resp >= 1; })
-    .sort(function(a,b){ return a.taxa - b.taxa || a.resp - b.resp; })
+    .map(function(e) {
+      var o = e[1];
+      var taxaPos = o.total > 0 ? Math.round(o.pos / o.total * 100) : 0;
+      var taxaNeu = o.total > 0 ? Math.round(o.neu / o.total * 100) : 0;
+      var taxaNeg = o.total > 0 ? Math.round(o.neg / o.total * 100) : 0;
+      var taxaNR  = 100 - taxaPos - taxaNeu - taxaNeg;
+      return { inst: e[0], total: o.total, pos: o.pos, neu: o.neu, neg: o.neg, taxaPos: taxaPos, taxaNeu: taxaNeu, taxaNeg: taxaNeg, taxaNR: taxaNR };
+    })
+    .filter(function(e){ return (e.pos + e.neu + e.neg) >= 1; })
+    .sort(function(a,b){ return a.taxaPos - b.taxaPos || a.taxaNeu - b.taxaNeu; })
     .slice(-12);
 
   var instCanvas = document.getElementById('inst-content');
@@ -719,42 +740,38 @@ function updateMetrics() {
     if (window._cInst) { try { window._cInst.destroy(); } catch(e){} }
     var refinedTicksI = { color: '#8aa0b0', font: { family: 'Segoe UI, Arial, sans-serif', size: 11 } };
 
-    function bmColorInst(taxa) {
-      var t = Math.max(0, Math.min(1, taxa/100));
-      var stops = [[0,[13,78,138]],[0.35,[26,115,200]],[0.65,[37,162,190]],[1,[46,196,165]]];
-      for (var i=0;i<stops.length-1;i++) {
-        if (t>=stops[i][0]&&t<=stops[i+1][0]) {
-          var r=(t-stops[i][0])/(stops[i+1][0]-stops[i][0]);
-          var lerp=function(a,b){return Math.round(a+(b-a)*r);};
-          var c0=stops[i][1],c1=stops[i+1][1];
-          return 'rgba('+lerp(c0[0],c1[0])+','+lerp(c0[1],c1[1])+','+lerp(c0[2],c1[2])+',0.88)';
-        }
-      }
-      return 'rgba(46,196,165,0.88)';
-    }
-
     window._cInst = new Chart(instCanvas, {
       type: 'bar',
       data: {
         labels: instList.map(function(d){ return d.inst; }),
         datasets: [
           {
-            label: 'Respondeu',
-            data: instList.map(function(d){ return d.taxa; }),
-            backgroundColor: instList.map(function(d){ return bmColorInst(d.taxa); }),
-            hoverBackgroundColor: instList.map(function(d){ return bmColorInst(d.taxa).replace('0.88','1'); }),
-            borderRadius: 0,
-            borderSkipped: false,
-            stack: 'a',
+            label: 'Positiva',
+            data: instList.map(function(d){ return d.taxaPos; }),
+            backgroundColor: 'rgba(46,196,165,0.88)',
+            hoverBackgroundColor: 'rgba(46,196,165,1)',
+            borderRadius: 0, borderSkipped: false, stack: 'a',
+          },
+          {
+            label: 'Neutra',
+            data: instList.map(function(d){ return d.taxaNeu; }),
+            backgroundColor: 'rgba(26,115,200,0.72)',
+            hoverBackgroundColor: 'rgba(26,115,200,0.92)',
+            borderRadius: 0, borderSkipped: false, stack: 'a',
+          },
+          {
+            label: 'Negativa',
+            data: instList.map(function(d){ return d.taxaNeg; }),
+            backgroundColor: 'rgba(90,127,168,0.65)',
+            hoverBackgroundColor: 'rgba(90,127,168,0.88)',
+            borderRadius: 0, borderSkipped: false, stack: 'a',
           },
           {
             label: 'Não respondeu',
-            data: instList.map(function(d){ return 100 - d.taxa; }),
+            data: instList.map(function(d){ return d.taxaNR; }),
             backgroundColor: '#D9ECF7',
             hoverBackgroundColor: '#c0ddf0',
-            borderRadius: 0,
-            borderSkipped: false,
-            stack: 'a',
+            borderRadius: 0, borderSkipped: false, stack: 'a',
           }
         ]
       },
@@ -773,16 +790,22 @@ function updateMetrics() {
             titleFont: { family: 'Segoe UI, Arial, sans-serif', size: 12, weight: '600' },
             bodyFont: { family: 'Segoe UI, Arial, sans-serif', size: 11 },
             footerFont: { family: 'Segoe UI, Arial, sans-serif', size: 10 },
-            padding: 10,
-            cornerRadius: 6,
-            displayColors: true,
-            boxWidth: 8, boxHeight: 8, boxPadding: 4,
+            padding: 10, cornerRadius: 6,
+            displayColors: true, boxWidth: 8, boxHeight: 8, boxPadding: 4,
+            mode: 'index',
             callbacks: {
               title: function(items){ return items[0].label; },
               label: function(item){
                 var d = instList[item.dataIndex];
-                if (item.datasetIndex === 0) return ' Respondeu: '+d.resp+' ('+d.taxa+'%)';
-                return ' Não respondeu: '+(d.total-d.resp)+' ('+(100-d.taxa)+'%)';
+                var map = [
+                  { lbl: 'Positiva',      n: d.pos,                          pct: d.taxaPos },
+                  { lbl: 'Neutra',        n: d.neu,                          pct: d.taxaNeu },
+                  { lbl: 'Negativa',      n: d.neg,                          pct: d.taxaNeg },
+                  { lbl: 'Não respondeu', n: d.total-d.pos-d.neu-d.neg,      pct: d.taxaNR  }
+                ];
+                var entry = map[item.datasetIndex];
+                if (entry.n === 0) return null;
+                return ' '+entry.lbl+': '+entry.n+' ('+entry.pct+'%)';
               },
               footer: function(items){ return 'Total: '+instList[items[0].dataIndex].total+' leads'; }
             }
