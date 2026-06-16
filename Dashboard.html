@@ -482,8 +482,7 @@ function updateMetrics() {
   // ── estado de expansão do breakdown de Responderam ──
   if (typeof window._sankeyExpandido === 'undefined') window._sankeyExpandido = false;
 
-  // altura total: H base + área de expansão se aberta
-  var EXPAND_H = 180;
+  var EXPAND_H = 175;
   var svgH = window._sankeyExpandido ? H + EXPAND_H : H;
 
   var parts=['<svg width="100%" viewBox="0 0 '+W+' '+svgH+'" role="img" aria-label="Fluxo de engajamento">', defs];
@@ -530,10 +529,7 @@ function updateMetrics() {
   if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
   if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
 
-  parts.push('</svg>');
-  document.getElementById('sankey-wrap').innerHTML=parts.join('');
-
-  // ── breakdown expansível de Responderam ──
+  // ── breakdown expansível de Responderam — desenhado dentro do mesmo SVG ──
   if (window._sankeyExpandido) {
     var nPedInfo  = ativos.filter(function(d){ return d.status === 'Respondeu — Pediu informações'; }).length;
     var nContFut  = ativos.filter(function(d){ return d.status === 'Respondeu — Solicitou contato futuro'; }).length;
@@ -548,30 +544,28 @@ function updateMetrics() {
       { n: nSemRetAp,      cor: '#8AAABB', label: 'Sem retorno após interesse' },
     ].filter(function(d){ return d.n > 0; });
 
-    var xStart = col[2] + nW + tx;
+    var xStart  = col[2] + nW + tx;
+    var yStart  = H + 14;
     var rowH = 16, rowGap = 9, maxBarW = 260;
 
-    var expandParts = [
-      '<svg width="100%" viewBox="0 0 '+W+' '+EXPAND_H+'" role="img" aria-label="Desdobramentos de Responderam" style="margin-top:-4px">',
-      '<rect x="'+col[2]+'" y="0" width="'+(W-col[2])+'" height="'+(EXPAND_H-4)+'" rx="6" fill="#2EC4A5" opacity=".04"/>',
-      '<text x="'+xStart+'" y="14" font-size="7.5" font-weight="700" fill="#2EC4A5" opacity=".7" font-family="Segoe UI,sans-serif" letter-spacing=".08em">DESDOBRAMENTOS DE RESPONDERAM</text>'
-    ];
+    parts.push('<rect x="'+col[2]+'" y="'+H+'" width="'+(W-col[2]-10)+'" height="'+(EXPAND_H-8)+'" rx="6" fill="#2EC4A5" opacity=".04"/>');
+    parts.push('<text x="'+xStart+'" y="'+(yStart)+'" font-size="7.5" font-weight="700" fill="#2EC4A5" opacity=".7" font-family="Segoe UI,sans-serif" letter-spacing=".08em">DESDOBRAMENTOS DE RESPONDERAM</text>');
 
     desdobramentos.forEach(function(d, i) {
-      var ry = 24 + i * (rowH + rowGap);
+      var ry = yStart + 10 + i * (rowH + rowGap);
       var barW = Math.max(Math.round((d.n / nResponderam) * maxBarW), 4);
-      expandParts.push('<rect x="'+xStart+'" y="'+ry+'" width="'+barW+'" height="'+rowH+'" rx="3" fill="'+d.cor+'" opacity=".85"/>');
+      parts.push('<rect x="'+xStart+'" y="'+ry+'" width="'+barW+'" height="'+rowH+'" rx="3" fill="'+d.cor+'" opacity=".85"/>');
       if (barW > 22) {
-        expandParts.push('<text x="'+(xStart+barW/2)+'" y="'+(ry+rowH/2)+'" dominant-baseline="central" text-anchor="middle" font-size="8" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">'+d.n+'</text>');
+        parts.push('<text x="'+(xStart+barW/2)+'" y="'+ry+'" dy="'+rowH/2+'" dominant-baseline="central" text-anchor="middle" font-size="8" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">'+d.n+'</text>');
       } else {
-        expandParts.push('<text x="'+(xStart+barW+5)+'" y="'+(ry+rowH/2)+'" dominant-baseline="central" font-size="8" font-weight="700" fill="'+d.cor+'" font-family="Segoe UI,sans-serif">'+d.n+'</text>');
+        parts.push('<text x="'+(xStart+barW+5)+'" y="'+ry+'" dy="'+rowH/2+'" dominant-baseline="central" font-size="8" font-weight="700" fill="'+d.cor+'" font-family="Segoe UI,sans-serif">'+d.n+'</text>');
       }
-      expandParts.push('<text x="'+(xStart+maxBarW+10)+'" y="'+(ry+rowH/2)+'" dominant-baseline="central" font-size="8.5" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+d.label+'  <tspan font-weight="700" fill="'+d.cor+'">'+sp(d.n,nResponderam)+'%</tspan></text>');
+      parts.push('<text x="'+(xStart+maxBarW+10)+'" y="'+ry+'" dy="'+rowH/2+'" dominant-baseline="central" font-size="8.5" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+d.label+'  <tspan font-weight="700" fill="'+d.cor+'">'+sp(d.n,nResponderam)+'%</tspan></text>');
     });
-
-    expandParts.push('</svg>');
-    document.getElementById('sankey-wrap').innerHTML += expandParts.join('');
   }
+
+  parts.push('</svg>');
+  document.getElementById('sankey-wrap').innerHTML=parts.join('');
 
 
 
