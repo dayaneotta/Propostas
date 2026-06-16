@@ -596,22 +596,24 @@ function updateMetrics() {
           label: 'Total',
           data: estadosSorted.map(([,n]) => n),
           backgroundColor: 'rgba(13,78,138,0.15)',
-          hoverBackgroundColor: 'rgba(13,78,138,0.22)',
+          hoverBackgroundColor: 'rgba(13,78,138,0.2)',
           borderRadius: 4,
           borderSkipped: false,
-          barPercentage: 0.85,
-          categoryPercentage: 0.8,
+          xAxisID: 'x',
+          barPercentage: 0.8,
+          categoryPercentage: 0.9,
           order: 2,
         },
         {
           label: 'Alto score',
           data: estadosSorted.map(([e]) => byEstadoAlto[e]||0),
-          backgroundColor: 'rgba(46,196,165,0.88)',
+          backgroundColor: 'rgba(46,196,165,0.9)',
           hoverBackgroundColor: '#2EC4A5',
           borderRadius: 4,
           borderSkipped: false,
-          barPercentage: 0.5,
-          categoryPercentage: 0.8,
+          xAxisID: 'x2',
+          barPercentage: 0.45,
+          categoryPercentage: 0.9,
           order: 1,
         }
       ]
@@ -623,21 +625,23 @@ function updateMetrics() {
         tooltip: {
           mode: 'index',
           intersect: false,
+          filter: function(item){ return item.dataset.label === 'Total'; },
           callbacks: {
             title: function(items){ return items[0].label; },
             label: function(item){
-              if (item.dataset.label === 'Total') return 'Total: ' + item.raw;
               var idx = item.dataIndex;
               var total = estadosSorted[idx][1];
-              var pct = total > 0 ? Math.round(item.raw/total*100) : 0;
-              return 'Alto score: ' + item.raw + ' (' + pct + '%)';
+              var alto = byEstadoAlto[estadosSorted[idx][0]] || 0;
+              var pct = total > 0 ? Math.round(alto/total*100) : 0;
+              return ['Total: ' + total, 'Alto score: ' + alto + ' (' + pct + '%)'];
             }
           }
         }
       },
       scales: {
-        x: { grid: { display: false }, ticks: refinedTicksE, border: { display: false } },
-        y: { beginAtZero: true, grid: { color: 'rgba(13,78,138,0.05)', drawBorder: false }, ticks: { ...refinedTicksE, stepSize: 1 }, border: { display: false } }
+        x:  { type: 'category', offset: true, grid: { display: false }, ticks: refinedTicksE, border: { display: false } },
+        x2: { type: 'category', offset: true, display: false },
+        y:  { beginAtZero: true, grid: { color: 'rgba(13,78,138,0.05)', drawBorder: false }, ticks: { ...refinedTicksE, stepSize: 1 }, border: { display: false } }
       }
     }
   });
