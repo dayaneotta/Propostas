@@ -48,7 +48,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .mc.red .mc-accent{background:#dc2626}.mc.red .mc-val{color:#dc2626}
 .mc.purple .mc-accent{background:#7c3aed}.mc.purple .mc-val{color:#7c3aed}
 .mc.blue .mc-accent{background:var(--bm-blue)}.mc.blue .mc-val{color:var(--bm-blue)}
-.mc.default .mc-accent{background:var(--bm-blue)}
+.mc.blue-mid .mc-accent{background:var(--bm-mid)}.mc.blue-mid .mc-val{color:var(--bm-mid)}
+.mc.default .mc-accent{background:var(--bm-blue)}.mc.default .mc-val{color:var(--text)}
 
 /* Charts grid */
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
@@ -398,15 +399,15 @@ function updateMetrics() {
   }
 
   document.getElementById('mbox').innerHTML =
-    mc('default', 'ti-users',        'Contatos',         t,               ta+' ativos · '+desq+' desqualif.',      deltaHtml(t,tAnterior))
-  + mc('default', 'ti-star',         'Score alto',        alto,            (ta?Math.round(alto/ta*100):0)+'% dos ativos', '')
-  + mc('teal',    'ti-repeat',       'Cadência',          cadenciaPct+'%', cadenciaSub,                             '')
-  + mc('purple',  'ti-trophy',       'Convertidos',       conv,            'clientes confirmados',                  deltaHtml(conv,convAnterior))
+    mc('default',  'ti-users',         'Contatos',         t,               ta+' ativos · '+desq+' desqualif.',      deltaHtml(t,tAnterior))
+  + mc('default',  'ti-star',          'Score alto',        alto,            (ta?Math.round(alto/ta*100):0)+'% dos ativos', '')
+  + mc('blue-mid', 'ti-repeat',        'Cadência',          cadenciaPct+'%', cadenciaSub,                             '')
+  + mc('teal',     'ti-trophy',        'Convertidos',       conv,            'clientes confirmados',                  deltaHtml(conv,convAnterior))
   + '<div class="mc-divider"></div>'
-  + mc('amber',   'ti-calendar-plus','Agendadas',         reunAgend,       'aguardando realização',                 '')
-  + mc('green',   'ti-calendar-check','Realizadas',       reunReal,        Math.round(reunReal/(reunTotal||1)*100)+'% de realização', '')
-  + mc('red',     'ti-calendar-x',   'Canceladas',        reunCanc,        Math.round(reunCanc/(reunTotal||1)*100)+'% de cancelamento', '')
-  + mc('purple',  'ti-file-invoice', 'Orçamentos',        orc,             'pedidos de proposta',                   '');
+  + mc('amber',    'ti-calendar-plus', 'Agendadas',         reunAgend,       'aguardando realização',                 '')
+  + mc('green',    'ti-calendar-check','Realizadas',        reunReal,        Math.round(reunReal/(reunTotal||1)*100)+'% de realização', '')
+  + mc('red',      'ti-calendar-x',    'Canceladas',        reunCanc,        Math.round(reunCanc/(reunTotal||1)*100)+'% de cancelamento', '')
+  + mc('default',  'ti-file-invoice',  'Orçamentos',        orc,             'pedidos de proposta',                   '');
 
   // ── Variáveis do funil — declaradas aqui para KPIs e Sankey ──
   var nCadastrados = ta;
