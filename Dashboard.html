@@ -162,11 +162,10 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
     <!-- Métricas com delta -->
     <div class="metrics-row" id="mbox"></div>
 
-    <!-- Fluxo de engajamento + KPIs de conversão -->
+    <!-- Fluxo de engajamento -->
     <div class="chart-card full" style="margin-bottom:16px">
       <div class="chart-title"><i class="ti ti-git-merge" aria-hidden="true"></i> Fluxo de engajamento</div>
       <div id="sankey-wrap" style="width:100%;overflow:hidden"></div>
-      <div class="conv-kpis" id="conv-kpis"></div>
     </div>
 
     <!-- Desdobramentos de Responderam — card separado, visível só quando expandido -->
@@ -396,18 +395,6 @@ function updateMetrics() {
   var nConv2 = ativos.filter(function(d){ return d.status === 'Convertido'; }).length;
 
   function pct(a,b){ return b>0 ? Math.round(a/b*100) : 0; }
-  function ckpiColor(v){ if(v>=60) return '#27a85a'; if(v>=30) return '#d97706'; return '#dc2626'; }
-
-  var ckpiData = [
-    {lbl:'Cadastrado → Contatado', val:pct(nContatados,nCadastrados)},
-    {lbl:'Contatado → Respondeu',  val:pct(nResponderam,nContatados)},
-  ];
-  document.getElementById('conv-kpis').innerHTML = ckpiData.map(function(k){
-    var c = ckpiColor(k.val);
-    return '<div class="ckpi"><div class="ckpi-val" style="color:'+c+'">'+k.val+'%</div>'
-      +'<div class="ckpi-lbl">'+k.lbl+'</div>'
-      +'<div class="ckpi-bar"><div class="ckpi-fill" style="width:'+k.val+'%;background:'+c+'"></div></div></div>';
-  }).join('');
 
   // Sankey de engajamento — gradiente Biomelting
   // Fluxo: Cadastrado → Contatado → Responderam → Convertidos
