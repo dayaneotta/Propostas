@@ -694,8 +694,9 @@ function updateMetrics() {
   });
   var instList = Object.entries(byInst)
     .map(function(e){ return { inst: e[0], total: e[1].total, resp: e[1].resp, taxa: e[1].total > 0 ? Math.round(e[1].resp/e[1].total*100) : 0 }; })
-    .filter(function(e){ return e.total >= 2; })
-    .sort(function(a,b){ return b.taxa - a.taxa || b.total - a.total; });
+    .filter(function(e){ return e.resp >= 1; })
+    .sort(function(a,b){ return b.resp - a.resp || b.taxa - a.taxa; })
+    .slice(0, 10);
 
   var instCanvas = document.getElementById('inst-content');
   if (instCanvas) {
@@ -727,6 +728,7 @@ function updateMetrics() {
           hoverBackgroundColor: instList.map(function(d){ return bmColorInst(d.taxa).replace('0.82','1'); }),
           borderRadius: 4,
           borderSkipped: false,
+          barThickness: 14,
         }]
       },
       options: {
@@ -746,13 +748,13 @@ function updateMetrics() {
         scales: {
           x: {
             min: 0,
-            grid: { color: 'rgba(13,78,138,0.05)', drawBorder: false },
-            ticks: { ...refinedTicksI, stepSize: 1 },
+            grid: { color: 'rgba(13,78,138,0.06)', drawBorder: false, drawOnChartArea: true },
+            ticks: { ...refinedTicksI, stepSize: 1, maxTicksLimit: 6 },
             border: { display: false }
           },
           y: {
             grid: { display: false },
-            ticks: refinedTicksI,
+            ticks: { ...refinedTicksI, crossAlign: 'far' },
             border: { display: false }
           }
         }
