@@ -102,7 +102,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .sem-contato-btn{background:#dc2626;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;white-space:nowrap}
 .sem-contato-btn:hover{background:#b91c1c}
 /* ── KPIs DE CONVERSÃO ── */
-.conv-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;padding-top:14px;border-top:.5px solid var(--border)}
+.conv-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px;padding-top:14px;border-top:.5px solid var(--border)}
 .ckpi{text-align:center}
 .ckpi-val{font-size:18px;font-weight:700}
 .ckpi-lbl{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;line-height:1.3}
@@ -401,7 +401,6 @@ function updateMetrics() {
   var ckpiData = [
     {lbl:'Cadastrado → Contatado', val:pct(nContatados,nCadastrados)},
     {lbl:'Contatado → Respondeu',  val:pct(nResponderam,nContatados)},
-    {lbl:'Convertidos do total',   val:pct(nConv2,nCadastrados)},
   ];
   document.getElementById('conv-kpis').innerHTML = ckpiData.map(function(k){
     var c = ckpiColor(k.val);
