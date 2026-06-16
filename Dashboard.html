@@ -564,13 +564,41 @@ function updateMetrics() {
 
 
 
-  // Tempo médio entre contatos
+  // Tempo médio entre contatos + distribuição por nº de contatos
   let somaC1C2 = 0, contC1C2 = 0, somaC2C3 = 0, contC2C3 = 0;
+  let so1 = 0, so2 = 0, so3 = 0;
   ativos.forEach(d => {
     const d1 = parseDataDash(d.c1_raw), d2 = parseDataDash(d.c2_raw), d3 = parseDataDash(d.c3_raw);
+    const tem1 = contatoValido(d.c1_raw), tem2 = contatoValido(d.c2_raw), tem3 = contatoValido(d.c3_raw);
+    if (tem1 && tem2 && tem3) so3++;
+    else if (tem1 && tem2) so2++;
+    else if (tem1) so1++;
     if (d1 && d2) { somaC1C2 += (d2-d1)/(1000*60*60*24); contC1C2++; }
     if (d2 && d3) { somaC2C3 += (d3-d2)/(1000*60*60*24); contC2C3++; }
   });
+
+  var distTotal = so1 + so2 + so3;
+  var distHtml = distTotal > 0 ? (
+    '<div style="margin-top:14px;padding-top:12px;border-top:.5px solid var(--border)">'
+    + '<div style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Distribuição por nº de contatos</div>'
+    + [
+        { n: so1, label: '1 contato',   color: 'rgba(13,78,138,0.55)'  },
+        { n: so2, label: '2 contatos',  color: 'rgba(26,115,200,0.75)' },
+        { n: so3, label: '3 contatos',  color: 'rgba(46,196,165,0.88)' },
+      ].map(function(row) {
+        var pct = distTotal > 0 ? Math.round(row.n / distTotal * 100) : 0;
+        return '<div style="display:grid;grid-template-columns:72px 1fr 32px 28px;align-items:center;gap:8px;margin-bottom:7px">'
+          + '<div style="font-size:11px;color:var(--text2)">' + row.label + '</div>'
+          + '<div style="position:relative;height:14px;border-radius:3px;background:rgba(13,78,138,0.06);overflow:hidden">'
+            + '<div style="position:absolute;left:0;top:0;bottom:0;width:' + pct + '%;background:' + row.color + ';border-radius:3px"></div>'
+          + '</div>'
+          + '<div style="font-size:12px;font-weight:600;color:var(--text);text-align:right">' + row.n + '</div>'
+          + '<div style="font-size:10px;color:var(--text3);text-align:right">' + pct + '%</div>'
+          + '</div>';
+      }).join('')
+    + '</div>'
+  ) : '';
+
   document.getElementById('tempo-content').innerHTML =
     '<div class="tempo-item"><div class="tempo-label">1º → 2º contato</div>' +
     '<div class="tempo-val">' + (contC1C2 ? Math.round(somaC1C2/contC1C2) : '—') +
@@ -578,8 +606,9 @@ function updateMetrics() {
     '<div class="tempo-item"><div class="tempo-label">2º → 3º contato</div>' +
     '<div class="tempo-val">' + (contC2C3 ? Math.round(somaC2C3/contC2C3) : '—') +
     ' <span style="font-size:11px;font-weight:400;color:var(--text3)">dias em média</span></div></div>' +
-    '<div class="tempo-item"><div class="tempo-label">Pesquisadores c/ 2+ contatos</div>' +
-    '<div class="tempo-val">' + contC1C2 + ' <span style="font-size:11px;font-weight:400;color:var(--text3)">de ' + ta + '</span></div></div>';
+    '<div class="tempo-item" style="border-bottom:none"><div class="tempo-label">Pesquisadores c/ 2+ contatos</div>' +
+    '<div class="tempo-val">' + contC1C2 + ' <span style="font-size:11px;font-weight:400;color:var(--text3)">de ' + ta + '</span></div></div>'
+    + distHtml;
 
   // Distribuição por estado — barras sobrepostas (total atrás, alto score na frente)
   const byEstado = {};
