@@ -754,35 +754,6 @@ function updateCharts() {
       +'<div style="'+lastStatStyle+'"><div style="'+valStyle+'#1A8A78">'+mesesAtivos+'</div><div style="'+lblStyle+'">Meses ativos</div></div>';
   }
 
-  // Distribuição por estado
-  const byEstado = {};
-  filtrado.forEach(d => { if (d.estado) byEstado[d.estado] = (byEstado[d.estado]||0)+1; });
-  const estadosSorted = Object.entries(byEstado).sort((a,b) => b[1]-a[1]);
-
-  if (cEstados) { try { cEstados.destroy(); } catch(e) {} cEstados = null; }
-  cEstados = new Chart(document.getElementById('cEstados'), {
-    type: 'bar',
-    data: {
-      labels: estadosSorted.map(([e]) => e),
-      datasets: [{
-        data: estadosSorted.map(([,n]) => n),
-        backgroundColor: estadosSorted.map(function(_,i) {
-          var t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0;
-          return gradC(t, 0.78);
-        }),
-        borderRadius: 4,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, grid: refinedGrid, ticks: refinedTicks, border: { display: false } },
-        x: { grid: { display: false }, ticks: refinedTicks, border: { display: false } }
-      }
-    }
-  });
 }
 
 function gradC(t,alpha){
