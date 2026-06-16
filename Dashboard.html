@@ -125,13 +125,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .reun-chip-num{font-size:13px;font-weight:500;color:var(--text)}
 
 /* Taxa por instituição */
-.inst-row{display:grid;grid-template-columns:1fr 44px 54px;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--border)}
-.inst-row:last-child{border-bottom:none}
-.inst-nome{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.inst-n{font-size:12px;font-weight:500;color:var(--text);text-align:right}
-.inst-taxa{font-size:11px;font-weight:500;text-align:right;padding:2px 6px;border-radius:20px}
-.inst-bar-bg{height:4px;border-radius:2px;background:#EAF4FA;margin-top:3px;overflow:hidden}
-.inst-bar-fill{height:100%;border-radius:2px;background:var(--bm-teal)}
+.inst-chart-wrap{position:relative;height:240px}
 </style>
 </head>
 <body>
@@ -214,8 +208,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
         <div id="tempo-content"></div>
       </div>
       <div class="chart-card">
-        <div class="chart-title"><i class="ti ti-school" aria-hidden="true"></i> Taxa de resposta por instituição</div>
-        <div id="inst-content"></div>
+        <div class="chart-title"><i class="ti ti-layout-grid" aria-hidden="true"></i> Potencial por instituição</div>
+        <div class="inst-chart-wrap"><canvas id="inst-content"></canvas></div>
       </div>
     </div>
 
@@ -685,40 +679,104 @@ function updateMetrics() {
     }
   }
 
-  // ── Taxa de resposta por instituição ──
+  // ── Quadrante de potencial por instituição ──
   var STATUS_RESPONDEU_INST = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   var byInst = {};
   ativos.forEach(function(d) {
     if (!d.inst) return;
-    var insts = d.inst.split(' / ').map(function(s){ return s.trim(); }).filter(Boolean);
-    insts.forEach(function(inst) {
+    d.inst.split(' / ').map(function(s){ return s.trim(); }).filter(Boolean).forEach(function(inst) {
       if (!byInst[inst]) byInst[inst] = { total: 0, resp: 0 };
       byInst[inst].total++;
       if (STATUS_RESPONDEU_INST.includes(d.status||'')) byInst[inst].resp++;
     });
   });
   var instList = Object.entries(byInst)
-    .map(function(e){ return { inst: e[0], total: e[1].total, resp: e[1].resp, taxa: e[1].total > 0 ? Math.round(e[1].resp/e[1].total*100) : 0 }; })
-    .filter(function(e){ return e.total >= 2; })
-    .sort(function(a,b){ return b.taxa - a.taxa || b.total - a.total; })
-    .slice(0, 8);
+    .map(function(e){ return { inst: e[0], total: e[1].total, taxa: e[1].total > 0 ? Math.round(e[1].resp/e[1].total*100) : 0 }; })
+    .filter(function(e){ return e.total >= 2; });
 
-  var instEl = document.getElementById('inst-content');
-  if (instEl) {
-    if (instList.length === 0) {
-      instEl.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:8px 0">Sem dados suficientes</div>';
-    } else {
-      instEl.innerHTML = instList.map(function(e) {
-        var cor = e.taxa >= 50 ? 'var(--bm-teal)' : e.taxa >= 25 ? '#d97706' : 'var(--text3)';
-        var bg  = e.taxa >= 50 ? 'rgba(46,196,165,0.12)' : e.taxa >= 25 ? 'rgba(217,119,6,0.1)' : '#f1f5f9';
-        return '<div class="inst-row">'
-          + '<div><div class="inst-nome">'+e.inst+'</div>'
-          + '<div class="inst-bar-bg"><div class="inst-bar-fill" style="width:'+e.taxa+'%;background:'+cor+'"></div></div></div>'
-          + '<div class="inst-n">'+e.total+'<span style="font-size:9px;font-weight:400;color:var(--text3)"> leads</span></div>'
-          + '<div class="inst-taxa" style="color:'+cor+';background:'+bg+'">'+e.taxa+'%</div>'
-          + '</div>';
-      }).join('');
+  var instCanvas = document.getElementById('inst-content');
+  if (instCanvas && instList.length > 0) {
+    if (window._cInst) { try { window._cInst.destroy(); } catch(e){} }
+    var avgTotal = Math.round(instList.reduce(function(s,d){ return s+d.total; },0) / instList.length);
+    var avgTaxa  = Math.round(instList.reduce(function(s,d){ return s+d.taxa; }, 0) / instList.length);
+    var refinedTicks = { color: '#8aa0b0', font: { family: 'Segoe UI, Arial, sans-serif', size: 10 } };
+
+    function qColor(d) {
+      if (d.total >= avgTotal && d.taxa >= avgTaxa) return { bg: 'rgba(46,196,165,0.85)',  br: '#2EC4A5' };
+      if (d.total <  avgTotal && d.taxa >= avgTaxa) return { bg: 'rgba(13,78,138,0.75)',   br: '#0D4E8A' };
+      if (d.total >= avgTotal && d.taxa <  avgTaxa) return { bg: 'rgba(217,119,6,0.75)',   br: '#d97706' };
+      return                                               { bg: 'rgba(139,160,176,0.55)', br: '#8aa0b0' };
     }
+
+    window._cInst = new Chart(instCanvas, {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          data: instList.map(function(d){ return { x: d.total, y: d.taxa }; }),
+          backgroundColor: instList.map(function(d){ return qColor(d).bg; }),
+          borderColor: instList.map(function(d){ return qColor(d).br; }),
+          borderWidth: 1.5,
+          pointRadius: 7,
+          pointHoverRadius: 9,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(item) {
+                var d = instList[item.dataIndex];
+                return [d.inst, 'Leads: '+d.total, 'Taxa: '+d.taxa+'%'];
+              }
+            }
+          }
+        },
+        scales: {
+          x: { min: 0, title: { display: true, text: 'total de leads', color: '#8aa0b0', font: { size: 10 } }, grid: { color: 'rgba(13,78,138,0.05)' }, ticks: refinedTicks, border: { display: false } },
+          y: { min: 0, max: 100, title: { display: true, text: 'taxa de resposta (%)', color: '#8aa0b0', font: { size: 10 } }, grid: { color: 'rgba(13,78,138,0.05)' }, ticks: { ...refinedTicks, callback: function(v){ return v+'%'; } }, border: { display: false } }
+        }
+      },
+      plugins: [{
+        afterDraw: function(chart) {
+          var ctx = chart.ctx;
+          var xS = chart.scales.x, yS = chart.scales.y;
+          var xMid = xS.getPixelForValue(avgTotal), yMid = yS.getPixelForValue(avgTaxa);
+          var left = xS.left, right = xS.right, top = yS.top, bottom = yS.bottom;
+          ctx.save();
+          // Fundos dos quadrantes
+          var quads = [
+            { x: xMid, y: top,  w: right-xMid, h: yMid-top,    c: 'rgba(46,196,165,0.06)',  lbl: 'Prioridade máxima', lx: right-4,  ly: top+8,     a: 'right' },
+            { x: left, y: top,  w: xMid-left,  h: yMid-top,    c: 'rgba(13,78,138,0.05)',   lbl: 'Nicho promissor',   lx: left+4,   ly: top+8,     a: 'left'  },
+            { x: xMid, y: yMid, w: right-xMid, h: bottom-yMid, c: 'rgba(217,119,6,0.05)',   lbl: 'Revisar abordagem', lx: right-4,  ly: bottom-4,  a: 'right' },
+            { x: left, y: yMid, w: xMid-left,  h: bottom-yMid, c: 'rgba(139,160,176,0.05)', lbl: 'Baixa prioridade',  lx: left+4,   ly: bottom-4,  a: 'left'  },
+          ];
+          quads.forEach(function(q) {
+            ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, q.w, q.h);
+            ctx.font = '500 9px Segoe UI,Arial,sans-serif'; ctx.fillStyle = 'rgba(100,120,140,0.55)';
+            ctx.textAlign = q.a; ctx.textBaseline = q.ly < yMid ? 'top' : 'bottom';
+            ctx.fillText(q.lbl, q.lx, q.ly);
+          });
+          // Linhas de referência
+          ctx.setLineDash([4,4]); ctx.strokeStyle = 'rgba(13,78,138,0.18)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(xMid, top); ctx.lineTo(xMid, bottom); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(left, yMid); ctx.lineTo(right, yMid); ctx.stroke();
+          ctx.setLineDash([]);
+          // Labels
+          chart.getDatasetMeta(0).data.forEach(function(pt, i) {
+            var d = instList[i];
+            var offsetX = pt.x > xMid ? -11 : 11;
+            ctx.font = '500 10px Segoe UI,Arial,sans-serif';
+            ctx.fillStyle = 'rgba(26,42,58,0.82)';
+            ctx.textAlign = pt.x > xMid ? 'right' : 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(d.inst, pt.x + offsetX, pt.y);
+          });
+          ctx.restore();
+        }
+      }]
+    });
   }
 }
 
