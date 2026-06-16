@@ -478,7 +478,15 @@ function updateMetrics() {
     +'</defs>';
 
   var tx=10;
-  var parts=['<svg width="100%" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Fluxo de engajamento">', defs];
+
+  // ── estado de expansão do breakdown de Responderam ──
+  if (typeof window._sankeyExpandido === 'undefined') window._sankeyExpandido = false;
+
+  // altura total: H base + área de expansão se aberta
+  var EXPAND_H = 180;
+  var svgH = window._sankeyExpandido ? H + EXPAND_H : H;
+
+  var parts=['<svg width="100%" viewBox="0 0 '+W+' '+svgH+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
   // Waves
   parts.push(wave(col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)'));
@@ -494,7 +502,8 @@ function updateMetrics() {
   // Nodes
   parts.push(node(col[0],yCad,hCad,'#0D4E8A'));
   parts.push(node(col[1],yCont,hCont,'#1A73C8'));
-  parts.push(node(col[2],yResp,hResp,'#2EC4A5'));
+  // nó de Responderam clicável
+  parts.push('<rect x="'+col[2]+'" y="'+yResp+'" width="'+nW+'" height="'+hResp+'" rx="2" fill="#2EC4A5" style="cursor:pointer" onclick="toggleSankeyExpandido()"/>');
   if(nReuniaoAgend>0) parts.push(node(col[3],yReu,hReu,'#1A8A78'));
   if(nOrcamento>0)    parts.push(node(col[3],yOrc,hOrc,'#6055B0'));
   if(nSemInteresse>0) parts.push(node(col[3],ySem,hSem,'#A06060',0.5));
@@ -505,7 +514,13 @@ function updateMetrics() {
   // Labels
   parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-16, nCadastrados, '#0D4E8A', 'ATIVOS', ''));
   parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-16, nContatados, '#1A73C8', 'CONTATADOS', sp(nContatados,nCadastrados)+'% dos ativos'));
-  parts.push(lbl(col[2]+nW+tx, yResp+hResp/2-16, nResponderam, '#2EC4A5', 'RESPONDERAM', sp(nResponderam,nContatados)+'% dos contatados'));
+  var respSeta = window._sankeyExpandido ? ' ↑' : ' ↓';
+  var respHint = window._sankeyExpandido ? 'recolher' : 'ver desdobramentos';
+  parts.push(
+    '<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2-16)+'" font-size="22" font-weight="700" fill="#2EC4A5" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+nResponderam+respSeta+'</text>'
+    +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+2)+'" font-size="7" font-weight="700" fill="#2EC4A5" opacity=".55" font-family="Segoe UI,sans-serif" letter-spacing=".1em" style="cursor:pointer" onclick="toggleSankeyExpandido()">RESPONDERAM</text>'
+    +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+14)+'" font-size="7" fill="#2EC4A5" opacity=".7" font-family="Segoe UI,sans-serif">'+sp(nResponderam,nContatados)+'% dos contatados · '+respHint+'</text>'
+  );
   if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-16, nReuniaoAgend, '#1A8A78', 'REUNIÕES', sp(nReuniaoAgend,nResponderam)+'% dos resp.'));
   if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-16, nOrcamento, '#6055B0', 'ORÇAMENTOS', sp(nOrcamento,nResponderam)+'% dos resp.'));
   if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
@@ -517,6 +532,48 @@ function updateMetrics() {
 
   parts.push('</svg>');
   document.getElementById('sankey-wrap').innerHTML=parts.join('');
+
+  // ── breakdown expansível de Responderam ──
+  if (window._sankeyExpandido) {
+    var nPedInfo  = ativos.filter(function(d){ return d.status === 'Respondeu — Pediu informações'; }).length;
+    var nContFut  = ativos.filter(function(d){ return d.status === 'Respondeu — Solicitou contato futuro'; }).length;
+    var nSemRetAp = ativos.filter(function(d){ return d.status === 'Respondeu — Sem retorno após interesse'; }).length;
+
+    var desdobramentos = [
+      { n: nReuniaoAgend,  cor: '#1A8A78', label: 'Reunião agendada' },
+      { n: nOrcamento,     cor: '#6055B0', label: 'Pediu orçamento' },
+      { n: nPedInfo,       cor: '#2EC4A5', label: 'Pediu informações' },
+      { n: nContFut,       cor: '#7ec8c8', label: 'Solicitou contato futuro' },
+      { n: nSemInteresse,  cor: '#A06060', label: 'Sem interesse / sem projeto' },
+      { n: nSemRetAp,      cor: '#8AAABB', label: 'Sem retorno após interesse' },
+    ].filter(function(d){ return d.n > 0; });
+
+    var xStart = col[2] + nW + tx;
+    var rowH = 16, rowGap = 9, maxBarW = 260;
+
+    var expandParts = [
+      '<svg width="100%" viewBox="0 0 '+W+' '+EXPAND_H+'" role="img" aria-label="Desdobramentos de Responderam" style="margin-top:-4px">',
+      '<rect x="'+col[2]+'" y="0" width="'+(W-col[2])+'" height="'+(EXPAND_H-4)+'" rx="6" fill="#2EC4A5" opacity=".04"/>',
+      '<text x="'+xStart+'" y="14" font-size="7.5" font-weight="700" fill="#2EC4A5" opacity=".7" font-family="Segoe UI,sans-serif" letter-spacing=".08em">DESDOBRAMENTOS DE RESPONDERAM</text>'
+    ];
+
+    desdobramentos.forEach(function(d, i) {
+      var ry = 24 + i * (rowH + rowGap);
+      var barW = Math.max(Math.round((d.n / nResponderam) * maxBarW), 4);
+      expandParts.push('<rect x="'+xStart+'" y="'+ry+'" width="'+barW+'" height="'+rowH+'" rx="3" fill="'+d.cor+'" opacity=".85"/>');
+      if (barW > 22) {
+        expandParts.push('<text x="'+(xStart+barW/2)+'" y="'+(ry+rowH/2)+'" dominant-baseline="central" text-anchor="middle" font-size="8" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">'+d.n+'</text>');
+      } else {
+        expandParts.push('<text x="'+(xStart+barW+5)+'" y="'+(ry+rowH/2)+'" dominant-baseline="central" font-size="8" font-weight="700" fill="'+d.cor+'" font-family="Segoe UI,sans-serif">'+d.n+'</text>');
+      }
+      expandParts.push('<text x="'+(xStart+maxBarW+10)+'" y="'+(ry+rowH/2)+'" dominant-baseline="central" font-size="8.5" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+d.label+'  <tspan font-weight="700" fill="'+d.cor+'">'+sp(d.n,nResponderam)+'%</tspan></text>');
+    });
+
+    expandParts.push('</svg>');
+    document.getElementById('sankey-wrap').innerHTML += expandParts.join('');
+  }
+
+
 
 
   // Taxa de resposta
@@ -731,6 +788,11 @@ function gradC(t,alpha){
       return 'rgba('+lerp(c0[0],c1[0])+','+lerp(c0[1],c1[1])+','+lerp(c0[2],c1[2])+','+alpha+')';
     }
   }
+}
+
+function toggleSankeyExpandido() {
+  window._sankeyExpandido = !window._sankeyExpandido;
+  updateMetrics();
 }
 
 function carregarEIniciar() {
