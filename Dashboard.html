@@ -407,39 +407,33 @@ function updateMetrics() {
   }).join('');
 
   // Sankey de engajamento — gradiente Biomelting
-  var nReuniaoFut = ativos.filter(function(d){ return d.status === 'Reunião agendada'; }).length;
-  var nReuniaoCanc = ativos.filter(function(d){ return d.status === 'Reunião cancelada'; }).length;
+  // Fluxo: Cadastrado → Contatado → Responderam → Convertidos
+  // Reuniões omitidas aqui — detalhadas no card acima
   var nOrcamento = orcDireto + orcPosReun;
   var nSemInteresse = ativos.filter(function(d){ return ['Respondeu — Sem interesse','Respondeu — Sem projeto no momento'].includes(d.status||''); }).length;
   var nSemRetorno = Math.max(0, nContatados - nResponderam);
-  var nNaoContat = Math.max(0, nCadastrados - nContatados);
+  var nNaoContat  = Math.max(0, nCadastrados - nContatados);
 
   function sp(n, of) { return of > 0 ? Math.round(n/of*100) : 0; }
   function sh(n, maxN, maxH) { return Math.max(Math.round(Math.sqrt(n/maxN)*maxH), 5); }
 
-  var W=900, H=250, nW=6;
-  var col=[30,234,374,504,664];
+  // 4 colunas: cad | cont | resp | conv
+  var W=900, H=220, nW=6;
+  var col=[30, 260, 490, 720];
   var maxH=100, maxN=nCadastrados;
 
-  var hCad=sh(nCadastrados,maxN,maxH), hCont=sh(nContatados,maxN,maxH);
-  var hResp=sh(nResponderam,maxN,maxH), hReu=sh(nReuniaoAgend,maxN,maxH);
-  var hReal=sh(nReuniaoReal,maxN,maxH), hCanc=sh(nReuniaoCanc,maxN,maxH), hFut=sh(nReuniaoFut,maxN,maxH);
-  var hOrc=sh(nOrcamento,maxN,maxH), hSem=sh(nSemInteresse,maxN,maxH);
-  var hSemRet=nSemRetorno>0?Math.max(Math.round(Math.cbrt(nSemRetorno/maxN)*maxH*0.4),4):0;
-  var hNaoCont=nNaoContat>0?Math.max(Math.round(Math.cbrt(nNaoContat/maxN)*maxH*0.4),4):0;
+  var hCad  = sh(nCadastrados, maxN, maxH);
+  var hCont = sh(nContatados,  maxN, maxH);
+  var hResp = sh(nResponderam, maxN, maxH);
+  var hConv = sh(nConv2,       maxN, maxH);
+  var hSemRet   = nSemRetorno>0 ? Math.max(Math.round(Math.cbrt(nSemRetorno/maxN)*maxH*0.4),4) : 0;
+  var hNaoCont  = nNaoContat>0  ? Math.max(Math.round(Math.cbrt(nNaoContat/maxN)*maxH*0.4),4)  : 0;
 
-  // Gap dinâmico: garante espaço mínimo para o label (32px por nó)
-  var GAP = 32;
-  var GAP_REUN = 44; // gap maior entre reuniões e orçamentos para acomodar 3 linhas de label
   var cy=H/2;
-  var yCad=cy-hCad/2, yCont=cy-hCont/2, yResp=cy-hResp/2;
-  var totRes=hReu+hOrc+hSem+GAP_REUN+(nOrcamento>0?GAP:0);
-  var yReu=cy-totRes/2, yOrc=yReu+hReu+GAP_REUN, ySem=yOrc+hOrc+GAP;
-  var yNaoCont=yCad+hCad+10, ySemRet=yCont+hCont+10;
-  var GAP_REUN2 = 48; // gap maior entre realizadas e agendadas
-  var totReun=hReal+(nReuniaoFut>0?hFut+GAP_REUN2:0);
-  var yReal=cy-totReun/2, yFut=yReal+hReal+GAP_REUN2, yCanc=yFut+(nReuniaoFut>0?hFut+GAP_REUN2:0);
-  var hCancReun=nReuniaoCanc>0?Math.max(Math.round(Math.cbrt(nReuniaoCanc/maxN)*maxH*0.4),4):0;
+  var yCad  = cy - hCad/2;
+  var yCont = cy - hCont/2;
+  var yResp = cy - hResp/2;
+  var yConv = cy - hConv/2;
 
   function wave(x1,y1,h1,x2,y2,h2,fill,op){
     op=op||0.5;
@@ -457,11 +451,6 @@ function updateMetrics() {
       +'<text x="'+x+'" y="'+(y+18)+'" font-size="7" font-weight="700" fill="'+color+'" opacity=".55" font-family="Segoe UI,sans-serif" letter-spacing=".1em">'+label+'</text>'
       +(sub?'<text x="'+x+'" y="'+(y+30)+'" font-size="7" fill="#9AABB8" font-family="Segoe UI,sans-serif">'+sub+'</text>':'');
   }
-  function slbl(x,y,val,color,label,op){
-    op=op||1;
-    return '<text x="'+x+'" y="'+y+'" font-size="15" font-weight="700" fill="'+color+'" font-family="Segoe UI,sans-serif" opacity="'+op+'">'+val+'</text>'
-      +'<text x="'+x+'" y="'+(y+13)+'" font-size="8" font-weight="600" fill="'+color+'" font-family="Segoe UI,sans-serif" letter-spacing=".06em" opacity="'+op+'">'+label+'</text>';
-  }
   function glbl(x,y,txt){
     return '<text x="'+x+'" y="'+y+'" font-size="8" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+txt+'</text>';
   }
@@ -469,11 +458,7 @@ function updateMetrics() {
   var defs='<defs>'
     +'<linearGradient id="sg01" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#0D4E8A" stop-opacity=".55"/><stop offset="100%" stop-color="#1A73C8" stop-opacity=".55"/></linearGradient>'
     +'<linearGradient id="sg12" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1A73C8" stop-opacity=".5"/><stop offset="100%" stop-color="#2EC4A5" stop-opacity=".5"/></linearGradient>'
-    +'<linearGradient id="sg2a" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2EC4A5" stop-opacity=".45"/><stop offset="100%" stop-color="#1A8A78" stop-opacity=".45"/></linearGradient>'
-    +'<linearGradient id="sg2b" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2EC4A5" stop-opacity=".35"/><stop offset="100%" stop-color="#6055B0" stop-opacity=".35"/></linearGradient>'
-    +'<linearGradient id="sg2c" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#B8C8D4" stop-opacity=".2"/><stop offset="100%" stop-color="#A06060" stop-opacity=".2"/></linearGradient>'
-    +'<linearGradient id="sg3b" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#C9923C" stop-opacity=".45"/><stop offset="100%" stop-color="#B07A20" stop-opacity=".45"/></linearGradient>'
-    +'<linearGradient id="sg3a" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1A8A78" stop-opacity=".5"/><stop offset="100%" stop-color="#0B6E4F" stop-opacity=".5"/></linearGradient>'
+    +'<linearGradient id="sg23" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2EC4A5" stop-opacity=".5"/><stop offset="100%" stop-color="#27a85a" stop-opacity=".5"/></linearGradient>'
     +'<linearGradient id="sgneg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8AAABB" stop-opacity=".32"/><stop offset="100%" stop-color="#8AAABB" stop-opacity=".32"/></linearGradient>'
     +'</defs>';
 
@@ -487,32 +472,28 @@ function updateMetrics() {
 
   var parts=['<svg width="100%" viewBox="0 0 '+W+' '+svgH+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
-  // Waves
-  parts.push(wave(col[0],yCad,hCad,col[1],yCont,hCont,'url(#sg01)'));
-  if(nNaoContat>0) parts.push(wave(col[0],yCad+hCad+6,hNaoCont,col[1],ySemRet+hSemRet+6,hNaoCont,'url(#sgneg)'));
+  // Waves principais
+  parts.push(wave(col[0],yCad, hCad, col[1],yCont,hCont,'url(#sg01)'));
   parts.push(wave(col[1],yCont,hCont,col[2],yResp,hResp,'url(#sg12)'));
-  if(nSemRetorno>0) parts.push(wave(col[1],yCont+hCont+6,hSemRet,col[2],yResp+hResp+6,hSemRet,'url(#sgneg)'));
-  if(nReuniaoAgend>0) parts.push(wave(col[2],yResp,hReu,col[3],yReu,hReu,'url(#sg2a)'));
-  if(nOrcamento>0)    parts.push(wave(col[2],yResp+hReu,hOrc,col[3],yOrc,hOrc,'url(#sg2b)'));
-  if(nSemInteresse>0) parts.push(wave(col[2],yResp+hReu+hOrc,hSem,col[3],ySem,hSem,'url(#sg2c)'));
-  if(nReuniaoReal>0)  parts.push(wave(col[3],yReu,hReal,col[4],yReal,hReal,'url(#sg3a)'));
-  if(nReuniaoFut>0)   parts.push(wave(col[3],yReu+hReal,hFut,col[4],yFut,hFut,'url(#sg3b)'));
+  if(nConv2>0) parts.push(wave(col[2],yResp,hConv,col[3],yConv,hConv,'url(#sg23)'));
 
-  // Nodes
-  parts.push(node(col[0],yCad,hCad,'#0D4E8A'));
+  // Waves de perda (cinza, saem abaixo do fluxo principal)
+  if(nNaoContat>0)  parts.push(wave(col[0],yCad+hCad+6,   hNaoCont,col[1],yCont+hCont+6,   hNaoCont,'url(#sgneg)'));
+  if(nSemRetorno>0) parts.push(wave(col[1],yCont+hCont+6,  hSemRet, col[2],yResp+hResp+6,  hSemRet,'url(#sgneg)'));
+
+  // Nós
+  parts.push(node(col[0],yCad, hCad, '#0D4E8A'));
   parts.push(node(col[1],yCont,hCont,'#1A73C8'));
-  // nó de Responderam clicável
+  // nó Responderam clicável
   parts.push('<rect x="'+col[2]+'" y="'+yResp+'" width="'+nW+'" height="'+hResp+'" rx="2" fill="#2EC4A5" style="cursor:pointer" onclick="toggleSankeyExpandido()"/>');
-  if(nReuniaoAgend>0) parts.push(node(col[3],yReu,hReu,'#1A8A78'));
-  if(nOrcamento>0)    parts.push(node(col[3],yOrc,hOrc,'#6055B0'));
-  if(nSemInteresse>0) parts.push(node(col[3],ySem,hSem,'#A06060',0.5));
-  if(nReuniaoReal>0)  parts.push(node(col[4],yReal,hReal,'#0B6E4F'));
-  if(nReuniaoFut>0)   parts.push(node(col[4],yFut,hFut,'#C9923C'));
-  if(nReuniaoCanc>0)  parts.push(node(col[4],yFut+hFut+GAP_REUN2,hCancReun,'#8AAABB',0.6));
+  if(nConv2>0) parts.push(node(col[3],yConv,hConv,'#27a85a'));
 
   // Labels
-  parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-16, nCadastrados, '#0D4E8A', 'ATIVOS', ''));
-  parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-16, nContatados, '#1A73C8', 'CONTATADOS', sp(nContatados,nCadastrados)+'% dos ativos'));
+  var tx2 = col[3]+nW+tx;
+  parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-16,   nCadastrados,'#0D4E8A','ATIVOS',''));
+  parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-16,  nContatados, '#1A73C8','CONTATADOS', sp(nContatados,nCadastrados)+'% dos ativos'));
+
+  // Label Responderam — clicável
   var respSeta = window._sankeyExpandido ? ' ↑' : ' ↓';
   var respHint = window._sankeyExpandido ? 'recolher' : 'ver desdobramentos';
   parts.push(
@@ -520,36 +501,35 @@ function updateMetrics() {
     +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+2)+'" font-size="7" font-weight="700" fill="#2EC4A5" opacity=".55" font-family="Segoe UI,sans-serif" letter-spacing=".1em" style="cursor:pointer" onclick="toggleSankeyExpandido()">RESPONDERAM</text>'
     +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+14)+'" font-size="7" fill="#2EC4A5" opacity=".7" font-family="Segoe UI,sans-serif">'+sp(nResponderam,nContatados)+'% dos contatados · '+respHint+'</text>'
   );
-  if(nReuniaoAgend>0) parts.push(lbl(col[3]+nW+tx, yReu+hReu/2-16, nReuniaoAgend, '#1A8A78', 'REUNIÕES', sp(nReuniaoAgend,nResponderam)+'% dos resp.'));
-  if(nOrcamento>0)    parts.push(lbl(col[3]+nW+tx, yOrc+hOrc/2-16, nOrcamento, '#6055B0', 'ORÇAMENTOS', sp(nOrcamento,nResponderam)+'% dos resp.'));
-  if(nSemInteresse>0) parts.push(slbl(col[3]+nW+tx, ySem+hSem/2-6, nSemInteresse, '#904444', 'S/ INTERESSE', 0.6));
-  if(nReuniaoReal>0)  parts.push(lbl(col[4]+nW+tx, yReal+hReal/2-16, nReuniaoReal, '#0B6E4F', 'REALIZADAS', sp(nReuniaoReal,nReuniaoAgend)+'% das reun.'));
-  if(nReuniaoFut>0)   parts.push(lbl(col[4]+nW+tx, yFut+hFut/2-16, nReuniaoFut, '#C9923C', 'AGENDADAS', 'a realizar'));
-  if(nReuniaoCanc>0)  parts.push(glbl(col[4]+nW+tx, yFut+hFut+GAP_REUN2+hCancReun/2+10, nReuniaoCanc+' reuniões canceladas'));
-  if(nSemRetorno>0)   parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
-  if(nNaoContat>0)    parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18, nNaoContat+' sem contato'));
 
-  // ── breakdown expansível de Responderam — desenhado dentro do mesmo SVG ──
+  if(nConv2>0) parts.push(lbl(col[3]+nW+tx, yConv+hConv/2-16, nConv2, '#27a85a','CONVERTIDOS', sp(nConv2,nCadastrados)+'% do total'));
+
+  // Labels de perda
+  if(nNaoContat>0)  parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18,  nNaoContat+' sem contato'));
+  if(nSemRetorno>0) parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
+
+  // ── breakdown expansível de Responderam — dentro do mesmo SVG ──
   if (window._sankeyExpandido) {
     var nPedInfo  = ativos.filter(function(d){ return d.status === 'Respondeu — Pediu informações'; }).length;
     var nContFut  = ativos.filter(function(d){ return d.status === 'Respondeu — Solicitou contato futuro'; }).length;
     var nSemRetAp = ativos.filter(function(d){ return d.status === 'Respondeu — Sem retorno após interesse'; }).length;
+    var nReuniaoAgendExp = ativos.filter(function(d){ return ['Reunião agendada','Reunião realizada','Reunião cancelada'].includes(d.status||''); }).length;
 
     var desdobramentos = [
-      { n: nReuniaoAgend,  cor: '#1A8A78', label: 'Reunião agendada' },
-      { n: nOrcamento,     cor: '#6055B0', label: 'Pediu orçamento' },
-      { n: nPedInfo,       cor: '#2EC4A5', label: 'Pediu informações' },
-      { n: nContFut,       cor: '#7ec8c8', label: 'Solicitou contato futuro' },
-      { n: nSemInteresse,  cor: '#A06060', label: 'Sem interesse / sem projeto' },
-      { n: nSemRetAp,      cor: '#8AAABB', label: 'Sem retorno após interesse' },
+      { n: nReuniaoAgendExp, cor: '#1A8A78', label: 'Reunião (agendada / realizada / cancelada)' },
+      { n: nOrcamento,       cor: '#6055B0', label: 'Pediu orçamento' },
+      { n: nPedInfo,         cor: '#2EC4A5', label: 'Pediu informações' },
+      { n: nContFut,         cor: '#7ec8c8', label: 'Solicitou contato futuro' },
+      { n: nSemInteresse,    cor: '#A06060', label: 'Sem interesse / sem projeto' },
+      { n: nSemRetAp,        cor: '#8AAABB', label: 'Sem retorno após interesse' },
     ].filter(function(d){ return d.n > 0; });
 
-    var xStart  = col[2] + nW + tx;
-    var yStart  = H + 14;
-    var rowH = 16, rowGap = 9, maxBarW = 260;
+    var xStart = col[2] + nW + tx;
+    var yStart = H + 14;
+    var rowH = 16, rowGap = 9, maxBarW = 300;
 
     parts.push('<rect x="'+col[2]+'" y="'+H+'" width="'+(W-col[2]-10)+'" height="'+(EXPAND_H-8)+'" rx="6" fill="#2EC4A5" opacity=".04"/>');
-    parts.push('<text x="'+xStart+'" y="'+(yStart)+'" font-size="7.5" font-weight="700" fill="#2EC4A5" opacity=".7" font-family="Segoe UI,sans-serif" letter-spacing=".08em">DESDOBRAMENTOS DE RESPONDERAM</text>');
+    parts.push('<text x="'+xStart+'" y="'+yStart+'" font-size="7.5" font-weight="700" fill="#2EC4A5" opacity=".7" font-family="Segoe UI,sans-serif" letter-spacing=".08em">DESDOBRAMENTOS DE RESPONDERAM</text>');
 
     desdobramentos.forEach(function(d, i) {
       var ry = yStart + 10 + i * (rowH + rowGap);
