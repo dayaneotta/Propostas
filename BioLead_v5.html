@@ -283,6 +283,7 @@ textarea{resize:vertical;min-height:60px}
         <div class="form-section-label">🔗 Links e redes</div>
         <div class="form-grid">
           <div class="form-field"><label>Lattes</label><input id="f-lattes" placeholder="http://lattes.cnpq.br/0000000000000000" /></div>
+          <div class="form-field"><label>LinkedIn</label><input id="f-linkedin" placeholder="https://linkedin.com/in/usuario" /></div>
           <div class="form-field"><label>Instagram</label><input id="f-insta" placeholder="@handle ou URL completa" /></div>
         </div>
       </div>
@@ -372,6 +373,7 @@ textarea{resize:vertical;min-height:60px}
     </div>
     <div class="form-grid">
       <div><label>Lattes</label><input id="ed-lattes" /></div>
+      <div><label>LinkedIn</label><input id="ed-linkedin" placeholder="https://linkedin.com/in/usuario" /></div>
       <div><label>Instagram</label><input id="ed-insta" /></div>
     </div>
     <div class="form-full">
@@ -471,6 +473,7 @@ function normalizarContato(p) {
     tel: String(p.tel || ''),
     lattes: String(p.lattes || ''),
     instagram: String(p.instagram || ''),
+    linkedin: String(p.linkedin || ''),
     score: String(p.score || ''),
     c1_raw: normalizarData(p.c1_raw),
     c1_nota: String(p.c1_nota || ''),
@@ -650,7 +653,7 @@ function mascaraData(input) {
 }
 
 function limparForm() {
-  ['f-nome','f-email','f-uf','f-inst','f-tel','f-lattes','f-insta','f-linha'].forEach(id=>document.getElementById(id).value='');
+  ['f-nome','f-email','f-uf','f-inst','f-tel','f-lattes','f-insta','f-linkedin','f-linha'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-score').value='';
 }
 
@@ -665,6 +668,7 @@ function adicionar() {
     tel: document.getElementById('f-tel').value.trim(),
     lattes: document.getElementById('f-lattes').value.trim(),
     instagram: document.getElementById('f-insta').value.trim(),
+    linkedin: document.getElementById('f-linkedin').value.trim(),
     linha: document.getElementById('f-linha').value.trim(),
     score: document.getElementById('f-score').value||'',
     status: 'Novo', c1_raw:'', c1_nota:'', c2_raw:'', c2_nota:'', c3_raw:'', c3_nota:'',
@@ -823,6 +827,7 @@ function abrirModal(id) {
   document.getElementById('ed-tel').value=p.tel||'';
   document.getElementById('ed-lattes').value=p.lattes||'';
   document.getElementById('ed-insta').value=p.instagram||'';
+  document.getElementById('ed-linkedin').value=p.linkedin||'';
   document.getElementById('ed-linha').value=p.linha||'';
   document.getElementById('ed-score').value=p.score||'MÉDIO';
   document.getElementById('ed-status').value=p.status||'Novo';
@@ -856,6 +861,7 @@ function salvarEdicao() {
   p.tel=document.getElementById('ed-tel').value.trim();
   p.lattes=document.getElementById('ed-lattes').value.trim();
   p.instagram=document.getElementById('ed-insta').value.trim();
+  p.linkedin=document.getElementById('ed-linkedin').value.trim();
   p.linha=document.getElementById('ed-linha').value.trim();
   p.score=document.getElementById('ed-score').value;
   p.status=document.getElementById('ed-status').value;
@@ -921,6 +927,7 @@ function render() {
     const emoji=STATUS_EMOJI[status]||'';
     const latBtn=p.lattes?`<a href="${p.lattes}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#185FA5;text-decoration:none;font-weight:500"><i class="ti ti-dna" style="font-size:13px"></i>Lattes</a>`:'';
     const igBtn=p.instagram&&p.instagram.startsWith('@')?`<a href="https://instagram.com/${p.instagram.slice(1)}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#993556;text-decoration:none;font-weight:500"><i class="ti ti-brand-instagram" style="font-size:13px"></i>IG</a>`:'';
+    const liBtn=p.linkedin?`<a href="${p.linkedin}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#0A66C2;text-decoration:none;font-weight:500"><i class="ti ti-brand-linkedin" style="font-size:13px"></i>LinkedIn</a>`:'';
     return `<tr class="${p.desqualificado?'desq':''}">
       <td><div class="name-cell"><div class="av ${av}">${ini}</div><div><div class="nmt">${p.nome}</div><div class="ins">${p.inst||'—'}</div></div></div></td>
       <td><span style="font-size:10px;font-weight:700;color:var(--bm-blue);background:#E8F5FB;border-radius:4px;padding:2px 6px">${p.estado||'—'}</span></td>
@@ -928,7 +935,7 @@ function render() {
       <td><div class="dots-wrap">${buildDotsBL(p)}</div></td>
       <td><span class="sp" style="${stStyle}">${emoji} ${status}</span></td>
       <td style="max-width:200px"><a href="mailto:${p.email}" style="font-size:12px;color:var(--bm-blue);text-decoration:none;font-style:italic;letter-spacing:-.01em" title="Clique para enviar e-mail">${p.email||'—'}</a></td>
-      <td><div class="lc">${latBtn}${igBtn}</div></td>
+      <td><div class="lc">${latBtn}${igBtn}${liBtn}</div></td>
       <td style="white-space:nowrap">
         <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer" onclick="abrirModal('${p.id}')"><i class="ti ti-pencil" style="font-size:14px"></i></button>
         <button class="btn"  onclick="gerarProposta('${p.id}')" title="Gerar proposta" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #2EC4A5;color:#2EC4A5;cursor:pointer"><i class="ti ti-file-dollar" style="font-size:14px"></i></button>
@@ -963,7 +970,7 @@ function exportarCSV() {
   if (!dados.length) { toast('Nenhum dado para exportar'); return; }
   const cols=['Nome','E-mail','Linha de pesquisa','Score','Instituição','UF','Telefone','Lattes','Instagram','Status','1° Data','1° Nota','2° Data','2° Nota','3° Data','3° Nota','Desqualificado','Motivo'];
   const linhas=[cols.join(';')];
-  dados.forEach(p=>linhas.push([p.nome,p.email,p.linha,p.score,p.inst,p.estado,p.tel,p.lattes,p.instagram,p.status||'Novo',p.c1_raw,p.c1_nota,p.c2_raw,p.c2_nota,p.c3_raw,p.c3_nota,p.desqualificado?'Sim':'Não',p.desq_motivo||''].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(';')));
+  dados.forEach(p=>linhas.push([p.nome,p.email,p.linha,p.score,p.inst,p.estado,p.tel,p.lattes,p.instagram,p.linkedin||'',p.status||'Novo',p.c1_raw,p.c1_nota,p.c2_raw,p.c2_nota,p.c3_raw,p.c3_nota,p.desqualificado?'Sim':'Não',p.desq_motivo||''].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(';')));
   const blob=new Blob(['\uFEFF'+linhas.join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`biolead_${new Date().toISOString().slice(0,10)}.csv`; a.click();
@@ -994,7 +1001,7 @@ function detectarSep(t) {
   return (p.match(/;/g)||[]).length>=(p.match(/,/g)||[]).length?';':',';
 }
 
-const MAPA_CAB={'nome completo':'nome','nome':'nome','e-mail':'email','email':'email','linha de pesquisa':'linha','linhas de pesquisa':'linha','score de prioridade biosetting':'score','score de prioridade':'score','score':'score','instituição':'inst','instituicao':'inst','uf':'estado','telefone':'tel','curriculo lattes':'lattes','currículo lattes':'lattes','lattes':'lattes','instagram':'instagram'};
+const MAPA_CAB={'nome completo':'nome','nome':'nome','e-mail':'email','email':'email','linha de pesquisa':'linha','linhas de pesquisa':'linha','score de prioridade biosetting':'score','score de prioridade':'score','score':'score','instituição':'inst','instituicao':'inst','uf':'estado','telefone':'tel','curriculo lattes':'lattes','currículo lattes':'lattes','lattes':'lattes','instagram':'instagram','linkedin':'linkedin'};
 
 function detectarCab(linha,sep) {
   const pts=parseLinha(linha,sep); const idx={};
@@ -1010,7 +1017,7 @@ function detectarCab(linha,sep) {
 
 function parsearCSV(linha,sep,idx) {
   const pts=parseLinha(linha,sep);
-  const p={nome:'',email:'',linha:'',score:'',inst:'',estado:'',tel:'',lattes:'',instagram:'',c1_raw:'',c1_nota:'',c2_raw:'',c2_nota:'',c3_raw:'',c3_nota:''};
+  const p={nome:'',email:'',linha:'',score:'',inst:'',estado:'',tel:'',lattes:'',instagram:'',linkedin:'',c1_raw:'',c1_nota:'',c2_raw:'',c2_nota:'',c3_raw:'',c3_nota:''};
   if (idx) Object.entries(idx).forEach(([i,campo])=>{p[campo]=(pts[i]||'').trim();});
   else [p.nome,p.email,p.linha,p.score,p.inst,p.estado,p.tel,p.lattes,p.c1_raw,p.c2_raw,p.c3_raw,p.instagram]=pts.map(x=>(x||'').trim());
   return p;
@@ -1130,6 +1137,7 @@ function migrarVersaoAnterior() {
       tel: p.telefone||p.tel||'',
       lattes: p.lattes||'',
       instagram: p.instagram||'',
+      linkedin: p.linkedin||'',
       score: p.score||'MÉDIO',
       status: status,
       c1_raw: p.contato1||p.c1_raw||'',
@@ -1177,7 +1185,7 @@ function importarDados() {
   arr.forEach(d=>{
     if (!d.nome) return;
     const p={id:Date.now()+Math.random(),nome:d.nome||'',email:d.email||'',linha:d.linha||'',
-      inst:d.inst||'',estado:d.estado||'',tel:d.tel||'',lattes:d.lattes||'',instagram:d.instagram||'',
+      inst:d.inst||'',estado:d.estado||'',tel:d.tel||'',lattes:d.lattes||'',instagram:d.instagram||'',linkedin:d.linkedin||'',
       score:d.score||'',c1_raw:limparData(d.c1_raw),c1_nota:d.c1_nota||extrairNotaDoRaw(d.c1_raw),
       c2_raw:limparData(d.c2_raw),c2_nota:d.c2_nota||extrairNotaDoRaw(d.c2_raw),
       c3_raw:limparData(d.c3_raw),c3_nota:d.c3_nota||extrairNotaDoRaw(d.c3_raw),
