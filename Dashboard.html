@@ -177,6 +177,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
           <span id="tendencia-badge" style="margin-left:8px"></span>
         </div>
         <div class="chart-wrap"><canvas id="cE"></canvas></div>
+        <div id="evolucao-stats" style="display:flex;gap:0;margin-top:12px;padding-top:12px;border-top:.5px solid var(--border)"></div>
       </div>
       <div class="chart-card">
         <div class="chart-title"><i class="ti ti-map-pin" aria-hidden="true"></i> Distribuição por estado</div>
@@ -665,6 +666,27 @@ function updateCharts() {
       }
     }
   });
+
+  // ── Stats abaixo do gráfico de evolução ──
+  var allKeys = Object.keys(meses).sort();
+  var totalContatos = allKeys.reduce(function(s,k){ return s + meses[k]; }, 0);
+  var media = allKeys.length ? Math.round(totalContatos / allKeys.length) : 0;
+  var melhorKey = allKeys.reduce(function(a,b){ return meses[a] >= meses[b] ? a : b; }, allKeys[0]);
+  var melhorVal = melhorKey ? meses[melhorKey] : 0;
+  var melhorLabel = melhorKey ? (['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][parseInt(melhorKey.split('/')[1])-1]+'/'+melhorKey.split('/')[0].slice(2)) : '—';
+  var mesesAtivos = allKeys.length;
+  var statsEl = document.getElementById('evolucao-stats');
+  if (statsEl) {
+    var statStyle = 'flex:1;text-align:center;padding:0 8px;border-right:.5px solid var(--border)';
+    var lastStatStyle = 'flex:1;text-align:center;padding:0 8px';
+    var valStyle = 'font-size:18px;font-weight:500;color:';
+    var lblStyle = 'font-size:9px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.06em';
+    var subStyle = 'font-size:10px;color:var(--text2);margin-top:1px';
+    statsEl.innerHTML =
+      '<div style="'+statStyle+'"><div style="'+valStyle+'#1A73C8">'+media+'</div><div style="'+lblStyle+'">Média / mês</div></div>'
+      +'<div style="'+statStyle+'"><div style="'+valStyle+'#0B6E4F">'+melhorVal+'</div><div style="'+lblStyle+'">Melhor mês</div><div style="'+subStyle+'">'+melhorLabel+'</div></div>'
+      +'<div style="'+lastStatStyle+'"><div style="'+valStyle+'#1A8A78">'+mesesAtivos+'</div><div style="'+lblStyle+'">Meses ativos</div></div>';
+  }
 
   // Distribuição por estado
   const byEstado = {};
