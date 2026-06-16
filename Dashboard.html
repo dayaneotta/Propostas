@@ -123,6 +123,15 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .reun-chip{display:inline-flex;align-items:center;background:var(--bg);border:.5px solid var(--border);border-radius:20px;padding:4px 10px;gap:8px}
 .reun-chip-estado{font-size:12px;font-weight:500;color:var(--text)}
 .reun-chip-num{font-size:13px;font-weight:500;color:var(--text)}
+
+/* Taxa por instituição */
+.inst-row{display:grid;grid-template-columns:1fr 44px 54px;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--border)}
+.inst-row:last-child{border-bottom:none}
+.inst-nome{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inst-n{font-size:12px;font-weight:500;color:var(--text);text-align:right}
+.inst-taxa{font-size:11px;font-weight:500;text-align:right;padding:2px 6px;border-radius:20px}
+.inst-bar-bg{height:4px;border-radius:2px;background:#EAF4FA;margin-top:3px;overflow:hidden}
+.inst-bar-fill{height:100%;border-radius:2px;background:var(--bm-teal)}
 </style>
 </head>
 <body>
@@ -198,14 +207,15 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
       </div>
     </div>
 
-    <!-- Tempo médio -->
+    <!-- Tempo médio + Taxa por instituição -->
     <div class="charts-grid">
       <div class="chart-card">
         <div class="chart-title"><i class="ti ti-clock" aria-hidden="true"></i> Tempo médio entre contatos</div>
         <div id="tempo-content"></div>
       </div>
-        <div class="chart-title"><i class="ti ti-clock" aria-hidden="true"></i> Tempo médio entre contatos</div>
-        <div id="tempo-content"></div>
+      <div class="chart-card">
+        <div class="chart-title"><i class="ti ti-school" aria-hidden="true"></i> Taxa de resposta por instituição</div>
+        <div id="inst-content"></div>
       </div>
     </div>
 
@@ -671,6 +681,42 @@ function updateMetrics() {
           +'<span style="width:1px;height:12px;background:var(--border);display:inline-block"></span>'
           +'<span style="font-size:12px;font-weight:700;color:'+altoColor+'">'+alto+' ★</span>'
           +'</div>';
+      }).join('');
+    }
+  }
+
+  // ── Taxa de resposta por instituição ──
+  var STATUS_RESPONDEU_INST = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
+  var byInst = {};
+  ativos.forEach(function(d) {
+    if (!d.inst) return;
+    var insts = d.inst.split(' / ').map(function(s){ return s.trim(); }).filter(Boolean);
+    insts.forEach(function(inst) {
+      if (!byInst[inst]) byInst[inst] = { total: 0, resp: 0 };
+      byInst[inst].total++;
+      if (STATUS_RESPONDEU_INST.includes(d.status||'')) byInst[inst].resp++;
+    });
+  });
+  var instList = Object.entries(byInst)
+    .map(function(e){ return { inst: e[0], total: e[1].total, resp: e[1].resp, taxa: e[1].total > 0 ? Math.round(e[1].resp/e[1].total*100) : 0 }; })
+    .filter(function(e){ return e.total >= 2; })
+    .sort(function(a,b){ return b.taxa - a.taxa || b.total - a.total; })
+    .slice(0, 8);
+
+  var instEl = document.getElementById('inst-content');
+  if (instEl) {
+    if (instList.length === 0) {
+      instEl.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:8px 0">Sem dados suficientes</div>';
+    } else {
+      instEl.innerHTML = instList.map(function(e) {
+        var cor = e.taxa >= 50 ? 'var(--bm-teal)' : e.taxa >= 25 ? '#d97706' : 'var(--text3)';
+        var bg  = e.taxa >= 50 ? 'rgba(46,196,165,0.12)' : e.taxa >= 25 ? 'rgba(217,119,6,0.1)' : '#f1f5f9';
+        return '<div class="inst-row">'
+          + '<div><div class="inst-nome">'+e.inst+'</div>'
+          + '<div class="inst-bar-bg"><div class="inst-bar-fill" style="width:'+e.taxa+'%;background:'+cor+'"></div></div></div>'
+          + '<div class="inst-n">'+e.total+'<span style="font-size:9px;font-weight:400;color:var(--text3)"> leads</span></div>'
+          + '<div class="inst-taxa" style="color:'+cor+';background:'+bg+'">'+e.taxa+'%</div>'
+          + '</div>';
       }).join('');
     }
   }
