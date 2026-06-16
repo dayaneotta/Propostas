@@ -191,8 +191,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
       <div class="chart-card">
         <div class="chart-title"><i class="ti ti-map-pin" aria-hidden="true"></i> Distribuição por estado
           <span style="margin-left:auto;display:flex;align-items:center;gap:12px;font-size:11px;font-weight:400;color:var(--text3)">
-            <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:linear-gradient(90deg,#0D4E8A,#2EC4A5)"></span> Alto</span>
-            <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:linear-gradient(90deg,rgba(13,78,138,0.25),rgba(46,196,165,0.25))"></span> Total</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:linear-gradient(90deg,#2EC4A5,#0D4E8A)"></span> Alto</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:linear-gradient(90deg,rgba(13,78,138,0.55),rgba(46,196,165,0.55))"></span> Total</span>
           </span>
         </div>
         <div class="chart-wrap" style="height:220px"><canvas id="cEstados"></canvas></div>
@@ -595,8 +595,8 @@ function updateMetrics() {
         {
           label: 'Total',
           data: estadosSorted.map(([,n]) => n),
-          backgroundColor: estadosSorted.map(function(_,i){ var t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0; return gradC(t, 0.22); }),
-          hoverBackgroundColor: estadosSorted.map(function(_,i){ var t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0; return gradC(t, 0.35); }),
+          backgroundColor: estadosSorted.map(function(_,i){ var t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0; return gradC(t, 0.55); }),
+          hoverBackgroundColor: estadosSorted.map(function(_,i){ var t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0; return gradC(t, 0.72); }),
           borderRadius: 4,
           borderSkipped: false,
           xAxisID: 'x',
@@ -607,8 +607,8 @@ function updateMetrics() {
         {
           label: 'Alto score',
           data: estadosSorted.map(([e]) => byEstadoAlto[e]||0),
-          backgroundColor: estadosSorted.map(function(_,i){ var t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0; return gradC(t, 0.92); }),
-          hoverBackgroundColor: estadosSorted.map(function(_,i){ var t = estadosSorted.length > 1 ? i/(estadosSorted.length-1) : 0; return gradC(t, 1); }),
+          backgroundColor: estadosSorted.map(function(_,i){ var t = estadosSorted.length > 1 ? 1 - i/(estadosSorted.length-1) : 0; return gradC(t, 0.92); }),
+          hoverBackgroundColor: estadosSorted.map(function(_,i){ var t = estadosSorted.length > 1 ? 1 - i/(estadosSorted.length-1) : 0; return gradC(t, 1); }),
           borderRadius: 4,
           borderSkipped: false,
           xAxisID: 'x2',
