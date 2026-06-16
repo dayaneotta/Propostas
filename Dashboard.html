@@ -125,10 +125,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .reun-chip-num{font-size:13px;font-weight:500;color:var(--text)}
 
 /* Taxa por instituição */
-.inst-chart-wrap{position:relative;width:100%;height:240px;border-radius:6px;overflow:hidden}
-.tm-cell{position:absolute;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:4px;transition:opacity .15s;cursor:default}
-.tm-cell:hover{opacity:.82}
-.tm-inst{font-size:11px;font-weight:500;text-align:center;line-height:1.2}
+.inst-chart-wrap{position:relative;height:220px}
 .tm-taxa{font-size:13px;font-weight:500;margin-top:2px}
 .tm-leads{font-size:10px;margin-top:1px;opacity:.75}
 </style>
@@ -213,15 +210,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
         <div id="tempo-content"></div>
       </div>
       <div class="chart-card">
-        <div class="chart-title"><i class="ti ti-layout-grid" aria-hidden="true"></i> Potencial por instituição
-          <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--text3)">tamanho = leads · cor = taxa</span>
-        </div>
-        <div class="inst-chart-wrap" id="inst-content"></div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:.5px solid var(--border)">
-          <span style="font-size:10px;color:var(--text3)">baixa taxa</span>
-          <div style="flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#0D4E8A,#1A73C8,#2EC4A5)"></div>
-          <span style="font-size:10px;color:var(--text3)">alta taxa</span>
-        </div>
+        <div class="chart-title"><i class="ti ti-school" aria-hidden="true"></i> Taxa de resposta por instituição</div>
+        <div class="inst-chart-wrap"><canvas id="inst-content"></canvas></div>
       </div>
     </div>
 
@@ -691,7 +681,7 @@ function updateMetrics() {
     }
   }
 
-  // ── Treemap de potencial por instituição ──
+  // ── Barras horizontais — taxa de resposta por instituição ──
   var STATUS_RESPONDEU_INST = ['Respondeu — Pediu informações','Respondeu — Pediu orçamento','Respondeu — Solicitou contato futuro','Respondeu — Sem interesse','Respondeu — Sem projeto no momento','Respondeu — Sem retorno após interesse','Reunião agendada','Reunião realizada','Reunião cancelada','Convertido'];
   var byInst = {};
   ativos.forEach(function(d) {
@@ -705,76 +695,70 @@ function updateMetrics() {
   var instList = Object.entries(byInst)
     .map(function(e){ return { inst: e[0], total: e[1].total, taxa: e[1].total > 0 ? Math.round(e[1].resp/e[1].total*100) : 0 }; })
     .filter(function(e){ return e.total >= 2; })
-    .sort(function(a,b){ return b.total - a.total; });
+    .sort(function(a,b){ return b.taxa - a.taxa || b.total - a.total; });
 
-  var tmEl = document.getElementById('inst-content');
-  if (tmEl && instList.length > 0) {
-    tmEl.innerHTML = '';
-    var W = tmEl.clientWidth || 580, H = 240, gap = 3;
-    var total = instList.reduce(function(s,d){ return s+d.total; }, 0);
+  var instCanvas = document.getElementById('inst-content');
+  if (instCanvas) {
+    if (window._cInst) { try { window._cInst.destroy(); } catch(e){} }
+    var refinedTicksI = { color: '#8aa0b0', font: { family: 'Segoe UI, Arial, sans-serif', size: 10 } };
 
-    // Gradiente Biomelting: azul escuro (taxa 0%) → teal (taxa 100%)
-    function bmColor(taxa) {
+    // Gradiente Biomelting contínuo por taxa
+    function bmColorInst(taxa) {
       var t = Math.max(0, Math.min(1, taxa/100));
-      var stops = [[0,[13,78,138]],[0.3,[26,115,200]],[0.6,[37,162,190]],[1,[46,196,165]]];
+      var stops = [[0,[13,78,138]],[0.35,[26,115,200]],[0.65,[37,162,190]],[1,[46,196,165]]];
       for (var i=0;i<stops.length-1;i++) {
         if (t>=stops[i][0]&&t<=stops[i+1][0]) {
           var r=(t-stops[i][0])/(stops[i+1][0]-stops[i][0]);
           var lerp=function(a,b){return Math.round(a+(b-a)*r);};
           var c0=stops[i][1],c1=stops[i+1][1];
-          return 'rgba('+lerp(c0[0],c1[0])+','+lerp(c0[1],c1[1])+','+lerp(c0[2],c1[2])+',0.88)';
+          return 'rgba('+lerp(c0[0],c1[0])+','+lerp(c0[1],c1[1])+','+lerp(c0[2],c1[2])+',0.82)';
         }
       }
-      return 'rgba(46,196,165,0.88)';
+      return 'rgba(46,196,165,0.82)';
     }
 
-    // Squarify simples
-    function squarify(items, x, y, w, h) {
-      if (!items.length) return [];
-      var rects = [];
-      var remaining = items.slice();
-      var cx=x,cy=y,cw=w,ch=h;
-      var tot = items.reduce(function(s,d){return s+d.total;},0);
-      while (remaining.length) {
-        var isH = cw < ch;
-        var n = Math.max(1, Math.round(Math.sqrt(remaining.length)));
-        var row = remaining.splice(0, n);
-        var rowTot = row.reduce(function(s,d){return s+d.total;},0);
-        var dim = isH ? cw*(rowTot/tot)*(w*h/(cw*ch)) : ch*(rowTot/tot)*(w*h/(cw*ch));
-        dim = Math.max(dim, 1);
-        var pos = isH ? cy : cx;
-        row.forEach(function(d) {
-          var frac = d.total/rowTot;
-          var rw = isH ? dim : cw*frac;
-          var rh = isH ? ch*frac : dim;
-          rects.push({inst:d.inst,total:d.total,taxa:d.taxa,x:isH?cx:pos,y:isH?pos:cy,w:rw,h:rh});
-          pos += isH ? rh : rw;
-        });
-        if (isH) { cx+=dim; cw-=dim; } else { cy+=dim; ch-=dim; }
-        if (cw<=1||ch<=1) break;
+    window._cInst = new Chart(instCanvas, {
+      type: 'bar',
+      data: {
+        labels: instList.map(function(d){ return d.inst; }),
+        datasets: [{
+          data: instList.map(function(d){ return d.taxa; }),
+          backgroundColor: instList.map(function(d){ return bmColorInst(d.taxa); }),
+          hoverBackgroundColor: instList.map(function(d){ return bmColorInst(d.taxa).replace('0.82','1'); }),
+          borderRadius: 4,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(item) {
+                var d = instList[item.dataIndex];
+                return ['Taxa: '+d.taxa+'%', 'Leads: '+d.total];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            min: 0, max: 100,
+            grid: { color: 'rgba(13,78,138,0.05)', drawBorder: false },
+            ticks: { ...refinedTicksI, callback: function(v){ return v+'%'; } },
+            border: { display: false }
+          },
+          y: {
+            grid: { display: false },
+            ticks: refinedTicksI,
+            border: { display: false }
+          }
+        }
       }
-      return rects;
-    }
-
-    var rects = squarify(instList, 0, 0, W, H);
-    rects.forEach(function(r) {
-      var bg = bmColor(r.taxa);
-      var div = document.createElement('div');
-      div.className = 'tm-cell';
-      div.style.cssText = 'left:'+(r.x+gap/2)+'px;top:'+(r.y+gap/2)+'px;width:'+(r.w-gap)+'px;height:'+(r.h-gap)+'px;background:'+bg+';';
-      div.title = r.inst+' · '+r.total+' leads · '+r.taxa+'% taxa';
-      var showInst = r.w > 38 && r.h > 28;
-      var showTaxa = r.w > 38 && r.h > 42;
-      var showLeads = r.w > 52 && r.h > 58;
-      if (showInst) {
-        div.innerHTML = '<div class="tm-inst" style="color:#fff">'+r.inst+'</div>'
-          +(showTaxa?'<div class="tm-taxa" style="color:#fff">'+r.taxa+'%</div>':'')
-          +(showLeads?'<div class="tm-leads" style="color:rgba(255,255,255,0.75)">'+r.total+' leads</div>':'');
-      }
-      tmEl.appendChild(div);
     });
   }
-}
 
 function updateCharts() {
   // Shared refined style
