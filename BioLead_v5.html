@@ -465,7 +465,7 @@ function normalizarData(val) {
 
 function normalizarContato(p) {
   return {
-    id: p.id ? String(p.id) : (String(p.nome||'') + '_' + String(p.inst||'')),
+    id: (p.id ? String(p.id) : (String(p.nome||'') + '_' + String(p.inst||''))).replace(/['"]/g,''),
     nome: String(p.nome || ''),
     email: String(p.email || ''),
     linha: String(p.linha || ''),
@@ -940,7 +940,7 @@ function render() {
       <td style="white-space:nowrap">
         <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer" onclick="abrirModal('${p.id}')"><i class="ti ti-pencil" style="font-size:14px"></i></button>
         <button class="btn"  onclick="gerarProposta('${p.id}')" title="Gerar proposta" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #2EC4A5;color:#2EC4A5;cursor:pointer"><i class="ti ti-file-dollar" style="font-size:14px"></i></button>
-        <button class="btn btn-danger" style="padding:3px 8px;font-size:11px;margin-left:3px" onclick="if(confirm('Remover ${p.nome.replace(/'/g,"\\'")}?'))remover('${p.id}')">✕</button>
+        <button class="btn btn-danger" style="padding:3px 8px;font-size:11px;margin-left:3px" onclick="if(confirm('Remover '+decodeURIComponent('${encodeURIComponent(p.nome)}')+'?'))remover('${p.id}')">✕</button>
       </td>
     </tr>`;
   }).join('');
