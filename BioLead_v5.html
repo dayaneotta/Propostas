@@ -136,16 +136,16 @@ textarea{resize:vertical;min-height:60px}
 
 .dots-wrap{display:flex;gap:6px;align-items:center}
 .dot-item{position:relative;display:inline-flex;align-items:center}
-.dot-item:hover .tip{display:block}
 .dot{width:10px;height:10px;border-radius:50%;background:rgba(13,111,182,.15);cursor:default;transition:transform .15s}
 .dot-item:hover .dot{transform:scale(1.4)}
-.dot-item .tip{
-  display:none;position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+.dot-item .tip{display:none}
+#bl-tooltip{
+  display:none;position:fixed;
   background:#072847;color:#E8F5FB;font-size:11px;line-height:1.45;padding:7px 11px;
   border-radius:7px;width:max-content;max-width:260px;white-space:normal;
-  z-index:999;pointer-events:none;box-shadow:0 3px 14px rgba(6,92,169,.3)
+  z-index:9999;pointer-events:none;box-shadow:0 3px 14px rgba(6,92,169,.3)
 }
-.dot-item .tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#072847}
+#bl-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#072847}
 .dot.f{background:var(--bm-teal)}
 .dot.r{background:var(--bm-blue)}
 .dot.n{background:#fca5a5;border:1.5px solid #dc2626}
@@ -1382,6 +1382,39 @@ carregarDados();
 </script>
 <script>
 document.getElementById('nav-biolead').style.cssText += ';background:#E6F1FB;border-color:#B5D4F4;color:#0C447C;font-weight:500';
+</script>
+<div id="bl-tooltip"></div>
+<script>
+(function(){
+  var tip = document.getElementById('bl-tooltip');
+  document.addEventListener('mouseover', function(e) {
+    var item = e.target.closest('.dot-item');
+    if (!item) return;
+    var span = item.querySelector('.tip');
+    if (!span || !span.textContent.trim()) return;
+    tip.textContent = span.textContent;
+    tip.style.display = 'block';
+    positionTip(e);
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (tip.style.display === 'none') return;
+    positionTip(e);
+  });
+  document.addEventListener('mouseout', function(e) {
+    var item = e.target.closest('.dot-item');
+    if (item) tip.style.display = 'none';
+  });
+  function positionTip(e) {
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var x = e.clientX - tw/2;
+    var y = e.clientY - th - 12;
+    if (x < 8) x = 8;
+    if (x + tw > window.innerWidth - 8) x = window.innerWidth - tw - 8;
+    if (y < 8) y = e.clientY + 20; // flip below if too close to top
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+  }
+})();
 </script>
 </body>
 </html>
