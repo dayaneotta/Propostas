@@ -452,9 +452,12 @@ textarea{resize:vertical;min-height:60px}
         <div><label>Observação</label><input id="ed-retorno-obs" placeholder="Ex: Aguardando resultado do edital..." oninput="converterTravessao(this)" /></div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="fecharModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarEdicao()">Salvar</button>
+    <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center">
+      <button class="btn btn-danger" onclick="removerDoModal()" title="Remover pesquisador"><i class="ti ti-trash" style="font-size:14px;vertical-align:middle"></i> Remover</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarEdicao()">Salvar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -920,6 +923,27 @@ function abrirModal(id) {
   document.getElementById('modal-overlay').style.display='flex';
 }
 
+function abrirModalEmail(id) {
+  abrirModal(id);
+  setTimeout(() => {
+    const campo = document.getElementById('ed-resumo-lattes');
+    if (campo) {
+      campo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      campo.focus();
+    }
+  }, 100);
+}
+
+function removerDoModal() {
+  const id = document.getElementById('ed-id').value;
+  const p = dados.find(x=>String(x.id)===String(id));
+  if (!p) return;
+  if (confirm('Remover '+decodeURIComponent(encodeURIComponent(p.nome))+'?')) {
+    remover(id);
+    fecharModal();
+  }
+}
+
 function fecharModal() { document.getElementById('modal-overlay').style.display='none'; }
 
 function salvarEdicao() {
@@ -1011,9 +1035,9 @@ function render() {
       <td style="max-width:200px"><a href="mailto:${p.email}" style="font-size:12px;color:var(--bm-blue);text-decoration:none;font-style:italic;letter-spacing:-.01em" title="Clique para enviar e-mail">${p.email||'—'}</a></td>
       <td><div class="lc">${latBtn}${igBtn}${liBtn}</div></td>
       <td style="white-space:nowrap">
-        <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer" onclick="abrirModal('${p.id}')"><i class="ti ti-pencil" style="font-size:14px"></i></button>
-        <button class="btn"  onclick="gerarProposta('${p.id}')" title="Gerar proposta" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #2EC4A5;color:#2EC4A5;cursor:pointer"><i class="ti ti-file-dollar" style="font-size:14px"></i></button>
-        <button class="btn btn-danger" style="padding:3px 8px;font-size:11px;margin-left:3px" onclick="if(confirm('Remover '+decodeURIComponent('${encodeURIComponent(p.nome)}')+'?'))remover('${p.id}')">✕</button>
+        <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer" onclick="abrirModal('${p.id}')" title="Editar"><i class="ti ti-pencil" style="font-size:14px"></i></button>
+        <button class="btn" onclick="abrirModalEmail('${p.id}')" title="Gerar e-mail" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #6055B0;color:#6055B0;cursor:pointer"><i class="ti ti-mail" style="font-size:14px"></i></button>
+        <button class="btn" onclick="gerarProposta('${p.id}')" title="Gerar proposta" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #2EC4A5;color:#2EC4A5;cursor:pointer"><i class="ti ti-file-dollar" style="font-size:14px"></i></button>
       </td>
     </tr>`;
   }).join('');
