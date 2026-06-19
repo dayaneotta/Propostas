@@ -383,6 +383,19 @@ textarea{resize:vertical;min-height:60px}
       <label>Linha de pesquisa</label>
       <textarea id="ed-linha" style="min-height:55px"></textarea>
     </div>
+    <div class="form-full">
+      <label>Resumo Lattes <span style="font-weight:400;color:var(--text3);font-size:10px">(cole aqui trechos do currículo para gerar o e-mail)</span></label>
+      <textarea id="ed-resumo-lattes" style="min-height:70px" placeholder="Ex: Doutor em Genética pela USP, atua com bioestimulantes em soja, publicou 3 artigos sobre microbiologia do solo em 2024..."></textarea>
+      <button type="button" class="btn" style="margin-top:6px;font-size:12px" onclick="gerarEmailLattes()">✉️ Gerar e-mail com base no Lattes</button>
+      <div id="email-gerado-wrap" style="display:none;margin-top:10px">
+        <label>Rascunho gerado <span style="font-weight:400;color:var(--text3);font-size:10px">(revise antes de enviar)</span></label>
+        <textarea id="email-gerado-texto" style="min-height:160px"></textarea>
+        <div style="margin-top:6px;display:flex;gap:8px">
+          <button type="button" class="btn" onclick="abrirEmailGerado()">📧 Abrir no e-mail</button>
+          <button type="button" class="btn" onclick="copiarEmailGerado()">📋 Copiar texto</button>
+        </div>
+      </div>
+    </div>
     <div class="form-grid">
       <div><label>Score</label>
         <select id="ed-score"><option value="ALTO">ALTO</option><option value="MÉDIO">MÉDIO</option></select>
@@ -477,6 +490,7 @@ function normalizarContato(p) {
     lattes: String(p.lattes || ''),
     instagram: String(p.instagram || ''),
     linkedin: String(p.linkedin || ''),
+    resumo_lattes: String(p.resumo_lattes || ''),
     score: String(p.score || ''),
     c1_raw: normalizarData(p.c1_raw),
     c1_nota: String(p.c1_nota || ''),
@@ -820,6 +834,60 @@ function renderLembretes() {
 }
 
 // ── Edição ────────────────────────────────────────────────────────────────────
+function gerarEmailLattes() {
+  const resumo = document.getElementById('ed-resumo-lattes').value.trim();
+  if (!resumo) {
+    toast('⚠ Cole um resumo do Lattes antes de gerar o e-mail.');
+    return;
+  }
+  const nome = document.getElementById('ed-nome').value.trim();
+  const inst = document.getElementById('ed-inst').value.trim();
+  const linha = document.getElementById('ed-linha').value.trim();
+
+  const btn = event.target;
+  const textoOriginal = btn.textContent;
+  btn.textContent = '⏳ Gerando...';
+  btn.disabled = true;
+
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=gerarEmail&params=${encodeURIComponent(JSON.stringify({nome, inst, linha, resumo}))}`)
+    .then(r => r.json())
+    .then(data => {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      if (data.ok && data.email) {
+        document.getElementById('email-gerado-texto').value = data.email;
+        document.getElementById('email-gerado-wrap').style.display = '';
+      } else {
+        toast('⚠ Erro ao gerar e-mail: ' + (data.error || 'tente novamente'));
+      }
+    })
+    .catch(err => {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      toast('⚠ Erro de conexão ao gerar e-mail.');
+      console.error(err);
+    });
+}
+
+function abrirEmailGerado() {
+  const texto = document.getElementById('email-gerado-texto').value;
+  const emailDest = document.getElementById('ed-email').value.trim();
+  const linhas = texto.split('\n');
+  const assunto = linhas[0].replace(/^Assunto:\s*/i, '').trim();
+  const corpo = linhas.slice(1).join('\n').trim();
+  const mailto = `mailto:${encodeURIComponent(emailDest)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+  window.open(mailto, '_blank');
+}
+
+function copiarEmailGerado() {
+  const texto = document.getElementById('email-gerado-texto').value;
+  navigator.clipboard.writeText(texto).then(() => {
+    toast('✅ Texto copiado!');
+  }).catch(() => {
+    toast('⚠ Não foi possível copiar automaticamente.');
+  });
+}
+
 function abrirModal(id) {
   const p = dados.find(x=>String(x.id)===String(id)); if (!p) return;
   document.getElementById('ed-id').value=String(id);
@@ -832,6 +900,8 @@ function abrirModal(id) {
   document.getElementById('ed-insta').value=p.instagram||'';
   document.getElementById('ed-linkedin').value=p.linkedin||'';
   document.getElementById('ed-linha').value=p.linha||'';
+  document.getElementById('ed-resumo-lattes').value=p.resumo_lattes||'';
+  document.getElementById('email-gerado-wrap').style.display='none';
   document.getElementById('ed-score').value=p.score||'MÉDIO';
   document.getElementById('ed-status').value=p.status||'Novo';
   document.getElementById('ed-desq-motivo').value=p.desq_motivo||'';
@@ -866,6 +936,7 @@ function salvarEdicao() {
   p.instagram=document.getElementById('ed-insta').value.trim();
   p.linkedin=document.getElementById('ed-linkedin').value.trim();
   p.linha=document.getElementById('ed-linha').value.trim();
+  p.resumo_lattes=document.getElementById('ed-resumo-lattes').value.trim();
   p.score=document.getElementById('ed-score').value;
   p.status=document.getElementById('ed-status').value;
   p.desqualificado=p.status==='Desqualificado';
