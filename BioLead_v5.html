@@ -467,7 +467,7 @@ function normalizarData(val) {
 
 function normalizarContato(p) {
   return {
-    id: (p.id ? String(p.id) : (String(p.nome||'') + '_' + String(p.inst||''))).replace(/['"]/g,''),
+    id: (p.id ? String(p.id) : (Date.now()+Math.random())).toString().replace(/['"]/g,''),
     nome: String(p.nome || ''),
     email: String(p.email || ''),
     linha: String(p.linha || ''),
