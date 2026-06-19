@@ -504,7 +504,6 @@ function normalizarContato(p) {
     lattes: String(p.lattes || ''),
     instagram: String(p.instagram || ''),
     linkedin: String(p.linkedin || ''),
-    resumo_lattes: String(p.resumo_lattes || ''),
     score: String(p.score || ''),
     c1_raw: normalizarData(p.c1_raw),
     c1_nota: String(p.c1_nota || ''),
@@ -940,19 +939,29 @@ function abrirModalEmail(id) {
   const p = dados.find(x=>String(x.id)===String(id)); if (!p) return;
   document.getElementById('email-modal-id').value = String(id);
   document.getElementById('email-modal-nome').textContent = p.nome || '';
-  document.getElementById('ed-resumo-lattes').value = p.resumo_lattes || '';
+  document.getElementById('ed-resumo-lattes').value = '⏳ carregando...';
   document.getElementById('email-gerado-wrap').style.display = 'none';
   document.getElementById('email-gerado-texto').value = '';
   document.getElementById('modal-email-overlay').style.display = 'flex';
+
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=buscarResumoLattes&params=${encodeURIComponent(JSON.stringify({id}))}`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('ed-resumo-lattes').value = (data.ok && data.resumo) ? data.resumo : '';
+    })
+    .catch(() => {
+      document.getElementById('ed-resumo-lattes').value = '';
+      toast('⚠ Não foi possível carregar o resumo salvo.');
+    });
 }
 
 function fecharModalEmail() {
-  // Salva o resumo digitado mesmo sem clicar em Salvar no modal de edição
+  // Salva o resumo numa aba separada, sem sobrecarregar a planilha principal
   const id = document.getElementById('email-modal-id').value;
-  const p = dados.find(x=>String(x.id)===String(id));
-  if (p) {
-    p.resumo_lattes = document.getElementById('ed-resumo-lattes').value.trim();
-    salvar(p);
+  const resumo = document.getElementById('ed-resumo-lattes').value.trim();
+  if (id) {
+    fetch(`${SHEETS_URL_BL}?action=biolead&sub=salvarResumoLattes&params=${encodeURIComponent(JSON.stringify({id, resumo}))}`)
+      .catch(() => toast('⚠ Não foi possível salvar o resumo.'));
   }
   document.getElementById('modal-email-overlay').style.display = 'none';
 }
