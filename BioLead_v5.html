@@ -462,7 +462,7 @@ textarea{resize:vertical;min-height:60px}
         <label>Rascunho gerado <span style="font-weight:400;color:var(--text3);font-size:10px">(revise antes de enviar)</span></label>
         <textarea id="email-gerado-texto" style="min-height:200px"></textarea>
         <div style="margin-top:6px;display:flex;gap:8px">
-          <button type="button" class="btn" onclick="abrirEmailGerado()">📧 Abrir no e-mail</button>
+          <button type="button" class="btn" onclick="abrirEmailGerado()">📧 Criar rascunho no Gmail</button>
           <button type="button" class="btn" onclick="copiarEmailGerado()">📋 Copiar texto</button>
         </div>
       </div>
@@ -893,16 +893,33 @@ function abrirEmailGerado() {
   const assunto = linhas[0].replace(/^Assunto:\s*/i, '').trim();
   const corpo = linhas.slice(1).join('\n').trim();
 
-  // E-mails longos (com acentos) ultrapassam o limite de caracteres do mailto: (~4000)
-  // Por isso copiamos o corpo para a área de transferência e abrimos só com destinatário + assunto
-  navigator.clipboard.writeText(corpo).then(() => {
-    toast('📋 Corpo do e-mail copiado! Cole com Ctrl+V na nova mensagem.');
-  }).catch(() => {
-    toast('⚠ Não foi possível copiar automaticamente — use o botão "Copiar texto".');
-  });
+  if (!emailDest) {
+    toast('⚠ Este pesquisador não tem e-mail cadastrado.');
+    return;
+  }
 
-  const mailto = `mailto:${encodeURIComponent(emailDest)}?subject=${encodeURIComponent(assunto)}`;
-  window.location.href = mailto;
+  const btn = event.target;
+  const textoOriginal = btn.textContent;
+  btn.textContent = '⏳ Criando rascunho...';
+  btn.disabled = true;
+
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=criarRascunho&params=${encodeURIComponent(JSON.stringify({destinatario: emailDest, assunto, corpo}))}`)
+    .then(r => r.json())
+    .then(data => {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      if (data.ok) {
+        toast('✅ Rascunho criado na sua caixa de rascunhos do Gmail!');
+      } else {
+        toast('⚠ Erro ao criar rascunho: ' + (data.error || 'tente novamente'));
+      }
+    })
+    .catch(err => {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      toast('⚠ Erro de conexão ao criar rascunho.');
+      console.error(err);
+    });
 }
 
 function copiarEmailGerado() {
