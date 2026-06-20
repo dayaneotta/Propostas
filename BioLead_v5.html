@@ -902,7 +902,11 @@ function abrirEmailGerado() {
   });
 
   const mailto = `mailto:${encodeURIComponent(emailDest)}?subject=${encodeURIComponent(assunto)}`;
-  window.open(mailto, '_blank');
+  const a = document.createElement('a');
+  a.href = mailto;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function copiarEmailGerado() {
