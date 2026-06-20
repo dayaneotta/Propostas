@@ -892,7 +892,16 @@ function abrirEmailGerado() {
   const linhas = texto.split('\n');
   const assunto = linhas[0].replace(/^Assunto:\s*/i, '').trim();
   const corpo = linhas.slice(1).join('\n').trim();
-  const mailto = `mailto:${encodeURIComponent(emailDest)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+
+  // E-mails longos (com acentos) ultrapassam o limite de caracteres do mailto: (~4000)
+  // Por isso copiamos o corpo para a área de transferência e abrimos só com destinatário + assunto
+  navigator.clipboard.writeText(corpo).then(() => {
+    toast('📋 Corpo do e-mail copiado! Cole com Ctrl+V na nova mensagem.');
+  }).catch(() => {
+    toast('⚠ Não foi possível copiar automaticamente — use o botão "Copiar texto".');
+  });
+
+  const mailto = `mailto:${encodeURIComponent(emailDest)}?subject=${encodeURIComponent(assunto)}`;
   window.open(mailto, '_blank');
 }
 
