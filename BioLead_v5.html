@@ -456,7 +456,7 @@ textarea{resize:vertical;min-height:60px}
     <input type="hidden" id="email-modal-id" />
     <input type="hidden" id="email-modal-numero" value="1" />
     <div class="form-full" id="resumo-lattes-wrap">
-      <label>Resumo Lattes <span style="font-weight:400;color:var(--text3);font-size:10px">(cole aqui trechos do currículo para gerar o e-mail)</span></label>
+      <label id="resumo-lattes-label">Resumo Lattes <span style="font-weight:400;color:var(--text3);font-size:10px">(cole aqui trechos do currículo para gerar o e-mail)</span></label>
       <textarea id="ed-resumo-lattes" style="min-height:110px" placeholder="Ex: Doutor em Genética pela USP, atua com bioestimulantes em soja, publicou 3 artigos sobre microbiologia do solo em 2024..."></textarea>
     </div>
     <div class="form-full">
@@ -996,6 +996,14 @@ function abrirModalEmail(id) {
   // Resumo do Lattes é exibido quando ainda não há sequência automática definida (0) ou no 1º e-mail
   const wrapResumo = document.getElementById('resumo-lattes-wrap');
   wrapResumo.style.display = (numEmail === 0 || numEmail === 1) ? '' : 'none';
+
+  if (numEmail === 0) {
+    document.getElementById('resumo-lattes-label').innerHTML = 'Contexto da resposta <span style="font-weight:400;color:var(--text3);font-size:10px">(cole aqui o que o pesquisador respondeu, ou descreva o contexto da conversa)</span>';
+    document.getElementById('ed-resumo-lattes').placeholder = 'Ex: Respondeu pedindo mais informações sobre prazos e custos. Demonstrou interesse em sequenciamento de RNA para seu projeto de microbioma...';
+  } else if (numEmail === 1) {
+    document.getElementById('resumo-lattes-label').innerHTML = 'Resumo Lattes <span style="font-weight:400;color:var(--text3);font-size:10px">(cole aqui trechos do currículo para gerar o e-mail)</span>';
+    document.getElementById('ed-resumo-lattes').placeholder = 'Ex: Doutor em Genética pela USP, atua com bioestimulantes em soja, publicou 3 artigos sobre microbiologia do solo em 2024...';
+  }
 
   document.getElementById('email-gerado-wrap').style.display = 'none';
   document.getElementById('email-gerado-texto').value = '';
