@@ -911,7 +911,7 @@ function abrirEmailGerado() {
   btn.textContent = '⏳ Criando rascunho...';
   btn.disabled = true;
 
-  fetch(`${SHEETS_URL_BL}?action=biolead&sub=criarRascunho&params=${encodeURIComponent(JSON.stringify({destinatario: emailDest, assunto, corpo, anexarApresentacao: numEmail === 3}))}`)
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=criarRascunho&params=${encodeURIComponent(JSON.stringify({destinatario: emailDest, assunto, corpo, anexarApresentacao: numEmail === 3, numEmail}))}`)
     .then(r => r.json())
     .then(data => {
       btn.textContent = textoOriginal;
