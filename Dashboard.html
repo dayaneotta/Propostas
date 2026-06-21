@@ -431,7 +431,7 @@ function updateMetrics() {
   function sh(n, maxN, maxH) { return Math.max(Math.round(Math.sqrt(n/maxN)*maxH), 5); }
 
   // 4 colunas: cad | cont | resp | conv
-  var W=900, H=200, nW=6;
+  var W=900, H=190, nW=6;
   var col=[30, 260, 490, 720];
   var maxH=100, maxN=nCadastrados;
 
@@ -485,59 +485,41 @@ function updateMetrics() {
 
   var parts=['<svg width="100%" viewBox="0 0 '+W+' '+svgH+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
-  // ── FUNIL ANGULAR — Ativos → Contatados → Responderam (forma fixa, independente de proporção numérica) ──
-  var funilX0 = col[0], funilX1 = col[2]+nW;
-  var fW = funilX1 - funilX0;
-  var funilTopo = 15, funilFundo = 165; // forma fixa, alta e estreita — igual ao design aprovado
-  var fTopL = funilX0, fTopR = funilX1;
-  var fMid1L = funilX0 + fW*0.12, fMid1R = funilX1 - fW*0.12;
-  var fMid2L = funilX0 + fW*0.30, fMid2R = funilX1 - fW*0.30;
-  var fBotL  = funilX0 + fW*0.44, fBotR  = funilX1 - fW*0.44;
-  var yEtapaA = funilTopo + (funilFundo-funilTopo)*0.30;
-  var yEtapaB = funilTopo + (funilFundo-funilTopo)*0.62;
-  var gapVisual = 6;
-  var funilPath = 'M '+fTopL+' '+funilTopo+' L '+fTopR+' '+funilTopo
-    +' L '+fMid1R+' '+(yEtapaA-gapVisual/2)+' L '+fMid1R+' '+(yEtapaA+gapVisual/2)
-    +' L '+fMid2R+' '+(yEtapaB-gapVisual/2)+' L '+fMid2R+' '+(yEtapaB+gapVisual/2)
-    +' L '+fBotR+' '+funilFundo+' L '+fBotL+' '+funilFundo
-    +' L '+fMid2L+' '+(yEtapaB+gapVisual/2)+' L '+fMid2L+' '+(yEtapaB-gapVisual/2)
-    +' L '+fMid1L+' '+(yEtapaA+gapVisual/2)+' L '+fMid1L+' '+(yEtapaA-gapVisual/2)+' Z';
-  parts.push('<defs><linearGradient id="grad-funil-bm" x1="0" y1="0" x2="0" y2="1">'
-    +'<stop offset="0%" stop-color="#5A8FC0"/><stop offset="50%" stop-color="#7FB0E0"/><stop offset="100%" stop-color="#9FE1CB"/>'
-    +'</linearGradient><clipPath id="clip-funil-bm"><path d="'+funilPath+'"/></clipPath></defs>');
-  parts.push('<rect x="'+funilX0+'" y="'+funilTopo+'" width="'+fW+'" height="'+(funilFundo-funilTopo)+'" fill="url(#grad-funil-bm)" clip-path="url(#clip-funil-bm)"/>');
-  // Área clicável invisível sobre a etapa "Responderam" (terço final do funil)
-  parts.push('<rect x="'+fMid2L+'" y="'+(yEtapaB+gapVisual/2)+'" width="'+(fMid2R-fMid2L)+'" height="'+(funilFundo-(yEtapaB+gapVisual/2))+'" fill="transparent" style="cursor:pointer" onclick="toggleSankeyExpandido()"/>');
+  // ── BARRAS HORIZONTAIS DECRESCENTES — Ativos → Contatados → Responderam ──
+  var barX = 30, barMaxW = 560;
+  var pctContB = sp(nContatados, nCadastrados);
+  var pctRespB = sp(nResponderam, nContatados);
+  var wAtivos = barMaxW;
+  var wContatados = barMaxW * (pctContB/100);
+  var wResponderam = barMaxW * (pctRespB/100) * (pctContB/100);
+  var barH = 34, barGap = 10;
+  var yBarA = 14, yBarB = yBarA + barH + barGap, yBarC = yBarB + barH + barGap;
 
-  // Posições de texto recalculadas para a nova geometria fixa
-  yCad = funilTopo + (yEtapaA-funilTopo)/2 - hCad/2;
-  yCont = yEtapaA + (yEtapaB-yEtapaA)/2 - hCont/2;
-  yResp = yEtapaB + (funilFundo-yEtapaB)/2 - hResp/2;
+  parts.push('<rect x="'+barX+'" y="'+yBarA+'" width="'+wAtivos+'" height="'+barH+'" rx="6" fill="#0D4E8A"/>');
+  parts.push('<text x="'+(barX+14)+'" y="'+(yBarA+barH/2)+'" dominant-baseline="central" font-size="14" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">ATIVOS</text>');
+  parts.push('<text x="'+(barX+wAtivos-14)+'" y="'+(yBarA+barH/2)+'" text-anchor="end" dominant-baseline="central" font-size="16" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">'+nCadastrados+'</text>');
 
-  if(nConv2>0) parts.push(wave(col[2],yResp,hConv,col[3],yConv,hConv,'url(#sg23)'));
+  parts.push('<rect x="'+barX+'" y="'+yBarB+'" width="'+wContatados+'" height="'+barH+'" rx="6" fill="#1A73C8"/>');
+  parts.push('<text x="'+(barX+14)+'" y="'+(yBarB+barH/2)+'" dominant-baseline="central" font-size="14" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">CONTATADOS</text>');
+  parts.push('<text x="'+(barX+wContatados-14)+'" y="'+(yBarB+barH/2)+'" text-anchor="end" dominant-baseline="central" font-size="16" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">'+nContatados+'</text>');
+  parts.push('<text x="'+(barX+wContatados+12)+'" y="'+(yBarB+barH/2)+'" dominant-baseline="central" font-size="11" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+pctContB+'% dos ativos</text>');
 
-  if(nConv2>0) parts.push(node(col[3],yConv,hConv,'#27a85a'));
+  parts.push('<rect x="'+barX+'" y="'+yBarC+'" width="'+wResponderam+'" height="'+barH+'" rx="6" fill="#2EC4A5" style="cursor:pointer" onclick="toggleSankeyExpandido()"/>');
+  parts.push('<text x="'+(barX+14)+'" y="'+(yBarC+barH/2)+'" dominant-baseline="central" font-size="14" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">RESPONDERAM</text>');
+  parts.push('<text x="'+(barX+wResponderam-14)+'" y="'+(yBarC+barH/2)+'" text-anchor="end" dominant-baseline="central" font-size="16" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+nResponderam+'</text>');
+  var respHintBar = window._sankeyExpandido ? '− recolher' : 'ver tipo de resposta ›';
+  parts.push('<text x="'+(barX+wResponderam+12)+'" y="'+(yBarC+barH/2)+'" dominant-baseline="central" font-size="11" fill="#2EC4A5" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+pctRespB+'% dos contatados · '+respHintBar+'</text>');
 
-  // Labels
-  var tx2 = col[3]+nW+tx;
-  parts.push(lbl(col[0]+nW+tx, yCad+hCad/2-16,   nCadastrados,'#0D4E8A','ATIVOS',''));
-  parts.push(lbl(col[1]+nW+tx, yCont+hCont/2-16,  nContatados, '#1A73C8','CONTATADOS', sp(nContatados,nCadastrados)+'% dos ativos'));
+  var yLabelPerdaBar = yBarC + barH + 24;
+  if(nNaoContat>0)  parts.push('<text x="'+barX+'" y="'+yLabelPerdaBar+'" font-size="11" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+nNaoContat+' sem contato</text>');
+  if(nSemRetorno>0) parts.push('<text x="'+(barX+140)+'" y="'+yLabelPerdaBar+'" font-size="11" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+nSemRetorno+' sem retorno</text>');
 
-  // Label Responderam — clicável
-  var respSeta = '';
-  var respHint = window._sankeyExpandido ? '− recolher' : 'ver tipo de resposta ›';
-  parts.push(
-    '<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2-16)+'" font-size="22" font-weight="700" fill="#2EC4A5" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+nResponderam+'</text>'
-    +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+2)+'" font-size="7" font-weight="700" fill="#2EC4A5" opacity=".55" font-family="Segoe UI,sans-serif" letter-spacing=".1em" style="cursor:pointer" onclick="toggleSankeyExpandido()">RESPONDERAM</text>'
-    +'<text x="'+(col[2]+nW+tx)+'" y="'+(yResp+hResp/2+14)+'" font-size="7" fill="#2EC4A5" opacity=".9" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+sp(nResponderam,nContatados)+'% dos contatados · '+respHint+'</text>'
-  );
-
-  if(nConv2>0) parts.push(lbl(col[3]+nW+tx, yConv+hConv/2-16, nConv2, '#27a85a','CONVERTIDOS', sp(nConv2,nCadastrados)+'% do total'));
-
-  // Labels de perda — reposicionados abaixo do funil angular fixo
-  var yLabelPerda = funilFundo + 16;
-  if(nNaoContat>0)  parts.push(glbl(col[0]+nW+tx, yLabelPerda,  nNaoContat+' sem contato'));
-  if(nSemRetorno>0) parts.push(glbl(col[1]+nW+tx, yLabelPerda, nSemRetorno+' sem retorno'));
+  if(nConv2>0) {
+    var xConv = barX + wResponderam + 220;
+    parts.push('<rect x="'+xConv+'" y="'+yBarC+'" width="120" height="'+barH+'" rx="6" fill="#27a85a"/>');
+    parts.push('<text x="'+(xConv+12)+'" y="'+(yBarC+barH/2)+'" dominant-baseline="central" font-size="14" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">CONVERTIDOS</text>');
+    parts.push('<text x="'+(xConv+108)+'" y="'+(yBarC+barH/2)+'" text-anchor="end" dominant-baseline="central" font-size="16" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">'+nConv2+'</text>');
+  }
 
   parts.push('</svg>');
   document.getElementById('sankey-wrap').innerHTML=parts.join('');
