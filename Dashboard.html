@@ -127,6 +127,15 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 
 .tm-taxa{font-size:13px;font-weight:500;margin-top:2px}
 .tm-leads{font-size:10px;margin-top:1px;opacity:.75}
+.funil-bar-row{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.funil-bar-track{flex-shrink:0;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;box-shadow:0 1px 3px rgba(13,78,138,.12);transition:width .4s ease;min-width:140px}
+.funil-bar-label{font-size:12px;font-weight:700;color:#fff;letter-spacing:.03em;white-space:nowrap}
+.funil-bar-val{font-size:16px;font-weight:700;color:#fff;white-space:nowrap;margin-left:12px}
+.funil-bar-meta{font-size:11px;color:var(--text3);white-space:nowrap}
+.funil-bar-meta.click{color:var(--bm-teal);cursor:pointer;font-weight:600}
+.funil-bar-meta.click:hover{text-decoration:underline}
+.funil-perda-row{display:flex;gap:24px;margin-top:6px;padding-left:2px}
+.funil-perda-item{font-size:11px;color:var(--text3)}
 </style>
 </head>
 <body>
@@ -170,6 +179,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
     <!-- Fluxo de engajamento -->
     <div class="chart-card full" style="margin-bottom:16px">
       <div class="chart-title"><i class="ti ti-git-merge" aria-hidden="true"></i> Fluxo de engajamento</div>
+      <div id="funil-bars-wrap" style="margin-bottom:10px"></div>
       <div id="sankey-wrap" style="width:100%;overflow:hidden"></div>
     </div>
 
@@ -485,44 +495,44 @@ function updateMetrics() {
 
   var parts=['<svg width="100%" viewBox="0 0 '+W+' '+svgH+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
-  // ── BARRAS HORIZONTAIS DECRESCENTES — Ativos → Contatados → Responderam ──
-  var barX = 30, barMaxW = 560;
+  // ── BARRAS HORIZONTAIS HTML — Ativos → Contatados → Responderam (largura mínima garantida) ──
   var pctContB = sp(nContatados, nCadastrados);
   var pctRespB = sp(nResponderam, nContatados);
-  var wAtivos = barMaxW;
-  var wContatados = barMaxW * (pctContB/100);
-  var wResponderam = barMaxW * (pctRespB/100) * (pctContB/100);
-  var barH = 34, barGap = 10;
-  var yBarA = 14, yBarB = yBarA + barH + barGap, yBarC = yBarB + barH + barGap;
-
-  parts.push('<rect x="'+barX+'" y="'+yBarA+'" width="'+wAtivos+'" height="'+barH+'" rx="6" fill="#0D4E8A"/>');
-  parts.push('<text x="'+(barX+14)+'" y="'+(yBarA+barH/2)+'" dominant-baseline="central" font-size="14" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">ATIVOS</text>');
-  parts.push('<text x="'+(barX+wAtivos-14)+'" y="'+(yBarA+barH/2)+'" text-anchor="end" dominant-baseline="central" font-size="16" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">'+nCadastrados+'</text>');
-
-  parts.push('<rect x="'+barX+'" y="'+yBarB+'" width="'+wContatados+'" height="'+barH+'" rx="6" fill="#1A73C8"/>');
-  parts.push('<text x="'+(barX+14)+'" y="'+(yBarB+barH/2)+'" dominant-baseline="central" font-size="14" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">CONTATADOS</text>');
-  parts.push('<text x="'+(barX+wContatados-14)+'" y="'+(yBarB+barH/2)+'" text-anchor="end" dominant-baseline="central" font-size="16" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">'+nContatados+'</text>');
-  parts.push('<text x="'+(barX+wContatados+12)+'" y="'+(yBarB+barH/2)+'" dominant-baseline="central" font-size="11" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+pctContB+'% dos ativos</text>');
-
-  parts.push('<rect x="'+barX+'" y="'+yBarC+'" width="'+wResponderam+'" height="'+barH+'" rx="6" fill="#2EC4A5" style="cursor:pointer" onclick="toggleSankeyExpandido()"/>');
-  parts.push('<text x="'+(barX+14)+'" y="'+(yBarC+barH/2)+'" dominant-baseline="central" font-size="14" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">RESPONDERAM</text>');
-  parts.push('<text x="'+(barX+wResponderam-14)+'" y="'+(yBarC+barH/2)+'" text-anchor="end" dominant-baseline="central" font-size="16" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+nResponderam+'</text>');
+  var barMaxPct = 100;
+  var wAtivosPct = 100;
+  var wContatadosPct = Math.max(pctContB, 22);
+  var wRespPct = Math.max(Math.round((pctRespB/100) * pctContB), 16);
   var respHintBar = window._sankeyExpandido ? '− recolher' : 'ver tipo de resposta ›';
-  parts.push('<text x="'+(barX+wResponderam+12)+'" y="'+(yBarC+barH/2)+'" dominant-baseline="central" font-size="11" fill="#2EC4A5" font-family="Segoe UI,sans-serif" style="cursor:pointer" onclick="toggleSankeyExpandido()">'+pctRespB+'% dos contatados · '+respHintBar+'</text>');
 
-  var yLabelPerdaBar = yBarC + barH + 24;
-  if(nNaoContat>0)  parts.push('<text x="'+barX+'" y="'+yLabelPerdaBar+'" font-size="11" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+nNaoContat+' sem contato</text>');
-  if(nSemRetorno>0) parts.push('<text x="'+(barX+140)+'" y="'+yLabelPerdaBar+'" font-size="11" fill="#8AAABB" font-family="Segoe UI,sans-serif">'+nSemRetorno+' sem retorno</text>');
+  var barsHtml = ''
+    + '<div class="funil-bar-row">'
+    +   '<div class="funil-bar-track" style="width:'+wAtivosPct+'%;background:#0D4E8A">'
+    +     '<span class="funil-bar-label">ATIVOS</span><span class="funil-bar-val">'+nCadastrados+'</span>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="funil-bar-row">'
+    +   '<div class="funil-bar-track" style="width:'+wContatadosPct+'%;background:#1A73C8">'
+    +     '<span class="funil-bar-label">CONTATADOS</span><span class="funil-bar-val">'+nContatados+'</span>'
+    +   '</div>'
+    +   '<span class="funil-bar-meta">'+pctContB+'% dos ativos</span>'
+    + '</div>'
+    + '<div class="funil-bar-row">'
+    +   '<div class="funil-bar-track" style="width:'+wRespPct+'%;background:#2EC4A5;cursor:pointer" onclick="toggleSankeyExpandido()">'
+    +     '<span class="funil-bar-label">RESPONDERAM</span><span class="funil-bar-val">'+nResponderam+'</span>'
+    +   '</div>'
+    +   '<span class="funil-bar-meta click" onclick="toggleSankeyExpandido()">'+pctRespB+'% dos contatados · '+respHintBar+'</span>'
+    +   (nConv2>0 ? '<div class="funil-bar-track" style="width:auto;padding:0 16px;background:#27a85a;margin-left:8px"><span class="funil-bar-label">CONVERTIDOS</span><span class="funil-bar-val">'+nConv2+'</span></div>' : '')
+    + '</div>';
 
-  if(nConv2>0) {
-    var xConv = barX + wResponderam + 220;
-    parts.push('<rect x="'+xConv+'" y="'+yBarC+'" width="120" height="'+barH+'" rx="6" fill="#27a85a"/>');
-    parts.push('<text x="'+(xConv+12)+'" y="'+(yBarC+barH/2)+'" dominant-baseline="central" font-size="14" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">CONVERTIDOS</text>');
-    parts.push('<text x="'+(xConv+108)+'" y="'+(yBarC+barH/2)+'" text-anchor="end" dominant-baseline="central" font-size="16" font-weight="700" fill="#fff" font-family="Segoe UI,sans-serif">'+nConv2+'</text>');
+  if(nNaoContat>0 || nSemRetorno>0) {
+    barsHtml += '<div class="funil-perda-row">'
+      + (nNaoContat>0  ? '<span class="funil-perda-item">'+nNaoContat+' sem contato</span>' : '')
+      + (nSemRetorno>0 ? '<span class="funil-perda-item">'+nSemRetorno+' sem retorno</span>' : '')
+      + '</div>';
   }
 
-  parts.push('</svg>');
-  document.getElementById('sankey-wrap').innerHTML=parts.join('');
+  document.getElementById('funil-bars-wrap').innerHTML = barsHtml;
+  document.getElementById('sankey-wrap').innerHTML = '';
 
   // ── breakdown de Responderam — card HTML externo ──
   var cardEl = document.getElementById('desdobramentos-card');
