@@ -452,12 +452,15 @@ textarea{resize:vertical;min-height:60px}
 
 <div class="modal-overlay" id="modal-email-overlay" onclick="if(event.target===this)fecharModalEmail()">
   <div class="modal" style="max-width:560px">
-    <h3>✉️ Gerar e-mail — <span id="email-modal-nome" style="font-weight:400;color:var(--text2)"></span></h3>
+    <h3 id="email-modal-titulo">✉️ Gerar e-mail — <span id="email-modal-nome" style="font-weight:400;color:var(--text2)"></span></h3>
     <input type="hidden" id="email-modal-id" />
-    <div class="form-full">
+    <input type="hidden" id="email-modal-numero" value="1" />
+    <div class="form-full" id="resumo-lattes-wrap">
       <label>Resumo Lattes <span style="font-weight:400;color:var(--text3);font-size:10px">(cole aqui trechos do currículo para gerar o e-mail)</span></label>
       <textarea id="ed-resumo-lattes" style="min-height:110px" placeholder="Ex: Doutor em Genética pela USP, atua com bioestimulantes em soja, publicou 3 artigos sobre microbiologia do solo em 2024..."></textarea>
-      <button type="button" class="btn btn-primary" style="margin-top:8px;font-size:12px" onclick="gerarEmailLattes()">✉️ Gerar e-mail com base no Lattes</button>
+    </div>
+    <div class="form-full">
+      <button type="button" class="btn btn-primary" style="margin-top:8px;font-size:12px" onclick="gerarEmailLattes()" id="btn-gerar-email">✉️ Gerar e-mail</button>
       <div id="email-gerado-wrap" style="display:none;margin-top:14px">
         <label>Rascunho gerado <span style="font-weight:400;color:var(--text3);font-size:10px">(revise antes de enviar)</span></label>
         <textarea id="email-gerado-texto" style="min-height:200px"></textarea>
@@ -829,7 +832,8 @@ function renderLembretes() {
         <div><strong><a href="#" onclick="abrirModal('${l.id}');return false;" style="color:var(--bm-blue);text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(13,111,182,.3)">${l.nome}</a></strong> — ${l.contato} contato ${l.atrasado ? `atrasado desde <strong>${l.due.toLocaleDateString('pt-BR')}</strong>` : `sugerido para <strong>${l.due.toLocaleDateString('pt-BR')}</strong>`}</div>
         ${email ? `<div style="font-size:11px;color:var(--text3);font-style:italic;margin-top:1px">${email}</div>` : ''}
       </div>
-      <svg width="44" height="44" viewBox="0 0 40 40" style="flex-shrink:0;margin-left:12px">
+      <button class="btn" style="padding:4px 9px;font-size:11px;margin-left:8px" onclick="abrirModalEmail('${l.id}')" title="Gerar e-mail de follow-up">✉️</button>
+      <svg width="44" height="44" viewBox="0 0 40 40" style="flex-shrink:0;margin-left:10px">
         <circle cx="20" cy="20" r="16" fill="none" stroke="var(--border)" stroke-width="3"/>
         <circle cx="20" cy="20" r="16" fill="none" stroke="${circleColor}" stroke-width="3" stroke-dasharray="${arcLen} ${arcGap}" stroke-dashoffset="25" stroke-linecap="round"/>
         <text x="20" y="24" text-anchor="middle" font-size="10" font-weight="500" fill="${circleColor}">${diasAtraso}d</text>
@@ -848,11 +852,14 @@ function renderLembretes() {
 
 // ── Edição ────────────────────────────────────────────────────────────────────
 function gerarEmailLattes() {
-  const resumo = document.getElementById('ed-resumo-lattes').value.trim();
-  if (!resumo) {
+  const numEmail = parseInt(document.getElementById('email-modal-numero').value || '1');
+  const resumo = document.getElementById('ed-resumo-lattes') ? document.getElementById('ed-resumo-lattes').value.trim() : '';
+
+  if (numEmail !== 3 && !resumo) {
     toast('⚠ Cole um resumo do Lattes antes de gerar o e-mail.');
     return;
   }
+
   const id = document.getElementById('email-modal-id').value;
   const p = dados.find(x=>String(x.id)===String(id));
   const nome = p ? p.nome || '' : '';
@@ -864,7 +871,7 @@ function gerarEmailLattes() {
   btn.textContent = '⏳ Gerando...';
   btn.disabled = true;
 
-  fetch(`${SHEETS_URL_BL}?action=biolead&sub=gerarEmail&params=${encodeURIComponent(JSON.stringify({nome, inst, linha, resumo}))}`)
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=gerarEmail&params=${encodeURIComponent(JSON.stringify({nome, inst, linha, resumo, numEmail}))}`)
     .then(r => r.json())
     .then(data => {
       btn.textContent = textoOriginal;
@@ -887,6 +894,7 @@ function gerarEmailLattes() {
 function abrirEmailGerado() {
   const texto = document.getElementById('email-gerado-texto').value;
   const id = document.getElementById('email-modal-id').value;
+  const numEmail = parseInt(document.getElementById('email-modal-numero').value || '1');
   const p = dados.find(x=>String(x.id)===String(id));
   const emailDest = p ? p.email || '' : '';
   const linhas = texto.split('\n');
@@ -903,7 +911,7 @@ function abrirEmailGerado() {
   btn.textContent = '⏳ Criando rascunho...';
   btn.disabled = true;
 
-  fetch(`${SHEETS_URL_BL}?action=biolead&sub=criarRascunho&params=${encodeURIComponent(JSON.stringify({destinatario: emailDest, assunto, corpo}))}`)
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=criarRascunho&params=${encodeURIComponent(JSON.stringify({destinatario: emailDest, assunto, corpo, anexarApresentacao: numEmail === 3}))}`)
     .then(r => r.json())
     .then(data => {
       btn.textContent = textoOriginal;
@@ -961,15 +969,36 @@ function abrirModal(id) {
   document.getElementById('modal-overlay').style.display='flex';
 }
 
+function determinarNumeroEmail(p) {
+  if (!p.c2_raw || !p.c2_raw.trim()) return 1;
+  if (!p.c3_raw || !p.c3_raw.trim()) return 2;
+  return 3;
+}
+
 function abrirModalEmail(id) {
   const p = dados.find(x=>String(x.id)===String(id)); if (!p) return;
+  const numEmail = determinarNumeroEmail(p);
   document.getElementById('email-modal-id').value = String(id);
+  document.getElementById('email-modal-numero').value = String(numEmail);
   document.getElementById('email-modal-nome').textContent = p.nome || '';
-  document.getElementById('ed-resumo-lattes').value = '⏳ carregando...';
+
+  const tituloModal = numEmail === 1 ? 'Gerar e-mail (1º contato)' : numEmail === 2 ? 'Gerar e-mail (2º contato — follow-up)' : 'Gerar e-mail (3º contato — encerramento)';
+  document.getElementById('email-modal-titulo').textContent = tituloModal;
+
+  // Resumo do Lattes só é necessário/exibido para o 1º e 2º e-mail (3º não usa personalização)
+  const wrapResumo = document.getElementById('resumo-lattes-wrap');
+  wrapResumo.style.display = numEmail === 3 ? 'none' : '';
+
   document.getElementById('email-gerado-wrap').style.display = 'none';
   document.getElementById('email-gerado-texto').value = '';
   document.getElementById('modal-email-overlay').style.display = 'flex';
 
+  if (numEmail === 3) {
+    // 3º e-mail não precisa de resumo do Lattes — pode gerar direto
+    return;
+  }
+
+  document.getElementById('ed-resumo-lattes').value = '⏳ carregando...';
   fetch(`${SHEETS_URL_BL}?action=biolead&sub=buscarResumoLattes&params=${encodeURIComponent(JSON.stringify({id}))}`)
     .then(r => r.json())
     .then(data => {
