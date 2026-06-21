@@ -802,9 +802,10 @@ function renderLembretes() {
     html += `<div class="lembrete-card" style="border-color:#F59E0B;background:#FFFBEB"><h3 style="color:#e65100">📅 Retornos agendados (${manuais.length})</h3>
       ${manuais.map(l=>`<div class="lembrete-item">
         <span style="font-size:13px">📅</span>
-        <div><strong>${l.nome}</strong>${l.obs ? ` — <span style="color:var(--text3);font-size:11px">${l.obs}</span>` : ''}</div>
+        <div style="flex:1"><strong>${l.nome}</strong>${l.obs ? ` — <span style="color:var(--text3);font-size:11px">${l.obs}</span>` : ''}</div>
         <span style="font-size:11px;color:${l.atrasado?'#dc2626':'#e65100'};margin-left:auto;white-space:nowrap">${l.atrasado?'Atrasado: ':''}${l.due.toLocaleDateString('pt-BR')}</span>
-        <button class="btn" style="padding:2px 8px;font-size:11px;margin-left:8px" onclick="abrirModal('${l.id}')">✏️</button>
+        <button class="btn" style="padding:2px 8px;font-size:11px;margin-left:8px" onclick="abrirModal('${l.id}')" title="Editar cadastro">✏️</button>
+        <button class="btn" style="padding:2px 8px;font-size:11px;margin-left:4px" onclick="abrirModalEmail('${l.id}')" title="Gerar e-mail">✉️</button>
       </div>`).join('')}</div>`;
   }
   // Ordenar: primeiro 2° contato, depois 3° contato; dentro de cada grupo do mais atrasado para o menos
