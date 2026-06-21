@@ -1160,7 +1160,8 @@ function atualizarCards() {
     // usa dataCadastro se disponível, senão c1_raw como proxy
     var dt = p.dataCadastro || p.c1_raw;
     if (!dt) return false;
-    try { return new Date(dt.replace(/^"+|"+$/g,'')) >= semanaAtras; } catch(e) { return false; }
+    var dataParsed = parseData(String(dt).replace(/^"+|"+$/g,''));
+    return dataParsed && dataParsed >= semanaAtras;
   }).length;
   document.getElementById('s-total').textContent = dados.length;
   document.getElementById('s-semana').textContent = semana;
