@@ -855,7 +855,7 @@ function gerarEmailLattes() {
   const numEmail = parseInt(document.getElementById('email-modal-numero').value || '1');
   const resumo = document.getElementById('ed-resumo-lattes') ? document.getElementById('ed-resumo-lattes').value.trim() : '';
 
-  if (numEmail !== 3 && !resumo) {
+  if (numEmail === 1 && !resumo) {
     toast('⚠ Cole um resumo do Lattes antes de gerar o e-mail.');
     return;
   }
@@ -986,14 +986,14 @@ function abrirModalEmail(id) {
 
   // Resumo do Lattes só é necessário/exibido para o 1º e 2º e-mail (3º não usa personalização)
   const wrapResumo = document.getElementById('resumo-lattes-wrap');
-  wrapResumo.style.display = numEmail === 3 ? 'none' : '';
+  wrapResumo.style.display = numEmail === 1 ? '' : 'none';
 
   document.getElementById('email-gerado-wrap').style.display = 'none';
   document.getElementById('email-gerado-texto').value = '';
   document.getElementById('modal-email-overlay').style.display = 'flex';
 
-  if (numEmail === 3) {
-    // 3º e-mail não precisa de resumo do Lattes — pode gerar direto
+  if (numEmail !== 1) {
+    // 2º e 3º e-mail não precisam de resumo do Lattes — usam dados já cadastrados
     return;
   }
 
