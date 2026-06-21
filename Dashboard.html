@@ -431,7 +431,7 @@ function updateMetrics() {
   function sh(n, maxN, maxH) { return Math.max(Math.round(Math.sqrt(n/maxN)*maxH), 5); }
 
   // 4 colunas: cad | cont | resp | conv
-  var W=900, H=220, nW=6;
+  var W=900, H=200, nW=6;
   var col=[30, 260, 490, 720];
   var maxH=100, maxN=nCadastrados;
 
@@ -485,38 +485,36 @@ function updateMetrics() {
 
   var parts=['<svg width="100%" viewBox="0 0 '+W+' '+svgH+'" role="img" aria-label="Fluxo de engajamento">', defs];
 
-  // ── FUNIL ANGULAR — Ativos → Contatados → Responderam (substitui as waves curvas) ──
-  var funilX0 = col[0], funilX1 = col[2]+nW; // do início de Ativos até o fim do nó Responderam
-  var funilTopo = Math.min(yCad, yCont, yResp);
-  var funilBase = Math.max(yCad+hCad, yCont+hCont, yResp+hResp);
+  // ── FUNIL ANGULAR — Ativos → Contatados → Responderam (forma fixa, independente de proporção numérica) ──
+  var funilX0 = col[0], funilX1 = col[2]+nW;
+  var fW = funilX1 - funilX0;
+  var funilTopo = 15, funilFundo = 165; // forma fixa, alta e estreita — igual ao design aprovado
   var fTopL = funilX0, fTopR = funilX1;
-  var fMid1L = funilX0 + (funilX1-funilX0)*0.10, fMid1R = funilX1 - (funilX1-funilX0)*0.10;
-  var fMid2L = funilX0 + (funilX1-funilX0)*0.28, fMid2R = funilX1 - (funilX1-funilX0)*0.28;
-  var fBotL  = funilX0 + (funilX1-funilX0)*0.42, fBotR  = funilX1 - (funilX1-funilX0)*0.42;
-  var yA1 = yCad, yA2 = yCad+hCad;
-  var yB1 = yCont, yB2 = yCont+hCont;
-  var yC1 = yResp, yC2 = yResp+hResp;
-  var gapAB = 5, gapBC = 5;
-  var funilPath = 'M '+fTopL+' '+yA1+' L '+fTopR+' '+yA1
-    +' L '+fMid1R+' '+yA2+' L '+fMid1R+' '+(yA2+gapAB)
-    +' L '+fMid2R+' '+yB2+' L '+fMid2R+' '+(yB2+gapBC)
-    +' L '+fBotR+' '+yC2+' L '+fBotL+' '+yC2
-    +' L '+fMid2L+' '+(yB2+gapBC)+' L '+fMid2L+' '+yB2
-    +' L '+fMid1L+' '+(yA2+gapAB)+' L '+fMid1L+' '+yA2+' Z';
+  var fMid1L = funilX0 + fW*0.12, fMid1R = funilX1 - fW*0.12;
+  var fMid2L = funilX0 + fW*0.30, fMid2R = funilX1 - fW*0.30;
+  var fBotL  = funilX0 + fW*0.44, fBotR  = funilX1 - fW*0.44;
+  var yEtapaA = funilTopo + (funilFundo-funilTopo)*0.30;
+  var yEtapaB = funilTopo + (funilFundo-funilTopo)*0.62;
+  var gapVisual = 6;
+  var funilPath = 'M '+fTopL+' '+funilTopo+' L '+fTopR+' '+funilTopo
+    +' L '+fMid1R+' '+(yEtapaA-gapVisual/2)+' L '+fMid1R+' '+(yEtapaA+gapVisual/2)
+    +' L '+fMid2R+' '+(yEtapaB-gapVisual/2)+' L '+fMid2R+' '+(yEtapaB+gapVisual/2)
+    +' L '+fBotR+' '+funilFundo+' L '+fBotL+' '+funilFundo
+    +' L '+fMid2L+' '+(yEtapaB+gapVisual/2)+' L '+fMid2L+' '+(yEtapaB-gapVisual/2)
+    +' L '+fMid1L+' '+(yEtapaA+gapVisual/2)+' L '+fMid1L+' '+(yEtapaA-gapVisual/2)+' Z';
   parts.push('<defs><linearGradient id="grad-funil-bm" x1="0" y1="0" x2="0" y2="1">'
     +'<stop offset="0%" stop-color="#5A8FC0"/><stop offset="50%" stop-color="#7FB0E0"/><stop offset="100%" stop-color="#9FE1CB"/>'
     +'</linearGradient><clipPath id="clip-funil-bm"><path d="'+funilPath+'"/></clipPath></defs>');
-  parts.push('<rect x="'+funilX0+'" y="'+funilTopo+'" width="'+(funilX1-funilX0)+'" height="'+(funilBase-funilTopo)+'" fill="url(#grad-funil-bm)" clip-path="url(#clip-funil-bm)"/>');
-  parts.push('<line x1="'+fMid1L+'" y1="'+(yA2+gapAB/2)+'" x2="'+fMid1R+'" y2="'+(yA2+gapAB/2)+'" stroke="#fff" stroke-width="2.5"/>');
-  parts.push('<line x1="'+fMid2L+'" y1="'+(yB2+gapBC/2)+'" x2="'+fMid2R+'" y2="'+(yB2+gapBC/2)+'" stroke="#fff" stroke-width="2.5"/>');
+  parts.push('<rect x="'+funilX0+'" y="'+funilTopo+'" width="'+fW+'" height="'+(funilFundo-funilTopo)+'" fill="url(#grad-funil-bm)" clip-path="url(#clip-funil-bm)"/>');
   // Área clicável invisível sobre a etapa "Responderam" (terço final do funil)
-  parts.push('<rect x="'+fMid2L+'" y="'+yB2+'" width="'+(fMid2R-fMid2L)+'" height="'+(yC2-yB2)+'" fill="transparent" style="cursor:pointer" onclick="toggleSankeyExpandido()"/>');
+  parts.push('<rect x="'+fMid2L+'" y="'+(yEtapaB+gapVisual/2)+'" width="'+(fMid2R-fMid2L)+'" height="'+(funilFundo-(yEtapaB+gapVisual/2))+'" fill="transparent" style="cursor:pointer" onclick="toggleSankeyExpandido()"/>');
+
+  // Posições de texto recalculadas para a nova geometria fixa
+  yCad = funilTopo + (yEtapaA-funilTopo)/2 - hCad/2;
+  yCont = yEtapaA + (yEtapaB-yEtapaA)/2 - hCont/2;
+  yResp = yEtapaB + (funilFundo-yEtapaB)/2 - hResp/2;
 
   if(nConv2>0) parts.push(wave(col[2],yResp,hConv,col[3],yConv,hConv,'url(#sg23)'));
-
-  // Waves de perda (cinza, saem abaixo do fluxo principal) — ajustadas para sair do funil angular
-  if(nNaoContat>0)  parts.push(wave(col[0],funilBase+6, hNaoCont, col[1],funilBase+6, hNaoCont,'url(#sgneg)'));
-  if(nSemRetorno>0) parts.push(wave(col[1],funilBase+6+hNaoCont+8, hSemRet, col[2],funilBase+6+hNaoCont+8, hSemRet,'url(#sgneg)'));
 
   if(nConv2>0) parts.push(node(col[3],yConv,hConv,'#27a85a'));
 
@@ -536,9 +534,10 @@ function updateMetrics() {
 
   if(nConv2>0) parts.push(lbl(col[3]+nW+tx, yConv+hConv/2-16, nConv2, '#27a85a','CONVERTIDOS', sp(nConv2,nCadastrados)+'% do total'));
 
-  // Labels de perda
-  if(nNaoContat>0)  parts.push(glbl(col[0]+nW+tx, yCad+hCad+hNaoCont/2+18,  nNaoContat+' sem contato'));
-  if(nSemRetorno>0) parts.push(glbl(col[1]+nW+tx, yCont+hCont+hSemRet/2+18, nSemRetorno+' sem retorno'));
+  // Labels de perda — reposicionados abaixo do funil angular fixo
+  var yLabelPerda = funilFundo + 16;
+  if(nNaoContat>0)  parts.push(glbl(col[0]+nW+tx, yLabelPerda,  nNaoContat+' sem contato'));
+  if(nSemRetorno>0) parts.push(glbl(col[1]+nW+tx, yLabelPerda, nSemRetorno+' sem retorno'));
 
   parts.push('</svg>');
   document.getElementById('sankey-wrap').innerHTML=parts.join('');
