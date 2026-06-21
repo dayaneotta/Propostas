@@ -970,9 +970,10 @@ function abrirModal(id) {
 }
 
 function determinarNumeroEmail(p) {
-  if (!p.c2_raw || !p.c2_raw.trim()) return 1;
-  if (!p.c3_raw || !p.c3_raw.trim()) return 2;
-  return 3;
+  if (!p.c1_raw || !p.c1_raw.trim()) return 1;
+  if (!p.c2_raw || !p.c2_raw.trim()) return 2;
+  if (!p.c3_raw || !p.c3_raw.trim()) return 3;
+  return 3; // já tem os 3 contatos — mantém como 3º (encerramento), não há 4º e-mail
 }
 
 function abrirModalEmail(id) {
