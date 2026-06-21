@@ -130,7 +130,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .funil-bar-row{display:flex;align-items:center;gap:14px;margin-bottom:4px;position:relative}
 .funil-bar-track{flex-shrink:0;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;box-shadow:0 1px 3px rgba(13,78,138,.12);transition:width .6s cubic-bezier(.4,0,.2,1);min-width:140px;max-width:calc(100% - 8px);cursor:default;animation:funilGrow .6s ease-out}
 @keyframes funilGrow{from{transform:scaleX(0);transform-origin:left}to{transform:scaleX(1)}}
-.funil-bar-track:hover{box-shadow:0 2px 8px rgba(13,78,138,.22);filter:brightness(1.04)}
+.funil-bar-track.clicavel:hover{box-shadow:0 2px 8px rgba(13,78,138,.22);filter:brightness(1.04)}
 .funil-bar-label{font-size:12px;font-weight:700;color:#fff;letter-spacing:.03em;white-space:nowrap;display:flex;align-items:center;gap:6px}
 .funil-bar-label i{font-size:14px;opacity:.85}
 .funil-bar-val{font-size:16px;font-weight:700;color:#fff;white-space:nowrap;margin-left:12px}
@@ -530,7 +530,7 @@ function updateMetrics() {
     + '</div>'
     + '<div class="funil-connector"><i class="ti ti-chevron-down" aria-hidden="true"></i></div>'
     + '<div class="funil-bar-row">'
-    +   '<div class="funil-bar-track" style="width:'+wRespPct+'%;background:#2EC4A5;cursor:pointer" onclick="toggleSankeyExpandido()">'
+    +   '<div class="funil-bar-track clicavel" style="width:'+wRespPct+'%;background:#2EC4A5;cursor:pointer" onclick="toggleSankeyExpandido()">'
     +     '<span class="funil-bar-label"><i class="ti ti-message-circle" aria-hidden="true"></i>RESPONDERAM</span><span class="funil-bar-val">'+nResponderam+'</span>'
     +   '</div>'
     +   '<span class="funil-bar-meta click" onclick="toggleSankeyExpandido()">'+pctRespB+'% dos contatados · '+respHintBar+'</span>'
