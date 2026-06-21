@@ -514,36 +514,71 @@ function updateMetrics() {
   var borderAC = gargaloAC ? 'border:1.5px solid #B91C1C' : 'none';
   var borderCR = !gargaloAC ? 'border:1.5px solid #B91C1C' : 'none';
 
-  var barsHtml = ''
-    + '<div class="funil-bar-row">'
-    +   '<div class="funil-bar-track" style="width:'+wAtivosPct+'%;background:#0D4E8A;'+borderAC+'">'
-    +     '<span class="funil-bar-label"><i class="ti ti-users" aria-hidden="true"></i>ATIVOS</span><span class="funil-bar-val">'+nCadastrados+'</span>'
-    +   '</div>'
-    + '</div>'
-    + '<div class="funil-connector"><i class="ti ti-chevron-down" aria-hidden="true"></i></div>'
-    + '<div class="funil-bar-row">'
-    +   '<div class="funil-bar-track" style="width:'+wContatadosPct+'%;background:#1A73C8;'+borderCR+'">'
-    +     '<span class="funil-bar-label"><i class="ti ti-send" aria-hidden="true"></i>CONTATADOS</span><span class="funil-bar-val">'+nContatados+'</span>'
-    +   '</div>'
-    +   '<span class="funil-bar-meta">'+pctContB+'% dos ativos</span>'
-    + '</div>'
-    + '<div class="funil-connector"><i class="ti ti-chevron-down" aria-hidden="true"></i></div>'
-    + '<div class="funil-bar-row">'
-    +   '<div class="funil-bar-track clicavel" style="width:'+wRespPct+'%;background:#2EC4A5;cursor:pointer" onclick="toggleSankeyExpandido()">'
-    +     '<span class="funil-bar-label"><i class="ti ti-message-circle" aria-hidden="true"></i>RESPONDERAM</span><span class="funil-bar-val">'+nResponderam+'</span>'
-    +   '</div>'
-    +   '<span class="funil-bar-meta click" onclick="toggleSankeyExpandido()">'+pctRespB+'% dos contatados · '+respHintBar+'</span>'
-    +   (nConv2>0 ? '<div class="funil-bar-track" style="width:auto;padding:0 16px;background:#27a85a;margin-left:8px"><span class="funil-bar-label"><i class="ti ti-trophy" aria-hidden="true"></i>CONVERTIDOS</span><span class="funil-bar-val">'+nConv2+'</span></div>' : '')
-    + '</div>';
+  var funilJaExiste = !!document.getElementById('fbar-ativos');
 
-  if(nNaoContat>0 || nSemRetorno>0) {
-    barsHtml += '<div class="funil-perda-row">'
-      + (nNaoContat>0  ? '<span class="funil-perda-item">'+nNaoContat+' sem contato</span>' : '')
-      + (nSemRetorno>0 ? '<span class="funil-perda-item">'+nSemRetorno+' sem retorno</span>' : '')
-      + '</div>';
+  if (!funilJaExiste) {
+    // Primeira renderização: cria toda a estrutura com IDs fixos
+    var barsHtml = ''
+      + '<div class="funil-bar-row">'
+      +   '<div id="fbar-ativos" class="funil-bar-track" style="width:'+wAtivosPct+'%;background:#0D4E8A">'
+      +     '<span class="funil-bar-label"><i class="ti ti-users" aria-hidden="true"></i>ATIVOS</span><span id="fbar-ativos-val" class="funil-bar-val">'+nCadastrados+'</span>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="funil-connector"><i class="ti ti-chevron-down" aria-hidden="true"></i></div>'
+      + '<div class="funil-bar-row">'
+      +   '<div id="fbar-contatados" class="funil-bar-track" style="width:'+wContatadosPct+'%;background:#1A73C8">'
+      +     '<span class="funil-bar-label"><i class="ti ti-send" aria-hidden="true"></i>CONTATADOS</span><span id="fbar-contatados-val" class="funil-bar-val">'+nContatados+'</span>'
+      +   '</div>'
+      +   '<span id="fbar-contatados-meta" class="funil-bar-meta">'+pctContB+'% dos ativos</span>'
+      + '</div>'
+      + '<div class="funil-connector"><i class="ti ti-chevron-down" aria-hidden="true"></i></div>'
+      + '<div class="funil-bar-row">'
+      +   '<div id="fbar-responderam" class="funil-bar-track clicavel" style="width:'+wRespPct+'%;background:#2EC4A5;cursor:pointer" onclick="toggleSankeyExpandido()">'
+      +     '<span class="funil-bar-label"><i class="ti ti-message-circle" aria-hidden="true"></i>RESPONDERAM</span><span id="fbar-responderam-val" class="funil-bar-val">'+nResponderam+'</span>'
+      +   '</div>'
+      +   '<span id="fbar-responderam-meta" class="funil-bar-meta click" onclick="toggleSankeyExpandido()">'+pctRespB+'% dos contatados · '+respHintBar+'</span>'
+      +   '<div id="fbar-convertidos-wrap">'+(nConv2>0 ? '<div class="funil-bar-track" style="width:auto;padding:0 16px;background:#27a85a;margin-left:8px"><span class="funil-bar-label"><i class="ti ti-trophy" aria-hidden="true"></i>CONVERTIDOS</span><span id="fbar-convertidos-val" class="funil-bar-val">'+nConv2+'</span></div>' : '')+'</div>'
+      + '</div>'
+      + '<div id="fbar-perda-row">';
+    if(nNaoContat>0 || nSemRetorno>0) {
+      barsHtml += '<div class="funil-perda-row">'
+        + (nNaoContat>0  ? '<span class="funil-perda-item">'+nNaoContat+' sem contato</span>' : '')
+        + (nSemRetorno>0 ? '<span class="funil-perda-item">'+nSemRetorno+' sem retorno</span>' : '')
+        + '</div>';
+    }
+    barsHtml += '</div>';
+    document.getElementById('funil-bars-wrap').innerHTML = barsHtml;
+  } else {
+    // Atualizações seguintes: só ajusta width/valores dos elementos existentes — permite a transição CSS animar
+    document.getElementById('fbar-ativos').style.width = wAtivosPct+'%';
+    document.getElementById('fbar-ativos').style.border = borderAC;
+    document.getElementById('fbar-ativos-val').textContent = nCadastrados;
+
+    document.getElementById('fbar-contatados').style.width = wContatadosPct+'%';
+    document.getElementById('fbar-contatados').style.border = borderCR;
+    document.getElementById('fbar-contatados-val').textContent = nContatados;
+    document.getElementById('fbar-contatados-meta').textContent = pctContB+'% dos ativos';
+
+    document.getElementById('fbar-responderam').style.width = wRespPct+'%';
+    document.getElementById('fbar-responderam-val').textContent = nResponderam;
+    document.getElementById('fbar-responderam-meta').innerHTML = pctRespB+'% dos contatados · '+respHintBar;
+
+    var convWrap = document.getElementById('fbar-convertidos-wrap');
+    if (convWrap) {
+      convWrap.innerHTML = nConv2>0 ? '<div class="funil-bar-track" style="width:auto;padding:0 16px;background:#27a85a;margin-left:8px"><span class="funil-bar-label"><i class="ti ti-trophy" aria-hidden="true"></i>CONVERTIDOS</span><span id="fbar-convertidos-val" class="funil-bar-val">'+nConv2+'</span></div>' : '';
+    }
+
+    var perdaWrap = document.getElementById('fbar-perda-row');
+    if (perdaWrap) {
+      perdaWrap.innerHTML = (nNaoContat>0 || nSemRetorno>0)
+        ? '<div class="funil-perda-row">'
+          + (nNaoContat>0  ? '<span class="funil-perda-item">'+nNaoContat+' sem contato</span>' : '')
+          + (nSemRetorno>0 ? '<span class="funil-perda-item">'+nSemRetorno+' sem retorno</span>' : '')
+          + '</div>'
+        : '';
+    }
   }
 
-  document.getElementById('funil-bars-wrap').innerHTML = barsHtml;
   document.getElementById('sankey-wrap').innerHTML = '';
 
   // ── breakdown de Responderam — card HTML externo ──
