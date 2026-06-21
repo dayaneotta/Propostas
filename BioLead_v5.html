@@ -970,6 +970,8 @@ function abrirModal(id) {
 }
 
 function determinarNumeroEmail(p) {
+  // Se o pesquisador já respondeu (qualquer status de resposta), não faz sentido gerar follow-up automático de silêncio
+  if (STATUS_SEM_LEMBRETE.includes(p.status)) return 0; // 0 = já respondeu, não é mais sequência automática
   if (!p.c1_raw || !p.c1_raw.trim()) return 1;
   if (!p.c2_raw || !p.c2_raw.trim()) return 2;
   if (!p.c3_raw || !p.c3_raw.trim()) return 3;
@@ -982,18 +984,24 @@ function abrirModalEmail(id) {
   document.getElementById('email-modal-id').value = String(id);
   document.getElementById('email-modal-numero').value = String(numEmail);
 
-  const tituloBase = numEmail === 1 ? 'Gerar e-mail (1º contato)' : numEmail === 2 ? 'Gerar e-mail (2º contato — follow-up)' : 'Gerar e-mail (3º contato — encerramento)';
+  const titulosPorNumero = {
+    0: 'Gerar e-mail (já respondeu — sem follow-up automático)',
+    1: 'Gerar e-mail (1º contato)',
+    2: 'Gerar e-mail (2º contato — follow-up)',
+    3: 'Gerar e-mail (3º contato — encerramento)'
+  };
+  const tituloBase = titulosPorNumero[numEmail] || titulosPorNumero[1];
   document.getElementById('email-modal-titulo').innerHTML = `✉️ ${tituloBase} — <span id="email-modal-nome" style="font-weight:400;color:var(--text2)">${(p.nome||'').replace(/</g,'&lt;')}</span>`;
 
-  // Resumo do Lattes só é necessário/exibido para o 1º e 2º e-mail (3º não usa personalização)
+  // Resumo do Lattes é exibido quando ainda não há sequência automática definida (0) ou no 1º e-mail
   const wrapResumo = document.getElementById('resumo-lattes-wrap');
-  wrapResumo.style.display = numEmail === 1 ? '' : 'none';
+  wrapResumo.style.display = (numEmail === 0 || numEmail === 1) ? '' : 'none';
 
   document.getElementById('email-gerado-wrap').style.display = 'none';
   document.getElementById('email-gerado-texto').value = '';
   document.getElementById('modal-email-overlay').style.display = 'flex';
 
-  if (numEmail !== 1) {
+  if (numEmail !== 0 && numEmail !== 1) {
     // 2º e 3º e-mail não precisam de resumo do Lattes — usam dados já cadastrados
     return;
   }
