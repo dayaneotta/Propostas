@@ -105,6 +105,27 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 .filter-chip{border:.5px solid var(--border);border-radius:20px;padding:4px 11px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;background:var(--surface);transition:all .15s}
 .filter-chip:hover{background:var(--bm-light);color:var(--bm-mid);border-color:var(--bm-mid)}
 .filter-chip.active{background:var(--bm-blue);color:#fff;border-color:var(--bm-blue)}
+
+.origem-pill{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--bm-teal);background:rgba(46,196,165,.1);border:.5px solid rgba(46,196,165,.3);border-radius:20px;padding:4px 11px}
+.bm-tooltip{margin-left:auto;position:relative;display:inline-flex;align-items:center;gap:5px;cursor:default;outline:none}
+.bm-tooltip-icon{font-size:13px;color:var(--text3);transition:color .15s}
+.bm-tooltip:hover .bm-tooltip-icon,.bm-tooltip:focus-within .bm-tooltip-icon{color:var(--bm-mid)}
+.bm-tooltip-box{
+  position:absolute;top:calc(100% + 11px);right:-6px;width:272px;max-width:80vw;
+  background:#fff;color:var(--text2);font-size:11.5px;font-weight:400;line-height:1.55;text-align:left;
+  padding:12px 14px;border-radius:var(--r-sm);
+  box-shadow:0 10px 30px -6px rgba(13,78,138,.22),0 0 0 1px rgba(13,78,138,.06);
+  opacity:0;visibility:hidden;transform:translateY(-4px);pointer-events:none;
+  transition:opacity .15s ease,transform .15s ease;z-index:5;
+}
+.bm-tooltip-box b{color:var(--bm-blue);font-weight:600}
+.bm-tooltip-box::after{
+  content:'';position:absolute;top:-5px;right:22px;width:10px;height:10px;
+  background:#fff;transform:rotate(45deg);box-shadow:-1px -1px 3px rgba(13,78,138,.05);
+}
+.bm-tooltip:hover .bm-tooltip-box,.bm-tooltip:focus-within .bm-tooltip-box{
+  opacity:1;visibility:visible;transform:translateY(0);
+}
 /* ── ALERTA: SEM CONTATO ── */
 .sem-contato-box{background:linear-gradient(135deg,#fff5f5 0%,#fff 100%);border:.5px solid rgba(220,38,38,.25);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:16px}
 .sem-contato-num{font-size:38px;font-weight:700;color:#dc2626;line-height:1;min-width:52px;text-align:center}
@@ -180,8 +201,14 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
       <button class="filter-chip" onclick="setFiltro(90,this)">3 meses</button>
       <button class="filter-chip" onclick="setFiltro(180,this)">6 meses</button>
       <button class="filter-chip active" onclick="setFiltro(0,this)">Todo o período</button>
-      <span id="badge-origem-ativa" style="margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--bm-teal);background:rgba(46,196,165,.1);border:.5px solid rgba(46,196,165,.3);border-radius:20px;padding:4px 11px" title="Este dashboard mostra apenas contatos com origem &quot;Prospecção ativa&quot;. Leads inbound (Site, WhatsApp, E-mail direto) são contabilizados só no BioLead.">
-        <i class="ti ti-filter" aria-hidden="true"></i> Prospecção ativa
+      <span class="bm-tooltip" tabindex="0" role="button" aria-label="Sobre o escopo deste dashboard">
+        <span id="badge-origem-ativa" class="origem-pill">
+          <i class="ti ti-filter" aria-hidden="true"></i> Prospecção ativa
+        </span>
+        <i class="ti ti-info-circle bm-tooltip-icon" aria-hidden="true"></i>
+        <div class="bm-tooltip-box">
+          Este dashboard mostra apenas contatos com origem <b>"Prospecção ativa"</b>. Leads inbound (Site, WhatsApp, E-mail direto) são contabilizados só no BioLead.
+        </div>
       </span>
     </div>
 
