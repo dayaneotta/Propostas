@@ -417,30 +417,33 @@ textarea{resize:vertical;min-height:60px}
   <div class="modal">
     <h3>Editar pesquisador</h3>
     <input type="hidden" id="ed-id" />
+    <div class="section-title" style="margin-top:0">Identificação</div>
     <div class="form-grid">
       <div><label>Nome *</label><input id="ed-nome" /></div>
       <div><label>E-mail *</label><input id="ed-email" /></div>
     </div>
-    <div class="form-grid">
-      <div><label>Origem do contato</label>
-        <select id="ed-origem" onchange="atualizarRotulosPrimeiroContato(this.value!=='Prospecção ativa')">
-          <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
-          <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
-          <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
-          <option value="Inbound — E-mail direto">✉️ Contato espontâneo — E-mail direto</option>
-        </select>
-      </div>
+    <div class="form-full">
+      <label>Origem do contato</label>
+      <select id="ed-origem" onchange="atualizarRotulosPrimeiroContato(this.value!=='Prospecção ativa')">
+        <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
+        <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
+        <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
+        <option value="Inbound — E-mail direto">✉️ Contato espontâneo — E-mail direto</option>
+      </select>
     </div>
+    <div class="section-title">Vínculo</div>
     <div class="form-grid-3">
       <div><label>UF</label><input id="ed-uf" maxlength="2" /></div>
       <div><label>Instituição</label><input id="ed-inst" /></div>
       <div><label>Telefone</label><input id="ed-tel" /></div>
     </div>
-    <div class="form-grid">
+    <div class="section-title">Links</div>
+    <div class="form-grid-links">
       <div><label>Lattes</label><input id="ed-lattes" /></div>
       <div><label>LinkedIn</label><input id="ed-linkedin" placeholder="https://linkedin.com/in/usuario" /></div>
       <div><label>Instagram</label><input id="ed-insta" /></div>
     </div>
+    <div class="section-title">Perfil</div>
     <div class="form-full">
       <label>Linha de pesquisa</label>
       <textarea id="ed-linha" style="min-height:55px"></textarea>
