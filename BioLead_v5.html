@@ -482,14 +482,14 @@ textarea{resize:vertical;min-height:60px}
       </div>
     </div>
     <div class="contato-bloco">
-      <h4>2° Contato</h4>
+      <h4 id="ed-c2-titulo">2° Contato</h4>
       <div class="form-grid">
         <div><label>Data</label><input id="ed-c2-data" placeholder="dd/mm/aaaa" oninput="mascaraData(this)" /></div>
         <div><label>Nota</label><input id="ed-c2-nota" placeholder="Observações..." oninput="converterTravessao(this)" /></div>
       </div>
     </div>
     <div class="contato-bloco">
-      <h4>3° Contato</h4>
+      <h4 id="ed-c3-titulo">3° Contato</h4>
       <div class="form-grid">
         <div><label>Data</label><input id="ed-c3-data" placeholder="dd/mm/aaaa" oninput="mascaraData(this)" /></div>
         <div><label>Nota</label><input id="ed-c3-nota" placeholder="Observações..." oninput="converterTravessao(this)" /></div>
@@ -1050,6 +1050,8 @@ function atualizarRotulosPrimeiroContato(inbound) {
   document.getElementById('ed-c1-data-label').textContent = inbound ? 'Recebido em' : 'Data';
   document.getElementById('ed-c1-nota-label').textContent = inbound ? 'Mensagem' : 'Nota';
   document.getElementById('ed-c1-nota').placeholder = inbound ? 'O que o pesquisador escreveu...' : 'Observações...';
+  document.getElementById('ed-c2-titulo').textContent = inbound ? '2ª interação' : '2° Contato';
+  document.getElementById('ed-c3-titulo').textContent = inbound ? '3ª interação' : '3° Contato';
 }
 
 function abrirModal(id) {
