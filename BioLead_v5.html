@@ -455,12 +455,12 @@ textarea{resize:vertical;min-height:60px}
       </div>
       <div><label>Status</label>
         <select id="ed-status">
-          <option value="Novo">🔵 Novo</option>
-          <option value="Aguardando">🟡 Aguardando</option>
-          <option value="Respondeu — Pediu informações">📩 Respondeu — Pediu informações</option>
-          <option value="Respondeu — Pediu orçamento">📋 Respondeu — Pediu orçamento</option>
-          <option value="Respondeu — Solicitou contato futuro">🔔 Respondeu — Solicitou contato futuro</option>
-          <option value="Respondeu — Sem interesse">🚫 Respondeu — Sem interesse</option>
+          <option id="ed-status-novo" value="Novo">🔵 Novo</option>
+          <option id="ed-status-aguardando" value="Aguardando">🟡 Aguardando</option>
+          <option id="ed-status-pediu-info" value="Respondeu — Pediu informações">📩 Respondeu — Pediu informações</option>
+          <option id="ed-status-pediu-orc" value="Respondeu — Pediu orçamento">📋 Respondeu — Pediu orçamento</option>
+          <option id="ed-status-contato-futuro" value="Respondeu — Solicitou contato futuro">🔔 Respondeu — Solicitou contato futuro</option>
+          <option id="ed-status-sem-interesse" value="Respondeu — Sem interesse">🚫 Respondeu — Sem interesse</option>
           <option value="Respondeu — Sem projeto no momento">🔄 Sem projeto no momento</option>
           <option value="Respondeu — Sem retorno após interesse">📵 Sem retorno após interesse</option>
           <option value="Reunião agendada">📅 Reunião agendada</option>
@@ -1055,6 +1055,17 @@ function atualizarRotulosPrimeiroContato(inbound) {
   document.getElementById('ed-c1-nota').placeholder = inbound ? 'O que o pesquisador escreveu...' : 'Observações...';
   document.getElementById('ed-c2-titulo').textContent = inbound ? '2ª interação' : '2° Contato';
   document.getElementById('ed-c3-titulo').textContent = inbound ? '3ª interação' : '3° Contato';
+
+  // "Novo"/"Aguardando" descrevem quem ainda não foi contatado / está esperando resposta
+  // ao nosso contato — não se aplicam a quem chegou por iniciativa própria.
+  document.getElementById('ed-status-novo').style.display = inbound ? 'none' : '';
+  document.getElementById('ed-status-aguardando').style.display = inbound ? 'none' : '';
+  // O prefixo "Respondeu —" pressupõe que nós contatamos primeiro; pra contato espontâneo,
+  // a pessoa não respondeu nada, ela que tomou a iniciativa.
+  document.getElementById('ed-status-pediu-info').textContent = inbound ? '📩 Pediu informações' : '📩 Respondeu — Pediu informações';
+  document.getElementById('ed-status-pediu-orc').textContent = inbound ? '📋 Pediu orçamento' : '📋 Respondeu — Pediu orçamento';
+  document.getElementById('ed-status-contato-futuro').textContent = inbound ? '🔔 Solicitou contato futuro' : '🔔 Respondeu — Solicitou contato futuro';
+  document.getElementById('ed-status-sem-interesse').textContent = inbound ? '🚫 Sem interesse' : '🚫 Respondeu — Sem interesse';
 }
 
 function abrirModal(id) {
@@ -1305,6 +1316,7 @@ function renderInbound() {
     const status=p.status||'Respondeu — Pediu informações';
     const stStyle=STATUS_STYLES[status]||'background:#EAF4FA;color:var(--text3)';
     const emoji=STATUS_EMOJI[status]||'';
+    const statusLabel=status.replace(/^Respondeu — /, '');
     const canalIconeMap = {'Inbound — WhatsApp':'💬 WhatsApp', 'Inbound — E-mail direto':'✉️ E-mail direto', 'Inbound — Site':'🌐 Site'};
     const canalIcone = canalIconeMap[p.origem] || '🌐 Site';
     const ini=p.nome.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
@@ -1314,7 +1326,7 @@ function renderInbound() {
       <td><span style="font-size:11px;color:var(--text2)">${canalIcone}</span></td>
       <td><span style="font-size:11px;color:var(--text3)">${p.c1_raw||'—'}</span></td>
       <td style="max-width:280px"><span style="font-size:11px;color:var(--text2)" title="${(p.c1_nota||'').replace(/"/g,'&quot;')}">${mensagemCurta}</span></td>
-      <td><span class="sp" style="${stStyle}">${emoji} ${status}</span></td>
+      <td><span class="sp" style="${stStyle}">${emoji} ${statusLabel}</span></td>
       <td style="max-width:180px">
         <a href="mailto:${p.email}" style="font-size:11px;color:var(--bm-blue);text-decoration:none;display:block">${p.email||'—'}</a>
         ${p.tel ? `<span style="font-size:10px;color:var(--text3)">${p.tel}</span>` : ''}
