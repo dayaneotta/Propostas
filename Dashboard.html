@@ -173,9 +173,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
       <button class="filter-chip" onclick="setFiltro(90,this)">3 meses</button>
       <button class="filter-chip" onclick="setFiltro(180,this)">6 meses</button>
       <button class="filter-chip active" onclick="setFiltro(0,this)">Todo o período</button>
-      <span id="badge-origem-ativa" style="margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--bm-teal);background:rgba(46,196,165,.1);border:.5px solid rgba(46,196,165,.3);border-radius:20px;padding:4px 11px" title="Este dashboard mostra apenas contatos com origem &quot;Prospecção ativa&quot;. Leads inbound (Site, WhatsApp, E-mail direto) são contabilizados só no BioLead.">
-        <i class="ti ti-filter" aria-hidden="true"></i> Prospecção ativa
-      </span>
     </div>
 
 
@@ -240,14 +237,6 @@ const SHEETS_URL_DASH = 'https://script.google.com/macros/s/AKfycbw9hKu9e5IlpCF1
 const STORAGE_KEY = 'biolead-v3';
 let ALL = [], filtrado = [], sortCol = 'nome', sortDir = 1, pag = 1, POR_PAG = 25;
 let cE = null; let cEstados = null;
-
-// ── Escopo do dashboard: somente Prospecção ativa ──
-// Mesmo critério usado no BioLead (ehInboundOrigem) para excluir leads
-// com origem = "Inbound — Site" / "Inbound — WhatsApp" / "Inbound — E-mail direto".
-// Registros sem campo "origem" são tratados como Prospecção ativa (mesmo default do BioLead).
-function ehInboundOrigem(origem) {
-  return (origem || '').startsWith('Inbound');
-}
 
 function mapearStatus(s) {
   if (!s || s === 'Novo') return 'nc';
@@ -321,13 +310,6 @@ function aplicarFiltro() {
 
 function init() {
   document.getElementById('dash-dt').textContent = 'Atualizado em ' + new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'});
-
-  const badgeOrigem = document.getElementById('badge-origem-ativa');
-  if (badgeOrigem) {
-    const nExcluidos = window._dashInboundExcluidos || 0;
-    badgeOrigem.innerHTML = '<i class="ti ti-filter" aria-hidden="true"></i> Prospecção ativa'
-      + (nExcluidos > 0 ? ' <span style="opacity:.7">· ' + nExcluidos + ' inbound excluído' + (nExcluidos>1?'s':'') + '</span>' : '');
-  }
 
   const DADOS = carregarDados().map(p => ({
     ...p,
@@ -955,11 +937,7 @@ function carregarEIniciar() {
   window[cbName] = function(res) {
     document.getElementById('loading-overlay').style.display = 'none';
     if (res.ok) {
-      const totalBruto = res.dados.length;
-      const dadosProspeccaoAtiva = res.dados.filter(p => !ehInboundOrigem(p.origem));
-      window._dashInboundExcluidos = totalBruto - dadosProspeccaoAtiva.length;
-
-      window._dashDados = dadosProspeccaoAtiva.map(p => ({
+      window._dashDados = res.dados.map(p => ({
         ...p,
         nome: String(p.nome||''), email: String(p.email||''),
         linha: String(p.linha||''), inst: String(p.inst||''),
@@ -977,10 +955,7 @@ function carregarEIniciar() {
     }
   };
   const script = document.createElement('script');
-  // Pede ao servidor para já filtrar e devolver só Prospecção ativa
-  // (o filtro client-side em ehInboundOrigem abaixo continua como segunda camada de segurança).
-  const paramsListar = encodeURIComponent(JSON.stringify({ somenteProspeccaoAtiva: true }));
-  script.src = SHEETS_URL_DASH + '?action=biolead&sub=listar&params=' + paramsListar + '&callback=' + cbName + '&t=' + Date.now();
+  script.src = SHEETS_URL_DASH + '?action=biolead&sub=listar&params=%7B%7D&callback=' + cbName + '&t=' + Date.now();
   script.onerror = () => { document.getElementById('loading-overlay').style.display = 'none'; alert('Erro ao carregar dados.'); };
   document.head.appendChild(script);
 }
