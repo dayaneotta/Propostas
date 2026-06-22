@@ -314,13 +314,17 @@ textarea{resize:vertical;min-height:60px}
         </div>
         <div class="form-grid">
           <div class="form-field"><label>Origem do contato</label>
-            <select id="f-origem">
+            <select id="f-origem" onchange="atualizarCampoMensagemInicial()">
               <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
               <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
               <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
               <option value="Inbound — E-mail direto">✉️ Contato espontâneo — E-mail direto</option>
             </select>
           </div>
+        </div>
+        <div id="f-msg-inicial-wrap" class="form-full form-field" style="display:none">
+          <label>Mensagem inicial</label>
+          <textarea id="f-msg-inicial" placeholder="O que essa pessoa escreveu pra você..." style="min-height:60px"></textarea>
         </div>
         <div class="form-grid-3">
           <div class="form-field"><label>UF</label><input id="f-uf" maxlength="2" placeholder="SP" /></div>
@@ -417,6 +421,16 @@ textarea{resize:vertical;min-height:60px}
       <div><label>Nome *</label><input id="ed-nome" /></div>
       <div><label>E-mail *</label><input id="ed-email" /></div>
     </div>
+    <div class="form-grid">
+      <div><label>Origem do contato</label>
+        <select id="ed-origem" onchange="atualizarRotulosPrimeiroContato(this.value!=='Prospecção ativa')">
+          <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
+          <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
+          <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
+          <option value="Inbound — E-mail direto">✉️ Contato espontâneo — E-mail direto</option>
+        </select>
+      </div>
+    </div>
     <div class="form-grid-3">
       <div><label>UF</label><input id="ed-uf" maxlength="2" /></div>
       <div><label>Instituição</label><input id="ed-inst" /></div>
@@ -461,10 +475,10 @@ textarea{resize:vertical;min-height:60px}
     </div>
     <div class="section-title">Contatos</div>
     <div class="contato-bloco">
-      <h4>1° Contato</h4>
+      <h4 id="ed-c1-titulo">1° Contato</h4>
       <div class="form-grid">
-        <div><label>Data</label><input id="ed-c1-data" placeholder="dd/mm/aaaa" oninput="mascaraData(this)" /></div>
-        <div><label>Nota</label><input id="ed-c1-nota" placeholder="Observações..." oninput="converterTravessao(this)" /></div>
+        <div><label id="ed-c1-data-label">Data</label><input id="ed-c1-data" placeholder="dd/mm/aaaa" oninput="mascaraData(this)" /></div>
+        <div><label id="ed-c1-nota-label">Nota</label><input id="ed-c1-nota" placeholder="Observações..." oninput="converterTravessao(this)" /></div>
       </div>
     </div>
     <div class="contato-bloco">
@@ -755,10 +769,16 @@ function mascaraData(input) {
   input.value = v;
 }
 
+function atualizarCampoMensagemInicial() {
+  const inbound = document.getElementById('f-origem').value !== 'Prospecção ativa';
+  document.getElementById('f-msg-inicial-wrap').style.display = inbound ? 'block' : 'none';
+}
+
 function limparForm() {
-  ['f-nome','f-email','f-uf','f-inst','f-tel','f-lattes','f-insta','f-linkedin','f-linha'].forEach(id=>document.getElementById(id).value='');
+  ['f-nome','f-email','f-uf','f-inst','f-tel','f-lattes','f-insta','f-linkedin','f-linha','f-msg-inicial'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-origem').value = 'Prospecção ativa';
   document.getElementById('f-score').value='';
+  atualizarCampoMensagemInicial();
 }
 
 function adicionar() {
@@ -780,7 +800,7 @@ function adicionar() {
     origem: origemSelecionada,
     // Leads inbound já chegam "respondidos" (eles procuraram a gente); prospecção ativa começa como Novo
     status: ehInbound ? 'Respondeu — Pediu informações' : 'Novo',
-    c1_raw: ehInbound ? Utilities_formatarDataHoje() : '', c1_nota:'', c2_raw:'', c2_nota:'', c3_raw:'', c3_nota:'',
+    c1_raw: ehInbound ? Utilities_formatarDataHoje() : '', c1_nota: ehInbound ? document.getElementById('f-msg-inicial').value.trim() : '', c2_raw:'', c2_nota:'', c3_raw:'', c3_nota:'',
     desqualificado: false, desq_motivo:'', dataCadastro: new Date().toISOString()
   };
   if (!p.score) p.score = calcularScore(p);
@@ -1025,11 +1045,20 @@ function copiarEmailGerado() {
   });
 }
 
+function atualizarRotulosPrimeiroContato(inbound) {
+  document.getElementById('ed-c1-titulo').textContent = inbound ? '📩 Mensagem recebida' : '1° Contato';
+  document.getElementById('ed-c1-data-label').textContent = inbound ? 'Recebido em' : 'Data';
+  document.getElementById('ed-c1-nota-label').textContent = inbound ? 'Mensagem' : 'Nota';
+  document.getElementById('ed-c1-nota').placeholder = inbound ? 'O que o pesquisador escreveu...' : 'Observações...';
+}
+
 function abrirModal(id) {
   const p = dados.find(x=>String(x.id)===String(id)); if (!p) return;
   document.getElementById('ed-id').value=String(id);
   document.getElementById('ed-nome').value=p.nome||'';
   document.getElementById('ed-email').value=p.email||'';
+  document.getElementById('ed-origem').value=p.origem||'Prospecção ativa';
+  atualizarRotulosPrimeiroContato(ehInboundOrigem(p.origem));
   document.getElementById('ed-uf').value=p.estado||'';
   document.getElementById('ed-inst').value=p.inst||'';
   document.getElementById('ed-tel').value=p.tel||'';
@@ -1145,6 +1174,7 @@ function salvarEdicao() {
   const email=document.getElementById('ed-email').value.trim();
   if (!nome||!email) { alert('Nome e e-mail são obrigatórios'); return; }
   p.nome=nome; p.email=email;
+  p.origem=document.getElementById('ed-origem').value||'Prospecção ativa';
   p.estado=document.getElementById('ed-uf').value.trim().toUpperCase();
   p.inst=document.getElementById('ed-inst').value.trim();
   p.tel=document.getElementById('ed-tel').value.trim();
@@ -1166,6 +1196,7 @@ function salvarEdicao() {
   p.retorno_obs=document.getElementById('ed-retorno-obs').value.trim();
   salvar(p); fecharModal(); render(); atualizarCards(); renderBadge();
   if (document.getElementById('pane-lembretes').classList.contains('active')) renderLembretes();
+  if (document.getElementById('pane-inbound').classList.contains('active')) renderInbound();
   toast('Pesquisador atualizado');
 }
 
