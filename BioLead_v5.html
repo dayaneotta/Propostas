@@ -319,6 +319,7 @@ textarea{resize:vertical;min-height:60px}
               <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
               <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
               <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
+              <option value="Inbound — E-mail direto">✉️ Contato espontâneo — E-mail direto</option>
             </select>
           </div>
         </div>
@@ -541,6 +542,10 @@ function normalizarData(val) {
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return m[3] + '/' + m[2] + '/' + m[1];
   return s;
+}
+
+function ehInboundOrigem(origem) {
+  return (origem || '').startsWith('Inbound');
 }
 
 function normalizarContato(p) {
@@ -1162,7 +1167,7 @@ function render() {
   const curUF=selUF.value;
   selUF.innerHTML='<option value="">Todos os estados</option>'+ufs.map(u=>`<option ${u===curUF?'selected':''}>${u}</option>`).join('');
   let filtrados=dados.filter(p=>{
-    if (p.origem === 'Inbound — Site' || p.origem === 'Inbound — WhatsApp') return false;
+    if (ehInboundOrigem(p.origem)) return false;
     if (filtro && !p.nome.toLowerCase().includes(filtro) && !(p.inst||'').toLowerCase().includes(filtro)) return false;
     if (fScore && p.score!==fScore) return false;
     if (fStatus && (p.status||'Novo')!==fStatus) return false;
@@ -1218,7 +1223,7 @@ function renderInbound() {
   const filtro=(document.getElementById('filtro-inbound').value||'').toLowerCase();
   const fStatus=document.getElementById('fil-inbound-status').value;
   let filtrados=dados.filter(p=>{
-    if (p.origem !== 'Inbound — Site' && p.origem !== 'Inbound — WhatsApp') return false;
+    if (!ehInboundOrigem(p.origem)) return false;
     if (filtro && !p.nome.toLowerCase().includes(filtro)) return false;
     if (fStatus && (p.status||'')!==fStatus) return false;
     return true;
@@ -1244,7 +1249,8 @@ function renderInbound() {
     const status=p.status||'Respondeu — Pediu informações';
     const stStyle=STATUS_STYLES[status]||'background:#EAF4FA;color:var(--text3)';
     const emoji=STATUS_EMOJI[status]||'';
-    const canalIcone = p.origem==='Inbound — WhatsApp' ? '💬 WhatsApp' : '🌐 Site';
+    const canalIconeMap = {'Inbound — WhatsApp':'💬 WhatsApp', 'Inbound — E-mail direto':'✉️ E-mail direto', 'Inbound — Site':'🌐 Site'};
+    const canalIcone = canalIconeMap[p.origem] || '🌐 Site';
     const ini=p.nome.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
     const mensagemCurta = (p.c1_nota||'').length>60 ? (p.c1_nota||'').slice(0,60)+'…' : (p.c1_nota||'—');
     return `<tr>
@@ -1276,7 +1282,7 @@ function ordenar(col) {
 function atualizarCards() {
   const agora = new Date();
   const semanaAtras = new Date(agora); semanaAtras.setDate(agora.getDate()-7);
-  const dadosAtivos = dados.filter(p => p.origem !== 'Inbound — Site' && p.origem !== 'Inbound — WhatsApp');
+  const dadosAtivos = dados.filter(p => !ehInboundOrigem(p.origem));
   const semana = dadosAtivos.filter(p => {
     // usa dataCadastro se disponível, senão c1_raw como proxy
     var dt = p.dataCadastro || p.c1_raw;
@@ -1288,7 +1294,7 @@ function atualizarCards() {
   document.getElementById('s-semana').textContent = semana;
 
   // Badge da aba Contato Espontâneo: quantos ainda não foram tratados (status genérico de "Pediu informações")
-  const dadosInbound = dados.filter(p => p.origem === 'Inbound — Site' || p.origem === 'Inbound — WhatsApp');
+  const dadosInbound = dados.filter(p => ehInboundOrigem(p.origem));
   const pendentes = dadosInbound.filter(p => p.status === 'Respondeu — Pediu informações').length;
   const badgeInbound = document.getElementById('badge-inbound');
   if (badgeInbound) {
