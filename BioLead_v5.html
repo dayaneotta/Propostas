@@ -175,7 +175,8 @@ textarea{resize:vertical;min-height:60px}
     </div>
   <!-- nav dentro do header -->
   <nav class="header-nav">
-    <button class="header-tab active" id="tab-lista" onclick="showTab('lista')">📋 Lista</button>
+    <button class="header-tab active" id="tab-lista" onclick="showTab('lista')">📋 Prospecção Ativa</button>
+    <button class="header-tab" id="tab-inbound" onclick="showTab('inbound')">🌐 Contato Espontâneo<span class="badge-tab" id="badge-inbound" style="display:none"></span></button>
     <button class="header-tab" id="tab-add" onclick="showTab('add')">➕ Adicionar</button>
     <button class="header-tab" id="tab-lembretes" onclick="showTab('lembretes')">⏰ Lembretes<span class="badge-tab" id="badge-lembretes" style="display:none"></span></button>
     <button class="header-tab" id="tab-import" onclick="showTab('import')">📥 Importar</button>
@@ -257,6 +258,44 @@ textarea{resize:vertical;min-height:60px}
     </div>
   </div>
 
+  <!-- CONTATO ESPONTÂNEO (Inbound) -->
+  <div id="pane-inbound" class="pane">
+    <div>
+      <div class="single-toolbar">
+        <div class="stat-pill"><div class="stat-pill-val" id="s-inbound-total">0</div><div class="stat-pill-lbl">Total</div></div>
+        <div class="stat-pill verde"><div class="stat-pill-val" id="s-inbound-semana">0</div><div class="stat-pill-lbl">7 Dias</div></div>
+        <div style="width:0.5px;height:28px;background:var(--border)"></div>
+        <input id="filtro-inbound" placeholder="🔍  Buscar por nome..." oninput="renderInbound()" style="flex:1;min-width:140px" />
+        <select id="fil-inbound-status" onchange="renderInbound()" style="max-width:168px">
+          <option value="">Todos os status</option>
+          <option value="Respondeu — Pediu informações">📩 Pediu informações</option>
+          <option value="Respondeu — Pediu orçamento">📋 Pediu orçamento</option>
+          <option value="Reunião agendada">📅 Reunião agendada</option>
+          <option value="Reunião realizada">✅ Reunião realizada</option>
+          <option value="Convertido">🏆 Convertido</option>
+          <option value="Desqualificado">⛔ Desqualificado</option>
+        </select>
+      </div>
+    </div>
+    <div id="rodape-count-inbound" style="display:none" class="rodape-count"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Nome</th>
+          <th>Canal</th>
+          <th>Recebido em</th>
+          <th>Mensagem</th>
+          <th>Status</th>
+          <th>E-mail / Telefone</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="tbody-inbound"></tbody>
+      </table>
+      <div id="empty-inbound" style="display:none;text-align:center;padding:3rem;color:var(--text3)">Nenhum contato espontâneo recebido ainda.</div>
+    </div>
+    <div class="pag" id="paginacao-inbound"></div>
+  </div>
+
   <!-- LEMBRETES -->
   <div id="pane-lembretes" class="pane">
     <div id="painel-lembretes"></div>
@@ -273,6 +312,15 @@ textarea{resize:vertical;min-height:60px}
         <div class="form-grid">
           <div class="form-field"><label>Nome completo <span style="color:#ef4444">*</span></label><input id="f-nome" placeholder="Ex: Ana Luíza Mendes" /></div>
           <div class="form-field"><label>E-mail <span style="color:#ef4444">*</span></label><input id="f-email" type="email" placeholder="ana.mendes@unicamp.br" /></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-field"><label>Origem do contato</label>
+            <select id="f-origem">
+              <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
+              <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
+              <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
+            </select>
+          </div>
         </div>
         <div class="form-grid-3">
           <div class="form-field"><label>UF</label><input id="f-uf" maxlength="2" placeholder="SP" /></div>
@@ -507,6 +555,7 @@ function normalizarContato(p) {
     lattes: String(p.lattes || ''),
     instagram: String(p.instagram || ''),
     linkedin: String(p.linkedin || ''),
+    origem: String(p.origem || 'Prospecção ativa'),
     score: String(p.score || ''),
     c1_raw: normalizarData(p.c1_raw),
     c1_nota: String(p.c1_nota || ''),
@@ -635,13 +684,14 @@ function toast(msg) {
 }
 
 function showTab(t) {
-  ['lista','lembretes','add','import'].forEach(id => {
+  ['lista','inbound','lembretes','add','import'].forEach(id => {
     document.getElementById('pane-'+id).classList.toggle('active', id===t);
     // update header tabs
     const htab = document.getElementById('tab-'+id);
     if (htab) htab.classList.toggle('active', id===t);
   });
   if (t==='lista') render();
+  if (t==='inbound') renderInbound();
   if (t==='lembretes') renderLembretes();
 }
 
@@ -687,6 +737,7 @@ function mascaraData(input) {
 
 function limparForm() {
   ['f-nome','f-email','f-uf','f-inst','f-tel','f-lattes','f-insta','f-linkedin','f-linha'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-origem').value = 'Prospecção ativa';
   document.getElementById('f-score').value='';
 }
 
@@ -694,6 +745,8 @@ function adicionar() {
   const nome = document.getElementById('f-nome').value.trim();
   const email = document.getElementById('f-email').value.trim();
   if (!nome||!email) { alert('Nome e e-mail são obrigatórios'); return; }
+  const origemSelecionada = document.getElementById('f-origem').value || 'Prospecção ativa';
+  const ehInbound = origemSelecionada !== 'Prospecção ativa';
   const p = {
     id: Date.now()+Math.random(), nome, email,
     estado: document.getElementById('f-uf').value.trim().toUpperCase(),
@@ -704,13 +757,23 @@ function adicionar() {
     linkedin: document.getElementById('f-linkedin').value.trim(),
     linha: document.getElementById('f-linha').value.trim(),
     score: document.getElementById('f-score').value||'',
-    status: 'Novo', c1_raw:'', c1_nota:'', c2_raw:'', c2_nota:'', c3_raw:'', c3_nota:'',
+    origem: origemSelecionada,
+    // Leads inbound já chegam "respondidos" (eles procuraram a gente); prospecção ativa começa como Novo
+    status: ehInbound ? 'Respondeu — Pediu informações' : 'Novo',
+    c1_raw: ehInbound ? Utilities_formatarDataHoje() : '', c1_nota:'', c2_raw:'', c2_nota:'', c3_raw:'', c3_nota:'',
     desqualificado: false, desq_motivo:'', dataCadastro: new Date().toISOString()
   };
   if (!p.score) p.score = calcularScore(p);
   dados.push(p); salvar(p); limparForm(); atualizarCards(); renderBadge();
   toast('Pesquisador adicionado — score: '+p.score);
-  showTab('lista');
+  showTab(ehInbound ? 'inbound' : 'lista');
+}
+
+function Utilities_formatarDataHoje() {
+  const hoje = new Date();
+  const dd = String(hoje.getDate()).padStart(2,'0');
+  const mm = String(hoje.getMonth()+1).padStart(2,'0');
+  return dd+'/'+mm+'/'+hoje.getFullYear();
 }
 
 // ── Lembretes ────────────────────────────────────────────────────────────────
@@ -1099,6 +1162,7 @@ function render() {
   const curUF=selUF.value;
   selUF.innerHTML='<option value="">Todos os estados</option>'+ufs.map(u=>`<option ${u===curUF?'selected':''}>${u}</option>`).join('');
   let filtrados=dados.filter(p=>{
+    if (p.origem === 'Inbound — Site' || p.origem === 'Inbound — WhatsApp') return false;
     if (filtro && !p.nome.toLowerCase().includes(filtro) && !(p.inst||'').toLowerCase().includes(filtro)) return false;
     if (fScore && p.score!==fScore) return false;
     if (fStatus && (p.status||'Novo')!==fStatus) return false;
@@ -1148,6 +1212,62 @@ function render() {
   pagEl.innerHTML=totalPags<=1?'':Array.from({length:totalPags},(_,i)=>`<button class="${i+1===paginaAtual?'ativo':''}" onclick="paginaAtual=${i+1};render()">${i+1}</button>`).join('');
 }
 
+let paginaInbound = 1;
+function renderInbound() {
+  dados = dados.map(normalizarContato);
+  const filtro=(document.getElementById('filtro-inbound').value||'').toLowerCase();
+  const fStatus=document.getElementById('fil-inbound-status').value;
+  let filtrados=dados.filter(p=>{
+    if (p.origem !== 'Inbound — Site' && p.origem !== 'Inbound — WhatsApp') return false;
+    if (filtro && !p.nome.toLowerCase().includes(filtro)) return false;
+    if (fStatus && (p.status||'')!==fStatus) return false;
+    return true;
+  }).sort((a,b)=> new Date(parseData(b.c1_raw)||0) - new Date(parseData(a.c1_raw)||0));
+
+  document.getElementById('s-inbound-total').textContent = filtrados.length;
+  const semanaAtras = new Date(); semanaAtras.setDate(semanaAtras.getDate()-7);
+  const naSemana = filtrados.filter(p => { const d = parseData(p.c1_raw); return d && d >= semanaAtras; }).length;
+  document.getElementById('s-inbound-semana').textContent = naSemana;
+
+  const rodape=document.getElementById('rodape-count-inbound');
+  if (fStatus) { rodape.style.display='block'; rodape.textContent=filtrados.length+' contato'+(filtrados.length!==1?'s':''); }
+  else rodape.style.display='none';
+
+  const total=filtrados.length;
+  const totalPags=Math.max(1,Math.ceil(total/POR_PAGINA));
+  if (paginaInbound>totalPags) paginaInbound=1;
+  const slice=filtrados.slice((paginaInbound-1)*POR_PAGINA, paginaInbound*POR_PAGINA);
+  document.getElementById('empty-inbound').style.display=total===0?'block':'none';
+
+  const tbody=document.getElementById('tbody-inbound');
+  tbody.innerHTML=slice.map(p=>{
+    const status=p.status||'Respondeu — Pediu informações';
+    const stStyle=STATUS_STYLES[status]||'background:#EAF4FA;color:var(--text3)';
+    const emoji=STATUS_EMOJI[status]||'';
+    const canalIcone = p.origem==='Inbound — WhatsApp' ? '💬 WhatsApp' : '🌐 Site';
+    const ini=p.nome.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+    const mensagemCurta = (p.c1_nota||'').length>60 ? (p.c1_nota||'').slice(0,60)+'…' : (p.c1_nota||'—');
+    return `<tr>
+      <td><div class="name-cell"><div class="av medio">${ini}</div><div class="nmt">${p.nome}</div></div></td>
+      <td><span style="font-size:11px;color:var(--text2)">${canalIcone}</span></td>
+      <td><span style="font-size:11px;color:var(--text3)">${p.c1_raw||'—'}</span></td>
+      <td style="max-width:280px"><span style="font-size:11px;color:var(--text2)" title="${(p.c1_nota||'').replace(/"/g,'&quot;')}">${mensagemCurta}</span></td>
+      <td><span class="sp" style="${stStyle}">${emoji} ${status}</span></td>
+      <td style="max-width:180px">
+        <a href="mailto:${p.email}" style="font-size:11px;color:var(--bm-blue);text-decoration:none;display:block">${p.email||'—'}</a>
+        ${p.tel ? `<span style="font-size:10px;color:var(--text3)">${p.tel}</span>` : ''}
+      </td>
+      <td style="white-space:nowrap">
+        <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer" onclick="abrirModal('${p.id}')" title="Editar"><i class="ti ti-pencil" style="font-size:14px"></i></button>
+        <button class="btn" onclick="abrirModalEmail('${p.id}')" title="Gerar e-mail" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #6055B0;color:#6055B0;cursor:pointer"><i class="ti ti-mail" style="font-size:14px"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const pagEl=document.getElementById('paginacao-inbound');
+  pagEl.innerHTML=totalPags<=1?'':Array.from({length:totalPags},(_,i)=>`<button class="${i+1===paginaInbound?'ativo':''}" onclick="paginaInbound=${i+1};renderInbound()">${i+1}</button>`).join('');
+}
+
 function ordenar(col) {
   if (sortCol===col) sortDir=sortDir==='asc'?'desc':'asc'; else {sortCol=col;sortDir='asc';}
   paginaAtual=1; render();
@@ -1156,15 +1276,25 @@ function ordenar(col) {
 function atualizarCards() {
   const agora = new Date();
   const semanaAtras = new Date(agora); semanaAtras.setDate(agora.getDate()-7);
-  const semana = dados.filter(p => {
+  const dadosAtivos = dados.filter(p => p.origem !== 'Inbound — Site' && p.origem !== 'Inbound — WhatsApp');
+  const semana = dadosAtivos.filter(p => {
     // usa dataCadastro se disponível, senão c1_raw como proxy
     var dt = p.dataCadastro || p.c1_raw;
     if (!dt) return false;
     var dataParsed = parseData(String(dt).replace(/^"+|"+$/g,''));
     return dataParsed && dataParsed >= semanaAtras;
   }).length;
-  document.getElementById('s-total').textContent = dados.length;
+  document.getElementById('s-total').textContent = dadosAtivos.length;
   document.getElementById('s-semana').textContent = semana;
+
+  // Badge da aba Contato Espontâneo: quantos ainda não foram tratados (status genérico de "Pediu informações")
+  const dadosInbound = dados.filter(p => p.origem === 'Inbound — Site' || p.origem === 'Inbound — WhatsApp');
+  const pendentes = dadosInbound.filter(p => p.status === 'Respondeu — Pediu informações').length;
+  const badgeInbound = document.getElementById('badge-inbound');
+  if (badgeInbound) {
+    if (pendentes > 0) { badgeInbound.style.display='inline'; badgeInbound.textContent=pendentes; }
+    else badgeInbound.style.display='none';
+  }
 }
 
 // ── Exportar CSV ──────────────────────────────────────────────────────────────
