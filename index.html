@@ -24005,13 +24005,24 @@ async function salvarNoDrive(d, docxBuffer) {
     showToast('💾 Salvando no Drive e criando negócio no Zoho…');
     const resp = await fetch(SHEETS_URL, {
       method: 'POST',
-      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload),
     });
-    // Com no-cors não conseguimos ler a resposta, mas o script executa
+    const data = await resp.json();
+
+    if (data && data.naoAutorizado) { _blSessaoExpirada(); return; }
+
+    if (!data || data.error) {
+      showToast('⚠ Erro ao salvar: ' + (data && data.error ? data.error : 'tente novamente'));
+      return;
+    }
+
     showToast('✓ Arquivos salvos no Drive!');
-    setTimeout(() => showToast('✓ Negócio criado no Zoho CRM!'), 2000);
+    if (data.zohoErro) {
+      setTimeout(() => showToast('⚠ Salvo no Drive, mas houve um problema no Zoho: ' + data.zohoErro), 2000);
+    } else {
+      setTimeout(() => showToast('✓ Negócio criado no Zoho CRM!'), 2000);
+    }
   } catch(e) {
     showToast('⚠ Não foi possível salvar no Drive.');
     console.error(e);
