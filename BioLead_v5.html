@@ -533,6 +533,17 @@ let dados = [];
 let sortCol = 'nome', sortDir = 'asc', paginaAtual = 1;
 let _bioLeadCarregado = false;
 
+// Token de login Google (sessionStorage), enviado em toda chamada ao Apps Script.
+// Sem ele (ou se estiver expirado), o servidor recusa a ação.
+function tokenAuthBL() {
+  return encodeURIComponent(sessionStorage.getItem('bl_auth_token') || '');
+}
+function _blSessaoExpirada() {
+  sessionStorage.removeItem('bl_auth_token');
+  sessionStorage.removeItem('bl_auth_email');
+  window.location.href = '/Propostas/home.html';
+}
+
 function normalizarData(val) {
   if (!val) return '';
   const s = String(val);
@@ -586,6 +597,7 @@ function carregarDados() {
     const cbName = '_blCb';
     window[cbName] = function(res) {
       try {
+        if (res.naoAutorizado) { _blSessaoExpirada(); return; }
         if (res.ok) {
           dados = res.dados.map(normalizarContato);
           _bioLeadCarregado = true;
@@ -599,7 +611,7 @@ function carregarDados() {
       }
     };
     const script = document.createElement('script');
-    script.src = SHEETS_URL_BL + '?action=biolead&sub=listar&params=%7B%7D&callback=_blCb&t=' + Date.now();
+    script.src = SHEETS_URL_BL + '?action=biolead&sub=listar&params=%7B%7D&token=' + tokenAuthBL() + '&callback=_blCb&t=' + Date.now();
     script.onerror = () => reject(new Error('Script load failed'));
     document.head.appendChild(script);
   }).catch(e => {
@@ -667,7 +679,9 @@ const STATUS_EMOJI = {
 
 async function salvar(contato) {
   try {
-    await fetch(`${SHEETS_URL_BL}?action=biolead&sub=salvar&params=${encodeURIComponent(JSON.stringify({contato}))}`);
+    const resp = await fetch(`${SHEETS_URL_BL}?action=biolead&sub=salvar&params=${encodeURIComponent(JSON.stringify({contato}))}&token=${tokenAuthBL()}`);
+    const data = await resp.json();
+    if (data && data.naoAutorizado) { _blSessaoExpirada(); return; }
   } catch(e) {
     console.error('Erro ao salvar:', e);
     toast('⚠ Erro ao salvar. Verifique a conexão.');
@@ -676,7 +690,9 @@ async function salvar(contato) {
 
 async function excluir(id) {
   try {
-    await fetch(`${SHEETS_URL_BL}?action=biolead&sub=excluir&params=${encodeURIComponent(JSON.stringify({id}))}`);
+    const resp = await fetch(`${SHEETS_URL_BL}?action=biolead&sub=excluir&params=${encodeURIComponent(JSON.stringify({id}))}&token=${tokenAuthBL()}`);
+    const data = await resp.json();
+    if (data && data.naoAutorizado) { _blSessaoExpirada(); return; }
   } catch(e) {
     console.error('Erro ao excluir:', e);
   }
@@ -940,11 +956,12 @@ function gerarEmailLattes() {
   btn.textContent = '⏳ Gerando...';
   btn.disabled = true;
 
-  fetch(`${SHEETS_URL_BL}?action=biolead&sub=gerarEmail&params=${encodeURIComponent(JSON.stringify({nome, inst, linha, resumo, numEmail}))}`)
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=gerarEmail&params=${encodeURIComponent(JSON.stringify({nome, inst, linha, resumo, numEmail}))}&token=${tokenAuthBL()}`)
     .then(r => r.json())
     .then(data => {
       btn.textContent = textoOriginal;
       btn.disabled = false;
+      if (data.naoAutorizado) { _blSessaoExpirada(); return; }
       if (data.ok && data.email) {
         document.getElementById('email-gerado-texto').value = data.email;
         document.getElementById('email-gerado-wrap').style.display = '';
@@ -980,11 +997,12 @@ function abrirEmailGerado() {
   btn.textContent = '⏳ Criando rascunho...';
   btn.disabled = true;
 
-  fetch(`${SHEETS_URL_BL}?action=biolead&sub=criarRascunho&params=${encodeURIComponent(JSON.stringify({destinatario: emailDest, assunto, corpo, anexarApresentacao: numEmail === 3, numEmail}))}`)
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=criarRascunho&params=${encodeURIComponent(JSON.stringify({destinatario: emailDest, assunto, corpo, anexarApresentacao: numEmail === 3, numEmail}))}&token=${tokenAuthBL()}`)
     .then(r => r.json())
     .then(data => {
       btn.textContent = textoOriginal;
       btn.disabled = false;
+      if (data.naoAutorizado) { _blSessaoExpirada(); return; }
       if (data.ok) {
         toast('✅ Rascunho criado na sua caixa de rascunhos do Gmail!');
       } else {
@@ -1084,9 +1102,10 @@ function abrirModalEmail(id) {
   }
 
   document.getElementById('ed-resumo-lattes').value = '⏳ carregando...';
-  fetch(`${SHEETS_URL_BL}?action=biolead&sub=buscarResumoLattes&params=${encodeURIComponent(JSON.stringify({id}))}`)
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=buscarResumoLattes&params=${encodeURIComponent(JSON.stringify({id}))}&token=${tokenAuthBL()}`)
     .then(r => r.json())
     .then(data => {
+      if (data && data.naoAutorizado) { _blSessaoExpirada(); return; }
       document.getElementById('ed-resumo-lattes').value = (data.ok && data.resumo) ? data.resumo : '';
     })
     .catch(() => {
@@ -1100,7 +1119,9 @@ function fecharModalEmail() {
   const id = document.getElementById('email-modal-id').value;
   const resumo = document.getElementById('ed-resumo-lattes').value.trim();
   if (id) {
-    fetch(`${SHEETS_URL_BL}?action=biolead&sub=salvarResumoLattes&params=${encodeURIComponent(JSON.stringify({id, resumo}))}`)
+    fetch(`${SHEETS_URL_BL}?action=biolead&sub=salvarResumoLattes&params=${encodeURIComponent(JSON.stringify({id, resumo}))}&token=${tokenAuthBL()}`)
+      .then(r => r.json())
+      .then(data => { if (data && data.naoAutorizado) _blSessaoExpirada(); })
       .catch(() => toast('⚠ Não foi possível salvar o resumo.'));
   }
   document.getElementById('modal-email-overlay').style.display = 'none';
