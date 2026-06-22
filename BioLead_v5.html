@@ -1319,6 +1319,7 @@ function renderInbound() {
       <td style="white-space:nowrap">
         <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer" onclick="abrirModal('${p.id}')" title="Editar"><i class="ti ti-pencil" style="font-size:14px"></i></button>
         <button class="btn" onclick="abrirModalEmail('${p.id}')" title="Gerar e-mail" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #6055B0;color:#6055B0;cursor:pointer"><i class="ti ti-mail" style="font-size:14px"></i></button>
+        <button class="btn" onclick="gerarProposta('${p.id}')" title="Gerar proposta" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #2EC4A5;color:#2EC4A5;cursor:pointer"><i class="ti ti-file-dollar" style="font-size:14px"></i></button>
       </td>
     </tr>`;
   }).join('');
