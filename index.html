@@ -7,6 +7,14 @@
     window.location.href = '/Propostas/home.html';
   }
 })();
+function tokenAuthBL() {
+  return encodeURIComponent(sessionStorage.getItem('bl_auth_token') || '');
+}
+function _blSessaoExpirada() {
+  sessionStorage.removeItem('bl_auth_token');
+  sessionStorage.removeItem('bl_auth_email');
+  window.location.href = '/Propostas/home.html';
+}
 </script>
 
 <meta charset="UTF-8">
@@ -23946,8 +23954,9 @@ function setStatus(msg, color) {
 async function carregarSeq(anoMes) {
   setStatus('⏳ Buscando…');
   try {
-    const resp = await fetch(`${SHEETS_URL}?action=get&anoMes=${anoMes}`);
+    const resp = await fetch(`${SHEETS_URL}?action=get&anoMes=${anoMes}&token=${tokenAuthBL()}`);
     const data = await resp.json();
+    if (data && data.naoAutorizado) { _blSessaoExpirada(); return; }
     applySeq(data.seq || 101);
     setStatus('✓ Sincronizado', '#1A8A74');
   } catch(e) {
@@ -23958,7 +23967,9 @@ async function carregarSeq(anoMes) {
 
 async function reservarSeq(anoMes, proximoSeq) {
   try {
-    await fetch(`${SHEETS_URL}?action=set&anoMes=${anoMes}&seq=${proximoSeq}`);
+    const resp = await fetch(`${SHEETS_URL}?action=set&anoMes=${anoMes}&seq=${proximoSeq}&token=${tokenAuthBL()}`);
+    const data = await resp.json();
+    if (data && data.naoAutorizado) { _blSessaoExpirada(); return; }
     setStatus('✓ Sincronizado', '#1A8A74');
   } catch(e) {
     setStatus('⚠ Falha ao salvar', '#C0392B');
@@ -23977,6 +23988,7 @@ async function salvarNoDrive(d, docxBuffer) {
     };
     const payload = {
       action:     'salvar',
+      token:      sessionStorage.getItem('bl_auth_token') || '',
       num:        d.num,
       cliente:    d.cliente || 'Cliente',
       sigla:      d.sigla || '',
@@ -24675,8 +24687,9 @@ async function carregarRelatorio() {
   document.getElementById('rel-erro').style.display = 'none';
 
   try {
-    const resp = await fetch(`${SHEETS_URL}?action=relatorio`);
+    const resp = await fetch(`${SHEETS_URL}?action=relatorio&token=${tokenAuthBL()}`);
     const data = await resp.json();
+    if (data && data.naoAutorizado) { _blSessaoExpirada(); return; }
     if (!data.ok) throw new Error(data.error || 'Erro');
 
     const d = data.dados;
