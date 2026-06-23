@@ -63,6 +63,17 @@ header{background:linear-gradient(135deg,#065CA9 0%,#1484C6 35%,#1894D2 55%,#2DA
 .export-menu button{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;color:var(--text2);cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:inherit}
 .export-menu button:hover{background:#E8F5FB}
 .export-menu-sep{height:.5px;background:var(--border);margin:2px 0}
+
+.msg-tooltip{position:relative;cursor:help}
+.msg-tooltip-box{
+  position:absolute;left:0;top:calc(100% + 8px);width:320px;max-width:80vw;
+  background:var(--surface);color:var(--text2);font-size:12px;font-weight:400;line-height:1.55;
+  text-align:left;white-space:pre-line;padding:10px 13px;border-radius:var(--r-sm);
+  border:.5px solid rgba(13,111,182,.2);box-shadow:0 8px 24px rgba(13,111,182,.18);
+  opacity:0;visibility:hidden;transform:translateY(-4px);pointer-events:none;
+  transition:opacity .15s ease,transform .15s ease;z-index:150;
+}
+.msg-tooltip:hover .msg-tooltip-box{opacity:1;visibility:visible;transform:translateY(0)}
 .btn{border:.5px solid rgba(13,111,182,.28);border-radius:var(--r-sm);padding:0 12px;height:28px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--text2);display:inline-flex;align-items:center;gap:5px;box-sizing:border-box;vertical-align:middle}
 .btn:hover{background:#E8F5FB}
 .btn-primary{background:var(--bm-blue);color:#fff;border-color:var(--bm-blue)}
@@ -481,7 +492,7 @@ textarea{resize:vertical;min-height:60px}
       <h4 id="ed-c1-titulo">1° Contato</h4>
       <div class="form-grid">
         <div><label id="ed-c1-data-label">Data</label><input id="ed-c1-data" placeholder="dd/mm/aaaa" oninput="mascaraData(this)" /></div>
-        <div><label id="ed-c1-nota-label">Nota</label><input id="ed-c1-nota" placeholder="Observações..." oninput="converterTravessao(this)" /></div>
+        <div><label id="ed-c1-nota-label">Nota</label><textarea id="ed-c1-nota" placeholder="Observações..." oninput="converterTravessao(this)" style="min-height:32px"></textarea></div>
       </div>
     </div>
     <div class="contato-bloco">
@@ -1053,6 +1064,7 @@ function atualizarRotulosPrimeiroContato(inbound) {
   document.getElementById('ed-c1-data-label').textContent = inbound ? 'Recebido em' : 'Data';
   document.getElementById('ed-c1-nota-label').textContent = inbound ? 'Mensagem' : 'Nota';
   document.getElementById('ed-c1-nota').placeholder = inbound ? 'O que o pesquisador escreveu...' : 'Observações...';
+  document.getElementById('ed-c1-nota').style.minHeight = inbound ? '90px' : '32px';
   document.getElementById('ed-c2-titulo').textContent = inbound ? '2ª interação' : '2° Contato';
   document.getElementById('ed-c3-titulo').textContent = inbound ? '3ª interação' : '3° Contato';
 
@@ -1325,7 +1337,7 @@ function renderInbound() {
       <td><div class="name-cell"><div class="av medio">${ini}</div><div class="nmt">${p.nome}</div></div></td>
       <td><span style="font-size:11px;color:var(--text2)">${canalIcone}</span></td>
       <td><span style="font-size:11px;color:var(--text3)">${p.c1_raw||'—'}</span></td>
-      <td style="max-width:280px"><span style="font-size:11px;color:var(--text2)" title="${(p.c1_nota||'').replace(/"/g,'&quot;')}">${mensagemCurta}</span></td>
+      <td style="max-width:280px"><span class="msg-tooltip" style="font-size:11px;color:var(--text2)">${mensagemCurta}<div class="msg-tooltip-box">${(p.c1_nota||'Sem mensagem registrada.').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></span></td>
       <td><span class="sp" style="${stStyle}">${emoji} ${statusLabel}</span></td>
       <td style="max-width:180px">
         <a href="mailto:${p.email}" style="font-size:11px;color:var(--bm-blue);text-decoration:none;display:block">${p.email||'—'}</a>
