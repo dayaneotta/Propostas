@@ -374,7 +374,7 @@ textarea{resize:vertical;min-height:60px}
 
       <!-- Ações -->
       <div style="display:flex;align-items:center;gap:14px;margin-top:1rem;padding-top:0.75rem;border-top:.5px solid var(--border)">
-        <button class="btn btn-primary" style="height:36px;padding:0 20px;font-size:13px;font-weight:600" onclick="adicionar()">➕ Adicionar pesquisador</button>
+        <button id="btn-adicionar" class="btn btn-primary" style="height:36px;padding:0 20px;font-size:13px;font-weight:600" onclick="adicionar()">➕ Adicionar pesquisador</button>
         <button style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px;padding:0" onclick="limparForm()">Limpar campos</button>
         <span style="margin-left:auto;font-size:11px;color:var(--text3)"><span style="color:#ef4444">*</span> Campos obrigatórios</span>
       </div>
@@ -708,10 +708,16 @@ async function salvar(contato) {
   try {
     const resp = await fetch(`${SHEETS_URL_BL}?action=biolead&sub=salvar&params=${encodeURIComponent(JSON.stringify({contato}))}&token=${tokenAuthBL()}`);
     const data = await resp.json();
-    if (data && data.naoAutorizado) { _blSessaoExpirada(); return; }
+    if (data && data.naoAutorizado) { _blSessaoExpirada(); return false; }
+    if (!data || !data.ok) {
+      toast('⚠ Erro ao salvar: ' + (data && data.error ? data.error : 'tente novamente'));
+      return false;
+    }
+    return true;
   } catch(e) {
     console.error('Erro ao salvar:', e);
     toast('⚠ Erro ao salvar. Verifique a conexão.');
+    return false;
   }
 }
 
@@ -795,7 +801,7 @@ function limparForm() {
   atualizarCampoMensagemInicial();
 }
 
-function adicionar() {
+async function adicionar() {
   const nome = document.getElementById('f-nome').value.trim();
   const email = document.getElementById('f-email').value.trim();
   if (!nome||!email) { alert('Nome e e-mail são obrigatórios'); return; }
@@ -818,9 +824,22 @@ function adicionar() {
     desqualificado: false, desq_motivo:'', dataCadastro: new Date().toISOString()
   };
   if (!p.score) p.score = calcularScore(p);
-  dados.push(p); salvar(p); limparForm(); atualizarCards(); renderBadge();
-  toast('Pesquisador adicionado — score: '+p.score);
-  showTab(ehInbound ? 'inbound' : 'lista');
+
+  const btn = document.getElementById('btn-adicionar');
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Salvando...';
+  try {
+    const ok = await salvar(p);
+    if (!ok) return; // erro já avisado dentro de salvar(); formulário fica como estava, pra tentar de novo
+    dados.push(p);
+    limparForm(); atualizarCards(); renderBadge();
+    toast('Pesquisador adicionado — score: '+p.score);
+    showTab(ehInbound ? 'inbound' : 'lista');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+  }
 }
 
 function Utilities_formatarDataHoje() {
