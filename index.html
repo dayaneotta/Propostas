@@ -23548,6 +23548,7 @@ var __async = (__this, __arguments, generator) => {
         <label>Tipo de serviço</label>
         <select id="tpl-tipo">
           <option value="transcritoma">Sequenciamento de Transcritoma (RNA-Seq)</option>
+          <option value="metatranscritoma">Sequenciamento de Metatranscritoma</option>
           <option value="metagenoma16S">Sequenciamento de Metagenoma 16S rRNA</option>
           <option value="metagenoma_its">Sequenciamento de Metagenoma ITS</option>
           <option value="isoseq">Sequenciamento de RNA de Sequência Longa (ISO-seq)</option>
@@ -23627,7 +23628,47 @@ var __async = (__this, __arguments, generator) => {
         </div>
       </div>
 
-      <!-- Metagenoma 16S params -->
+      <!-- Metatranscritoma params -->
+      <div id="params-metatranscritoma" style="display:none">
+        <div class="row two">
+          <div class="field">
+            <label>Modo de sequenciamento</label>
+            <select id="tpl-paired-mt">
+              <option value="paired">Paired-end</option>
+              <option value="single">Single-end</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tamanho do read</label>
+            <select id="tpl-bp-mt">
+              <option value="2x150">2×150 pb</option>
+              <option value="2x100">2×100 pb</option>
+              <option value="2x75">2×75 pb</option>
+            </select>
+          </div>
+        </div>
+        <div class="row two">
+          <div class="field">
+            <label>Cobertura mínima por amostra</label>
+            <select id="tpl-reads-mt">
+              <option value="100">100 milhões de reads</option>
+              <option value="50">50 milhões de reads</option>
+              <option value="150">150 milhões de reads</option>
+              <option value="200">200 milhões de reads</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo de comunidade</label>
+            <select id="tpl-org-mt">
+              <option value="microbiota_intestinal">Microbiota Intestinal</option>
+              <option value="microbiota_solo">Microbiota de Solo</option>
+              <option value="microbiota_agua">Microbiota de Ambiente Aquático</option>
+              <option value="microbiota_geral">Comunidade Microbiana (geral)</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+        </div>
+      </div>
       <div id="params-metagenoma16S" style="display:none">
         <div class="row two">
           <div class="field">
@@ -24594,6 +24635,18 @@ const templates = {
     const extRna = p.extracao ? '- Extração de RNA total das amostras;\n' : '';
     return `Sequenciamento de Transcritoma (RNA-Seq)${orgMap[p.org] ? ' — '+orgMap[p.org] : ''}:\n${extRna}- Quantificação e análise de qualidade do RNA total;\n- ${bibliotecaMap[p.biblioteca]};\n- Quantificação e análise de qualidade das bibliotecas;\n- Sequenciamento ${modoStr} com ${p.reads} milhões de reads mínimas de cobertura por amostra.`;
   },
+  metatranscritoma: (p) => {
+    const orgMapMt = {
+      microbiota_intestinal: 'Microbiota Intestinal',
+      microbiota_solo: 'Microbiota de Solo',
+      microbiota_agua: 'Microbiota de Ambiente Aquático',
+      microbiota_geral: 'Comunidade Microbiana (geral)',
+    };
+    orgMapMt.outro = getOrgOutro();
+    const modoStr = p.paired === 'paired' ? `Paired-end ${p.bp} pb` : `Single-end ${p.bp.replace(/^\d+x/,'')} pb`;
+    const extMt = p.extracao ? '- Extração de RNA total das amostras;\n' : '';
+    return `Sequenciamento de Metatranscritoma${orgMapMt[p.org] ? ' — '+orgMapMt[p.org] : ''}:\n${extMt}- Quantificação e análise de qualidade do RNA total;\n- Preparação de bibliotecas de sequenciamento de RNA total;\n- Quantificação e análise de qualidade das bibliotecas;\n- Sequenciamento ${modoStr} com ${p.reads} milhões de reads mínimas de cobertura por amostra.`;
+  },
   metagenoma16S: (p) => {
     const orgMap16s = {
       bacterias: 'Bactérias e Arqueias (geral)', bacterias_solo: 'Bactérias de Solo',
@@ -24676,6 +24729,13 @@ function getTemplateParams() {
     org:        document.getElementById('tpl-org-rna').value,
     extracao: document.getElementById('tpl-extracao').checked,
   };
+  if(tipo === 'metatranscritoma') return {
+    paired:   document.getElementById('tpl-paired-mt').value,
+    bp:       document.getElementById('tpl-bp-mt').value,
+    reads:    document.getElementById('tpl-reads-mt').value,
+    org:      document.getElementById('tpl-org-mt').value,
+    extracao: document.getElementById('tpl-extracao').checked,
+  };
   if(tipo === 'metagenoma16S') return {
     paired: document.getElementById('tpl-paired-meta').value,
     bp:     document.getElementById('tpl-bp-meta').value,
@@ -24729,6 +24789,7 @@ function updatePreview() {
 document.getElementById('tpl-tipo').addEventListener('change', function() {
   const tipo = this.value;
   document.getElementById('params-transcritoma').style.display = tipo === 'transcritoma' ? '' : 'none';
+  document.getElementById('params-metatranscritoma').style.display = tipo === 'metatranscritoma' ? '' : 'none';
   document.getElementById('params-metagenoma16S').style.display = tipo === 'metagenoma16S' ? '' : 'none';
   document.getElementById('params-metagenoma_its').style.display = tipo === 'metagenoma_its' ? '' : 'none';
   document.getElementById('params-isoseq').style.display = tipo === 'isoseq' ? '' : 'none';
@@ -24736,7 +24797,7 @@ document.getElementById('tpl-tipo').addEventListener('change', function() {
   document.getElementById('params-genoma_completo').style.display = tipo === 'genoma_completo' ? '' : 'none';
   document.getElementById('params-bioinformatica').style.display = tipo === 'bioinformatica' ? '' : 'none';
   document.getElementById('tpl-qty-row').style.display = '';
-  const unidades = {transcritoma:'amostras', metagenoma16S:'amostras'};
+  const unidades = {transcritoma:'amostras', metatranscritoma:'amostras', metagenoma16S:'amostras'};
   if(unidades[tipo]) document.getElementById('tpl-unit').value = unidades[tipo];
   updateExtracaoLabel();
   checkOutroVisible();
@@ -24744,6 +24805,7 @@ document.getElementById('tpl-tipo').addEventListener('change', function() {
 });
 
 ['tpl-biblioteca','tpl-paired','tpl-bp','tpl-reads',
+ 'tpl-paired-mt','tpl-bp-mt','tpl-reads-mt','tpl-org-mt',
  'tpl-paired-meta','tpl-bp-meta','tpl-reads-meta','tpl-alvos',
  'tpl-paired-its','tpl-bp-its','tpl-reads-its',
  'tpl-paired-gc','tpl-bp-gc','tpl-cob-gc','tpl-org-gc','tpl-org-rna',
@@ -24764,7 +24826,7 @@ function updateExtracaoLabel() {
   const isBio = tipo === 'bioinformatica';
   const wrap = document.getElementById('extracao-wrap');
   if(wrap) wrap.style.display = isBio ? 'none' : '';
-  const isRna = tipo === 'transcritoma' || tipo === 'isoseq';
+  const isRna = tipo === 'transcritoma' || tipo === 'isoseq' || tipo === 'metatranscritoma';
   document.getElementById('tgl-sub-text').textContent = isRna
     ? 'RNA total — inclui etapa de extração de RNA nas amostras'
     : 'DNA total — inclui etapa de extração de DNA nas amostras';
@@ -24774,6 +24836,7 @@ function checkOutroVisible() {
   const tipo = document.getElementById('tpl-tipo').value;
   const activeOrgId = {
     transcritoma:    'tpl-org-rna',
+    metatranscritoma: 'tpl-org-mt',
     metagenoma16S:   'tpl-org-16s',
     metagenoma_its:  'tpl-org-its',
     isoseq:          'tpl-org-iso',
@@ -24791,7 +24854,7 @@ function checkOutroVisible() {
   }
 }
 
-['tpl-org-rna','tpl-org-16s','tpl-org-its','tpl-org-iso','tpl-org-sh','tpl-org-gc'].forEach(id => {
+['tpl-org-rna','tpl-org-mt','tpl-org-16s','tpl-org-its','tpl-org-iso','tpl-org-sh','tpl-org-gc'].forEach(id => {
   const el = document.getElementById(id);
   if(!el) return;
   el.addEventListener('change', () => { checkOutroVisible(); updatePreview(); });
