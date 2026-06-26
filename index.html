@@ -23235,19 +23235,20 @@ var __async = (__this, __arguments, generator) => {
   .btn-remove:hover { color: #E24B4A; }
 
   /* Actions */
-  .actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+  .actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: nowrap; }
   .btn-primary {
-    flex: 1; min-width: 180px; background: var(--grad); color: #fff; border: none;
-    border-radius: var(--radius-sm); padding: 13px 20px; font-size: 14px; font-weight: 600;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    flex: 1; min-width: 140px; background: var(--grad); color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: 11px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
     box-shadow: 0 3px 10px rgba(26,115,200,.3); transition: opacity .15s, box-shadow .15s;
+    white-space: nowrap;
   }
   .btn-primary:hover { opacity: .9; box-shadow: 0 5px 16px rgba(26,115,200,.4); }
   .btn-primary:disabled { opacity: .6; cursor: wait; }
   .btn-secondary {
     background: #fff; border: 1px solid var(--gray-border); border-radius: var(--radius-sm);
-    padding: 13px 20px; font-size: 14px; cursor: pointer;
-    display: flex; align-items: center; gap: 8px; color: var(--text); transition: background .15s;
+    padding: 11px 14px; font-size: 13px; cursor: pointer; white-space: nowrap;
+    display: flex; align-items: center; gap: 6px; color: var(--text); transition: background .15s;
   }
   .btn-secondary:hover { background: var(--gray-bg); }
 
@@ -23485,12 +23486,13 @@ var __async = (__this, __arguments, generator) => {
     </div>
   </div>
 
-  <div class="actions">
+  <div class="actions" style="align-items:center">
     <button class="btn-secondary" id="btn-copy">📋 Copiar número</button>
     <button class="btn-secondary" id="btn-preview-proposta">👁 Pré-visualizar proposta</button>
     <button class="btn-primary" id="btn-word">⬇ Gerar Proposta</button>
-    <button class="btn-secondary" id="btn-carregar-proposta">✏️ Editar proposta existente</button>
     <button class="btn-secondary" id="btn-relatorios" style="background:var(--blue);color:#fff;border-color:var(--blue)">📊 Relatórios</button>
+    <span style="width:1px;height:24px;background:#E0E5EA;margin:0 4px"></span>
+    <button id="btn-carregar-proposta" style="background:transparent;border:none;color:#7A8694;font-size:13px;padding:8px 6px;cursor:pointer;text-decoration:underline;text-decoration-color:#C5CDD5;display:flex;align-items:center;gap:5px" onmouseover="this.style.color='#3D4A56'" onmouseout="this.style.color='#7A8694'">✏️ Editar proposta existente</button>
 
   </div>
 
