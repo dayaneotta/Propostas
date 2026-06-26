@@ -23489,8 +23489,24 @@ var __async = (__this, __arguments, generator) => {
     <button class="btn-secondary" id="btn-copy">📋 Copiar número</button>
     <button class="btn-secondary" id="btn-preview-proposta">👁 Pré-visualizar proposta</button>
     <button class="btn-primary" id="btn-word">⬇ Gerar Proposta</button>
+    <button class="btn-secondary" id="btn-carregar-proposta">✏️ Editar proposta existente</button>
     <button class="btn-secondary" id="btn-relatorios" style="background:var(--blue);color:#fff;border-color:var(--blue)">📊 Relatórios</button>
 
+  </div>
+
+  <!-- Modal: carregar proposta existente para edição -->
+  <div id="modal-carregar-proposta" style="display:none;position:fixed;inset:0;background:rgba(20,30,40,0.45);z-index:9000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:12px;padding:24px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.25)">
+      <div style="font-size:15px;font-weight:600;color:#1A2A3A;margin-bottom:4px">Editar proposta existente</div>
+      <div style="font-size:12px;color:#888;margin-bottom:14px">Informe o número completo da proposta (ex: 2026-06-101-FAPED)</div>
+      <input type="text" id="input-num-proposta-editar" placeholder="Número da proposta"
+        style="width:100%;padding:9px 12px;border:1px solid #D5DCE3;border-radius:8px;font-size:13px;margin-bottom:14px;box-sizing:border-box">
+      <div id="msg-carregar-proposta" style="font-size:12px;color:#C0392B;margin-bottom:10px;display:none"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn-secondary" id="btn-cancelar-carregar" style="padding:8px 14px">Cancelar</button>
+        <button class="btn-primary" id="btn-confirmar-carregar" style="padding:8px 14px">Carregar</button>
+      </div>
+    </div>
   </div>
 
   <div class="app-footer">Biomelting Assessoria e Consultoria Ltda &nbsp;·&nbsp; CNPJ: 43.357.646/0001-33 &nbsp;·&nbsp; Assessoria Científica Estratégica</div>
@@ -23921,6 +23937,7 @@ var __async = (__this, __arguments, generator) => {
 let seqNum = 101;
 function pad3(n){ return String(n).padStart(3,'0'); }
 function buildNum(){
+  if (window.__modoEdicaoNum) return window.__modoEdicaoNum;
   const d = document.getElementById('prop-date').value;
   if(!d) return '——————';
   const [y,m] = d.split('-');
@@ -23980,7 +23997,8 @@ async function reservarSeq(anoMes, proximoSeq) {
 
 async function salvarNoDrive(d, docxBuffer) {
   try {
-    showToast('💾 Salvando no Drive e gerando PDF…');
+    const modoEdicao = !!window.__modoEdicaoNum;
+    showToast(modoEdicao ? '💾 Atualizando arquivos no Drive…' : '💾 Salvando no Drive e gerando PDF…');
     const toBase64 = async (buf) => {
       const ab = buf instanceof Blob ? await buf.arrayBuffer() : buf;
       let bin = '';
@@ -23989,7 +24007,7 @@ async function salvarNoDrive(d, docxBuffer) {
       return btoa(bin);
     };
     const payload = {
-      action:     'salvar',
+      action:     modoEdicao ? 'editar' : 'salvar',
       token:      sessionStorage.getItem('bl_auth_token') || '',
       num:        d.num,
       cliente:    d.cliente || 'Cliente',
@@ -24002,9 +24020,12 @@ async function salvarNoDrive(d, docxBuffer) {
       fonteLead:  d.fonteLead || 'Conversa',
       descricao:  d.descricao || '',
       docx:       docxBuffer ? await toBase64(docxBuffer) : null,
+      // Envia o formulário inteiro para ser salvo como JSON na planilha,
+      // permitindo recarregar tudo numa futura edição.
+      formularioCompleto: d,
     };
     // Enviar para o Apps Script
-    showToast('💾 Salvando no Drive e criando negócio no Zoho…');
+    showToast(modoEdicao ? '💾 Atualizando arquivos e negócio no Zoho…' : '💾 Salvando no Drive e criando negócio no Zoho…');
     const resp = await fetch(SHEETS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
@@ -24019,11 +24040,20 @@ async function salvarNoDrive(d, docxBuffer) {
       return;
     }
 
-    showToast('✓ Arquivos salvos no Drive!');
+    showToast(modoEdicao ? '✓ Arquivos atualizados no Drive!' : '✓ Arquivos salvos no Drive!');
     if (data.zohoErro) {
       setTimeout(() => showToast('⚠ Salvo no Drive, mas houve um problema no Zoho: ' + data.zohoErro), 2000);
+    } else if (data.aviso) {
+      setTimeout(() => showToast('⚠ ' + data.aviso), 2000);
     } else {
-      setTimeout(() => showToast('✓ Negócio criado no Zoho CRM!'), 2000);
+      setTimeout(() => showToast(modoEdicao ? '✓ Negócio atualizado no Zoho CRM!' : '✓ Negócio criado no Zoho CRM!'), 2000);
+    }
+
+    // Edição concluída — sai do modo edição (próxima proposta gerada será nova)
+    if (modoEdicao) {
+      window.__modoEdicaoNum = null;
+      const badge = document.getElementById('badge-modo-edicao');
+      if (badge) badge.remove();
     }
   } catch(e) {
     showToast('⚠ Não foi possível salvar no Drive.');
@@ -24254,7 +24284,7 @@ function collectData(){
       total: 'R$ ' + (row.querySelector('.row-total-input').value || '0,00')
     });
   });
-  return {
+  const formData = {
     num: buildNum(),
     date: document.getElementById('prop-date').value,
     cliente: document.getElementById('cli-nome').value||'',
@@ -24282,6 +24312,116 @@ function collectData(){
     grandTotal: document.getElementById('grand-total').textContent,
     items
   };
+  return formData;
+}
+
+// ── Edição de proposta existente ───────────────────────────────────────────
+// Abre/fecha o modal
+document.getElementById('btn-carregar-proposta').addEventListener('click', () => {
+  document.getElementById('input-num-proposta-editar').value = '';
+  document.getElementById('msg-carregar-proposta').style.display = 'none';
+  document.getElementById('modal-carregar-proposta').style.display = 'flex';
+});
+document.getElementById('btn-cancelar-carregar').addEventListener('click', () => {
+  document.getElementById('modal-carregar-proposta').style.display = 'none';
+});
+
+// Limpa todos os itens da tabela
+function limparItens() {
+  document.getElementById('items-body').innerHTML = '';
+  itemCount = 0;
+}
+
+// Preenche o formulário inteiro a partir do JSON salvo (mesmo formato de collectData)
+function preencherFormulario(d) {
+  // Trava o número da proposta no modo edição — não recalcula via seqNum
+  window.__modoEdicaoNum = d.num || '';
+
+  if (d.date) document.getElementById('prop-date').value = d.date;
+  document.getElementById('cli-nome').value = d.cliente || '';
+  document.getElementById('cli-cnpj').value = d.cnpj || '';
+  document.getElementById('cli-sigla').value = d.sigla || '';
+  document.getElementById('cli-tel').value = d.tel || '';
+  document.getElementById('cli-end').value = d.end || '';
+  document.getElementById('cli-contato').value = d.contato || '';
+  document.getElementById('cli-email').value = d.email || '';
+  document.getElementById('cli-processo').value = d.processo || '';
+  if (document.getElementById('forma-pg')) document.getElementById('forma-pg').value = d.formaPg || '';
+  if (document.getElementById('prazo-pg')) document.getElementById('prazo-pg').value = d.prazoPg || '';
+  if (document.getElementById('prazo-entrega')) document.getElementById('prazo-entrega').value = d.prazoEnt || '';
+  if (document.getElementById('validade')) document.getElementById('validade').value = d.validade || '30';
+  if (document.getElementById('obs')) document.getElementById('obs').value = d.obs || '';
+  if (document.getElementById('fonte-lead')) document.getElementById('fonte-lead').value = d.fonteLead || 'Conversa';
+  if (document.getElementById('bioinformatica')) document.getElementById('bioinformatica').value = d.bioinformatica || '';
+
+  limparItens();
+  (d.items || []).forEach(it => {
+    addItem(it.desc || '', it.qty || '1', it.unit || '', it.unitVal || '');
+    // Se o total veio salvo mas o valor unitário não bate, força o total na última linha
+    const rows = document.querySelectorAll('#items-body .item-row');
+    const lastRow = rows[rows.length - 1];
+    if (lastRow && it.total) {
+      const totalInput = lastRow.querySelector('.row-total-input');
+      totalInput.value = (it.total || 'R$ 0,00').replace('R$ ', '').trim();
+    }
+  });
+  calcTotals();
+  updateNum();
+}
+
+async function buscarPropostaParaEditar(num) {
+  const resp = await fetch(`${SHEETS_URL}?action=buscarProposta&num=${encodeURIComponent(num)}&token=${tokenAuthBL()}`);
+  const data = await resp.json();
+  if (data && data.naoAutorizado) { _blSessaoExpirada(); return null; }
+  return data;
+}
+
+document.getElementById('btn-confirmar-carregar').addEventListener('click', async () => {
+  const num = document.getElementById('input-num-proposta-editar').value.trim();
+  const msgEl = document.getElementById('msg-carregar-proposta');
+  msgEl.style.display = 'none';
+  if (!num) {
+    msgEl.textContent = 'Informe o número da proposta.';
+    msgEl.style.display = 'block';
+    return;
+  }
+  const btn = document.getElementById('btn-confirmar-carregar');
+  btn.disabled = true;
+  btn.textContent = 'Buscando…';
+  try {
+    const data = await buscarPropostaParaEditar(num);
+    if (!data || data.error) {
+      msgEl.textContent = (data && data.error) ? data.error : 'Não foi possível carregar a proposta.';
+      msgEl.style.display = 'block';
+      return;
+    }
+    preencherFormulario(data.formulario);
+    document.getElementById('modal-carregar-proposta').style.display = 'none';
+    showToast('✏️ Proposta #' + num + ' carregada para edição.');
+    ativarModoEdicaoVisual(num);
+  } catch (e) {
+    msgEl.textContent = 'Erro de conexão. Tente novamente.';
+    msgEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Carregar';
+  }
+});
+
+// Indicador visual de que está em modo edição + botão para sair do modo
+function ativarModoEdicaoVisual(num) {
+  let badge = document.getElementById('badge-modo-edicao');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'badge-modo-edicao';
+    badge.style.cssText = 'position:sticky;top:0;z-index:500;background:#FFF3CD;color:#7A4800;padding:8px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0DCA0';
+    document.body.insertBefore(badge, document.body.firstChild);
+  }
+  badge.innerHTML = `✏️ Editando a proposta #${num} — o botão "Gerar Proposta" vai <u>atualizar</u> os arquivos existentes no Drive e o negócio no Zoho.
+    <button id="btn-sair-modo-edicao" style="margin-left:auto;background:transparent;border:1px solid #7A4800;color:#7A4800;border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer">Cancelar edição</button>`;
+  document.getElementById('btn-sair-modo-edicao').addEventListener('click', () => {
+    window.location.reload();
+  });
 }
 
 // ── Download DOCX ──
@@ -24412,11 +24552,14 @@ document.getElementById('btn-word').addEventListener('click', async ()=>{
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    // Reservar este número e avançar para o próximo
-    const anoMes = getAnoMes(document.getElementById('prop-date').value);
-    applySeq(seqNum + 1);
-    await reservarSeq(anoMes, seqNum);
-    showToast('Proposta gerada com sucesso!');
+    // Reservar este número e avançar para o próximo — exceto em modo edição,
+    // onde o número já existe e não deve consumir um novo sequencial.
+    if (!window.__modoEdicaoNum) {
+      const anoMes = getAnoMes(document.getElementById('prop-date').value);
+      applySeq(seqNum + 1);
+      await reservarSeq(anoMes, seqNum);
+    }
+    showToast(window.__modoEdicaoNum ? 'Proposta atualizada com sucesso!' : 'Proposta gerada com sucesso!');
     // Salvar no Drive
     await salvarNoDrive(d, buffer);
   } catch(e) {
