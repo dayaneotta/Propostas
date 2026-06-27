@@ -23966,15 +23966,13 @@ var __async = (__this, __arguments, generator) => {
       <div id="rel-tab-geral" class="rel-tab-content">
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px" id="rel-metricas"></div>
         <div id="rel-comparacao" style="margin-bottom:12px"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-          <div>
-            <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Últimas propostas</div>
-            <div id="rel-ultimas-propostas"></div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Próximos vencimentos</div>
-            <div id="rel-proximos-vencimentos"></div>
-          </div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Últimas propostas</div>
+          <div id="rel-ultimas-propostas"></div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Próximos vencimentos</div>
+          <div id="rel-proximos-vencimentos"></div>
         </div>
       </div>
 
@@ -25106,7 +25104,7 @@ async function carregarRelatorio() {
       return (b.dataISO || '').localeCompare(a.dataISO || '');
     });
 
-    const ultimasHtml = propostasOrdenadas.slice(0, 5).map(p => {
+    const ultimasHtml = propostasOrdenadas.slice(0, 3).map(p => {
       const valorFmt = 'R$ ' + (p.valor || 0).toLocaleString('pt-BR', {maximumFractionDigits:0});
       return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #E5E8EC">
         <span style="font-size:12px;font-family:'Courier New',monospace;color:#aaa;flex-shrink:0">#${p.num}</span>
@@ -25130,7 +25128,7 @@ async function carregarRelatorio() {
       })
       .filter(p => p.diasRestantes >= 0)
       .sort((a, b) => a.diasRestantes - b.diasRestantes)
-      .slice(0, 5);
+      .slice(0, 3);
 
     const vencimentosHtml = vencimentos.map(p => {
       let bg = '#F8F9FB', cor = '#888';
