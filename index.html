@@ -23342,13 +23342,16 @@ var __async = (__this, __arguments, generator) => {
     </button>
   </div>
 
-  <button id="btn-relatorios" style="width:100%;background:#EAF8F0;border:none;border-radius:0 0 var(--radius) var(--radius);padding:10px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;margin-bottom:20px;transition:background .15s" onmouseover="this.style.background='#DCF3E8'" onmouseout="this.style.background='#EAF8F0'">
-    <i class="ti ti-chart-bar" style="font-size:18px;color:#1D9E75;flex-shrink:0" aria-hidden="true"></i>
+  <button id="btn-relatorios" style="width:100%;background:#F8F9FB;border:none;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left;margin-bottom:20px;transition:background .15s" onmouseover="this.style.background='#EEF0F3'" onmouseout="this.style.background='#F8F9FB'">
+    <svg id="rel-mini-trend" width="50" height="28" viewBox="0 0 50 28" style="flex-shrink:0">
+      <polyline points="2,20 12,16 22,18 32,8 42,4" fill="none" stroke="#38BA9B" stroke-width="2"/>
+      <circle cx="42" cy="4" r="2.5" fill="#38BA9B"/>
+    </svg>
     <div style="flex:1">
-      <div style="font-size:12px;font-weight:600;color:#1D9E75">Ver relatório de desempenho</div>
-      <div id="rel-resumo-preview" style="font-size:10px;color:#5BA88E">Carregando resumo…</div>
+      <div style="font-size:13px;font-weight:600;color:#0D4E8A">Relatório de desempenho</div>
+      <div id="rel-resumo-preview" style="font-size:10px;color:#888">Carregando resumo…</div>
     </div>
-    <i class="ti ti-chevron-right" style="font-size:16px;color:#1D9E75;flex-shrink:0" aria-hidden="true"></i>
+    <i class="ti ti-chevron-right" style="font-size:16px;color:#0D4E8A;flex-shrink:0" aria-hidden="true"></i>
   </button>
 
   <!-- Data e numeração -->
@@ -24964,13 +24967,31 @@ async function carregarResumoFaixa() {
     }
     const d = data.dados;
     const taxa = d.totalStatus && d.totalStatus['Aprovada'] ? Math.round(d.totalStatus['Aprovada']/d.total*100) : 0;
-    const formatarReaisCompactoFaixa = (valor) => {
-      if (valor >= 1000000) return 'R$ ' + (valor/1000000).toLocaleString('pt-BR', {maximumFractionDigits:2}) + ' mi';
-      if (valor >= 1000) return 'R$ ' + (valor/1000).toLocaleString('pt-BR', {maximumFractionDigits:1}) + ' mil';
-      return 'R$ ' + valor.toLocaleString('pt-BR', {maximumFractionDigits:0});
-    };
     document.getElementById('rel-resumo-preview').textContent =
-      d.total + ' propostas · ' + formatarReaisCompactoFaixa(d.valorTotal || 0) + ' enviados · ' + taxa + '% aprovação';
+      d.total + ' propostas · ' + taxa + '% aprovação';
+
+    // Mini gráfico de tendência com os últimos meses (quantidade de propostas)
+    if (d.porMes) {
+      const mesesOrdenados = Object.keys(d.porMes).sort((a, b) => {
+        const [ma, ya] = a.split('/'); const [mb, yb] = b.split('/');
+        return (ya + ma).localeCompare(yb + mb);
+      }).slice(-5);
+      if (mesesOrdenados.length >= 2) {
+        const valores = mesesOrdenados.map(m => d.porMes[m].qtd);
+        const max = Math.max(...valores, 1);
+        const min = Math.min(...valores, 0);
+        const range = max - min || 1;
+        const pontos = valores.map((v, i) => {
+          const x = 2 + i * (40 / (valores.length - 1));
+          const y = 22 - ((v - min) / range) * 18;
+          return x + ',' + y;
+        });
+        const ultimoPonto = pontos[pontos.length - 1].split(',');
+        document.getElementById('rel-mini-trend').innerHTML =
+          '<polyline points="' + pontos.join(' ') + '" fill="none" stroke="#38BA9B" stroke-width="2"/>' +
+          '<circle cx="' + ultimoPonto[0] + '" cy="' + ultimoPonto[1] + '" r="2.5" fill="#38BA9B"/>';
+      }
+    }
   } catch (e) {
     document.getElementById('rel-resumo-preview').textContent = 'Toque para ver o relatório completo';
   }
