@@ -23342,6 +23342,15 @@ var __async = (__this, __arguments, generator) => {
     </button>
   </div>
 
+  <button id="btn-relatorios" style="width:100%;background:#EAF8F0;border:none;border-radius:0 0 var(--radius) var(--radius);padding:10px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;margin-bottom:20px;transition:background .15s" onmouseover="this.style.background='#DCF3E8'" onmouseout="this.style.background='#EAF8F0'">
+    <i class="ti ti-chart-bar" style="font-size:18px;color:#1D9E75;flex-shrink:0" aria-hidden="true"></i>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:600;color:#1D9E75">Ver relatório de desempenho</div>
+      <div id="rel-resumo-preview" style="font-size:10px;color:#5BA88E">Carregando resumo…</div>
+    </div>
+    <i class="ti ti-chevron-right" style="font-size:16px;color:#1D9E75;flex-shrink:0" aria-hidden="true"></i>
+  </button>
+
   <!-- Data e numeração -->
   <div class="card">
     <div class="section-title">📅 Data e numeração</div>
@@ -23498,7 +23507,6 @@ var __async = (__this, __arguments, generator) => {
   <div class="actions" style="align-items:center">
     <button class="btn-secondary" id="btn-preview-proposta">👁 Pré-visualizar proposta</button>
     <button class="btn-primary" id="btn-word">⬇ Gerar Proposta</button>
-    <button class="btn-secondary" id="btn-relatorios" style="background:var(--blue);color:#fff;border-color:var(--blue)">📊 Relatórios</button>
 
   </div>
 
@@ -24942,6 +24950,32 @@ document.getElementById('btn-relatorios').addEventListener('click', async () => 
   document.getElementById('relatorios-modal').classList.add('open');
   await carregarRelatorio();
 });
+
+// Carrega um resumo leve para a faixa clicável abaixo do cabeçalho,
+// sem precisar abrir o modal completo de relatórios.
+async function carregarResumoFaixa() {
+  try {
+    const resp = await fetch(`${SHEETS_URL}?action=relatorio&token=${tokenAuthBL()}`);
+    const data = await resp.json();
+    if (data && data.naoAutorizado) return;
+    if (!data || data.error || !data.dados) {
+      document.getElementById('rel-resumo-preview').textContent = 'Toque para ver o relatório completo';
+      return;
+    }
+    const d = data.dados;
+    const taxa = d.totalStatus && d.totalStatus['Aprovada'] ? Math.round(d.totalStatus['Aprovada']/d.total*100) : 0;
+    const formatarReaisCompactoFaixa = (valor) => {
+      if (valor >= 1000000) return 'R$ ' + (valor/1000000).toLocaleString('pt-BR', {maximumFractionDigits:2}) + ' mi';
+      if (valor >= 1000) return 'R$ ' + (valor/1000).toLocaleString('pt-BR', {maximumFractionDigits:1}) + ' mil';
+      return 'R$ ' + valor.toLocaleString('pt-BR', {maximumFractionDigits:0});
+    };
+    document.getElementById('rel-resumo-preview').textContent =
+      d.total + ' propostas · ' + formatarReaisCompactoFaixa(d.valorTotal || 0) + ' enviados · ' + taxa + '% aprovação';
+  } catch (e) {
+    document.getElementById('rel-resumo-preview').textContent = 'Toque para ver o relatório completo';
+  }
+}
+carregarResumoFaixa();
 
 async function carregarRelatorio() {
   document.getElementById('rel-loading').style.display = '';
