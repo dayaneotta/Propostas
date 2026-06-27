@@ -23944,7 +23944,7 @@ var __async = (__this, __arguments, generator) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <!-- Modal Relatórios -->
 <div class="modal-overlay" id="relatorios-modal">
-  <div class="modal" style="max-width:1100px;max-height:90vh;overflow-y:auto">
+  <div class="modal" style="max-width:900px;max-height:90vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <h3 style="margin:0;color:var(--blue-dark)">📊 Relatórios de Desempenho</h3>
       <button onclick="document.getElementById('relatorios-modal').classList.remove('open')"
@@ -23964,17 +23964,15 @@ var __async = (__this, __arguments, generator) => {
 
       <!-- ABA: Visão geral -->
       <div id="rel-tab-geral" class="rel-tab-content">
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px" id="rel-metricas"></div>
-        <div id="rel-comparacao" style="margin-bottom:16px"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
-          <div>
-            <div style="font-size:12px;color:#1A73C8;margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Últimas propostas</div>
-            <div id="rel-ultimas-propostas"></div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:#1A73C8;margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Próximos vencimentos</div>
-            <div id="rel-proximos-vencimentos"></div>
-          </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px" id="rel-metricas"></div>
+        <div id="rel-comparacao" style="margin-bottom:10px"></div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:12px;color:#1A73C8;margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Últimas propostas</div>
+          <div id="rel-ultimas-propostas"></div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#1A73C8;margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Próximos vencimentos</div>
+          <div id="rel-proximos-vencimentos"></div>
         </div>
       </div>
 
@@ -24964,7 +24962,7 @@ async function carregarRelatorio() {
       { label: 'Valor total aprovado', val: 'R$ ' + (d.valorAprovado || 0).toLocaleString('pt-BR', {minimumFractionDigits:2}), destaque: true },
       { label: 'Taxa de aprovação', val: d.totalStatus['Aprovada'] ? Math.round(d.totalStatus['Aprovada']/d.total*100)+'%' : '0%', destaque: true },
     ].map(m => `
-      <div style="background:${m.destaque ? '#EAF8F0' : '#F8F9FB'};border-radius:8px;padding:14px;text-align:center;border:1px solid ${m.destaque ? '#B8E8CC' : '#E5E8EC'}">
+      <div style="background:${m.destaque ? '#EAF8F0' : '#F8F9FB'};border-radius:8px;padding:10px;text-align:center;border:1px solid ${m.destaque ? '#B8E8CC' : '#E5E8EC'}">
         <div style="font-size:11px;color:${m.destaque ? '#1D9E75' : '#888'}">${m.label}</div>
         <div style="font-size:20px;font-weight:600;color:${m.destaque ? '#1D9E75' : '#0D4E8A'};margin-top:6px">${m.val}</div>
       </div>`).join('');
@@ -25140,7 +25138,7 @@ async function carregarRelatorio() {
       return String(b.num || '').localeCompare(String(a.num || ''));
     });
 
-    const ultimasHtml = propostasOrdenadas.slice(0, 4).map(p => {
+    const ultimasHtml = propostasOrdenadas.slice(0, 3).map(p => {
       const valorFmt = 'R$ ' + (p.valor || 0).toLocaleString('pt-BR', {maximumFractionDigits:0});
       return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #E5E8EC">
         <span style="font-size:12px;font-family:'Courier New',monospace;color:#aaa;flex-shrink:0">#${p.num}</span>
@@ -25164,7 +25162,7 @@ async function carregarRelatorio() {
       })
       .filter(p => p.diasRestantes >= 0)
       .sort((a, b) => a.diasRestantes - b.diasRestantes)
-      .slice(0, 4);
+      .slice(0, 3);
 
     const vencimentosHtml = vencimentos.map(p => {
       let bg = '#F8F9FB', cor = '#888';
