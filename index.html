@@ -23988,8 +23988,8 @@ var __async = (__this, __arguments, generator) => {
         <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Propostas e valor total por mês</div>
         <div style="position:relative;height:300px"><canvas id="rel-chart-combo"></canvas></div>
         <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#888;justify-content:center">
-          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#1A73C8"></span>Propostas (eixo esquerdo)</span>
-          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:2px;background:#2EC4A5"></span>Valor total, em milhares (eixo direito)</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#065CA8"></span>Propostas (eixo esquerdo)</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:2px;background:#38BA9B"></span>Valor total, em milhares (eixo direito)</span>
         </div>
         <div id="rel-outlier-nota" style="margin-top:8px;text-align:center"></div>
       </div>
@@ -25082,7 +25082,7 @@ async function carregarRelatorio() {
             type: 'bar',
             label: 'Propostas',
             data: meses.map(m => d.porMes[m].qtd),
-            backgroundColor: '#1A73C8',
+            backgroundColor: '#065CA8',
             borderRadius: 4,
             yAxisID: 'y',
             order: 2
@@ -25092,11 +25092,11 @@ async function carregarRelatorio() {
             label: 'Valor (mil R$)',
             data: valorLinhaData,
             spanGaps: true,
-            borderColor: '#2EC4A5',
-            backgroundColor: '#2EC4A5',
+            borderColor: '#38BA9B',
+            backgroundColor: '#38BA9B',
             tension: 0.3,
             pointRadius: 5,
-            pointBackgroundColor: '#2EC4A5',
+            pointBackgroundColor: '#38BA9B',
             yAxisID: 'y1',
             order: 1
           }
@@ -25110,12 +25110,12 @@ async function carregarRelatorio() {
           y: {
             beginAtZero: true,
             position: 'left',
-            ticks: { stepSize: 1, color: '#1A73C8' },
+            ticks: { stepSize: 1, color: '#065CA8' },
           },
           y1: {
             beginAtZero: true,
             position: 'right',
-            ticks: { color: '#2EC4A5', callback: v => 'R$' + v + 'k' },
+            ticks: { color: '#38BA9B', callback: v => 'R$' + v + 'k' },
             grid: { display: false }
           }
         }
