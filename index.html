@@ -24959,12 +24959,12 @@ async function carregarRelatorio() {
     document.getElementById('rel-metricas').innerHTML = [
       { label: 'Total de propostas', val: d.total },
       { label: 'Valor total enviado', val: 'R$ ' + d.valorTotal.toLocaleString('pt-BR', {minimumFractionDigits:2}) },
-      { label: 'Ticket médio', val: d.total > 0 ? 'R$ ' + (d.valorTotal/d.total).toLocaleString('pt-BR', {minimumFractionDigits:2}) : '—' },
-      { label: 'Taxa de aprovação', val: d.totalStatus['Aprovada'] ? Math.round(d.totalStatus['Aprovada']/d.total*100)+'%' : '0%' },
+      { label: 'Valor total aprovado', val: 'R$ ' + (d.valorAprovado || 0).toLocaleString('pt-BR', {minimumFractionDigits:2}), destaque: true },
+      { label: 'Taxa de aprovação', val: d.totalStatus['Aprovada'] ? Math.round(d.totalStatus['Aprovada']/d.total*100)+'%' : '0%', destaque: true },
     ].map(m => `
-      <div style="background:#F8F9FB;border-radius:8px;padding:14px;text-align:center;border:1px solid #E5E8EC">
-        <div style="font-size:11px;color:#888;margin-bottom:6px">${m.label}</div>
-        <div style="font-size:20px;font-weight:600;color:#0D4E8A">${m.val}</div>
+      <div style="background:${m.destaque ? '#EAF8F0' : '#F8F9FB'};border-radius:8px;padding:14px;text-align:center;border:1px solid ${m.destaque ? '#B8E8CC' : '#E5E8EC'}">
+        <div style="font-size:11px;color:${m.destaque ? '#1D9E75' : '#888'}">${m.label}</div>
+        <div style="font-size:20px;font-weight:600;color:${m.destaque ? '#1D9E75' : '#0D4E8A'};margin-top:6px">${m.val}</div>
       </div>`).join('');
 
     // Comparação mês a mês — mês mais recente com dados vs o mês anterior
