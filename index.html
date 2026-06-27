@@ -23980,15 +23980,11 @@ var __async = (__this, __arguments, generator) => {
 
       <!-- ABA: Por mês -->
       <div id="rel-tab-mes" class="rel-tab-content" style="display:none">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-          <div>
-            <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Propostas por mês</div>
-            <div style="position:relative;height:340px"><canvas id="rel-chart-mes"></canvas></div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Valor total por mês (R$)</div>
-            <div style="position:relative;height:340px"><canvas id="rel-chart-valor"></canvas></div>
-          </div>
+        <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Propostas e valor total por mês</div>
+        <div style="position:relative;height:300px"><canvas id="rel-chart-combo"></canvas></div>
+        <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#888;justify-content:center">
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#1A73C8"></span>Propostas (eixo esquerdo)</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:2px;background:#2EC4A5"></span>Valor total, em milhares (eixo direito)</span>
         </div>
       </div>
 
@@ -24934,7 +24930,7 @@ document.getElementById('tpl-org-outro-text').addEventListener('input', updatePr
 // Numeração via Google Sheets — URL configurada diretamente no código
 
 // ── Relatórios ───────────────────────────────────────────────────────────────
-let chartMes, chartValor, chartServico, chartServicoMini;
+let chartCombo, chartServico, chartServicoMini;
 
 document.getElementById('btn-relatorios').addEventListener('click', async () => {
   document.getElementById('relatorios-modal').classList.add('open');
@@ -25026,7 +25022,7 @@ async function carregarRelatorio() {
     document.getElementById('rel-comparacao').innerHTML = compHtml;
 
     // Destroy existing charts
-    [chartMes, chartValor, chartServico].forEach(c => c && c.destroy());
+    [chartCombo, chartServico].forEach(c => c && c.destroy());
 
     // Chaves no formato "MM/yyyy" — ordenamos por ano e depois por mês
     const meses = Object.keys(d.porMes).sort((a, b) => {
@@ -25041,21 +25037,51 @@ async function carregarRelatorio() {
     });
     const cores = ['#1A73C8','#2EC4A5','#F4A100','#E24B4A','#534AB7','#1D9E75'];
 
-    chartMes = new Chart(document.getElementById('rel-chart-mes'), {
-      type: 'bar',
-      data: { labels: mesesLabels, datasets: [{ label: 'Propostas', data: meses.map(m => d.porMes[m].qtd),
-        backgroundColor: '#1A73C8', borderRadius: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-    });
-
-    chartValor = new Chart(document.getElementById('rel-chart-valor'), {
-      type: 'line',
-      data: { labels: mesesLabels, datasets: [{ label: 'Valor', data: meses.map(m => d.porMes[m].valor),
-        borderColor: '#2EC4A5', backgroundColor: 'rgba(46,196,165,0.1)', tension: 0.4, fill: true, pointRadius: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false,
+    chartCombo = new Chart(document.getElementById('rel-chart-combo'), {
+      data: {
+        labels: mesesLabels,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'Propostas',
+            data: meses.map(m => d.porMes[m].qtd),
+            backgroundColor: '#1A73C8',
+            borderRadius: 4,
+            yAxisID: 'y',
+            order: 2
+          },
+          {
+            type: 'line',
+            label: 'Valor (mil R$)',
+            data: meses.map(m => Math.round(d.porMes[m].valor / 1000)),
+            borderColor: '#2EC4A5',
+            backgroundColor: '#2EC4A5',
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: '#2EC4A5',
+            yAxisID: 'y1',
+            order: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { callback: v => 'R$'+v.toLocaleString('pt-BR') } } } }
+        scales: {
+          y: {
+            beginAtZero: true,
+            position: 'left',
+            ticks: { stepSize: 1, color: '#1A73C8' },
+          },
+          y1: {
+            beginAtZero: true,
+            position: 'right',
+            ticks: { color: '#2EC4A5', callback: v => 'R$' + v + 'k' },
+            grid: { display: false }
+          }
+        }
+      }
     });
 
     const servicoLabels = Object.keys(d.porServico).sort((a,b) => d.porServico[b]-d.porServico[a]).slice(0,8);
