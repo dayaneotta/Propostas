@@ -23313,6 +23313,7 @@ var __async = (__this, __arguments, generator) => {
   .extracao-toggle .tgl-label { font-size:13px; font-weight:500; color:var(--text); }
   .extracao-toggle .tgl-sub { font-size:11px; color:var(--gray-text); margin-top:1px; }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 </head>
 <body>
 <div style="display:flex;align-items:center;gap:8px;background:#fff;border-bottom:0.5px solid #E5E8EC;padding:8px 16px;font-family:'Segoe UI',Arial,sans-serif">
@@ -24956,15 +24957,26 @@ async function carregarRelatorio() {
     const d = data.dados;
 
     // Métricas
+    // Formata valores monetários de forma compacta (mi/mil), evitando
+    // que números grandes quebrem linha dentro dos cards.
+    const formatarReaisCompacto = (valor) => {
+      if (valor >= 1000000) return 'R$ ' + (valor/1000000).toLocaleString('pt-BR', {maximumFractionDigits:2}) + ' mi';
+      if (valor >= 1000) return 'R$ ' + (valor/1000).toLocaleString('pt-BR', {maximumFractionDigits:1}) + ' mil';
+      return 'R$ ' + valor.toLocaleString('pt-BR', {maximumFractionDigits:0});
+    };
+
     document.getElementById('rel-metricas').innerHTML = [
-      { label: 'Total de propostas', val: d.total },
-      { label: 'Valor total enviado', val: 'R$ ' + d.valorTotal.toLocaleString('pt-BR', {minimumFractionDigits:2}) },
-      { label: 'Valor total aprovado', val: 'R$ ' + (d.valorAprovado || 0).toLocaleString('pt-BR', {minimumFractionDigits:2}), destaque: true },
-      { label: 'Taxa de aprovação', val: d.totalStatus['Aprovada'] ? Math.round(d.totalStatus['Aprovada']/d.total*100)+'%' : '0%', destaque: true },
+      { label: 'Total de propostas', val: d.total, icon: 'ti-file-text' },
+      { label: 'Valor enviado', val: formatarReaisCompacto(d.valorTotal), icon: 'ti-send' },
+      { label: 'Valor aprovado', val: formatarReaisCompacto(d.valorAprovado || 0), icon: 'ti-check', destaque: true },
+      { label: 'Taxa de aprovação', val: d.totalStatus['Aprovada'] ? Math.round(d.totalStatus['Aprovada']/d.total*100)+'%' : '0%', icon: 'ti-percentage', destaque: true },
     ].map(m => `
-      <div style="background:${m.destaque ? '#EAF8F0' : '#F8F9FB'};border-radius:8px;padding:8px;text-align:center;border:1px solid ${m.destaque ? '#B8E8CC' : '#E5E8EC'}">
-        <div style="font-size:11px;color:${m.destaque ? '#1D9E75' : '#888'}">${m.label}</div>
-        <div style="font-size:17px;font-weight:600;color:${m.destaque ? '#1D9E75' : '#0D4E8A'};margin-top:4px">${m.val}</div>
+      <div style="background:${m.destaque ? '#EAF8F0' : '#F8F9FB'};border-radius:10px;padding:12px;border:0.5px solid ${m.destaque ? '#B8E8CC' : '#E5E8EC'}">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <i class="ti ${m.icon}" style="font-size:15px;color:${m.destaque ? '#1D9E75' : '#8aa0b0'}" aria-hidden="true"></i>
+          <span style="font-size:11px;color:${m.destaque ? '#1D9E75' : '#8aa0b0'}">${m.label}</span>
+        </div>
+        <div style="font-size:20px;font-weight:600;color:${m.destaque ? '#1D9E75' : '#0D4E8A'}">${m.val}</div>
       </div>`).join('');
 
     // Comparação mês a mês — mês mais recente com dados vs o mês anterior
