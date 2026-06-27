@@ -24928,7 +24928,16 @@ async function carregarRelatorio() {
       </div>`).join('');
 
     // Comparação mês a mês — mês mais recente com dados vs o mês anterior
-    const mesesOrdenados = Object.keys(d.porMes).sort();
+    const mesesOrdenados = Object.keys(d.porMes).sort((a, b) => {
+      const [ma, ya] = a.split('/');
+      const [mb, yb] = b.split('/');
+      return (ya + ma).localeCompare(yb + mb);
+    });
+    const nomesMesesComp = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const nomeAmigavel = (m) => {
+      const [mm, yyyy] = m.split('/');
+      return nomesMesesComp[parseInt(mm, 10) - 1] + '/' + yyyy.slice(2);
+    };
     const compHtml = (() => {
       if (mesesOrdenados.length < 1) return '';
       const mesAtual = mesesOrdenados[mesesOrdenados.length - 1];
@@ -24955,7 +24964,7 @@ async function carregarRelatorio() {
 
       return `<div style="background:#F8F9FB;border-radius:8px;padding:16px;border:1px solid #E5E8EC">
         <div style="font-size:11px;color:#888;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">
-          ${mesAtual} vs ${mesAnterior}
+          ${nomeAmigavel(mesAtual)} vs ${nomeAmigavel(mesAnterior)}
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div>
@@ -24980,12 +24989,22 @@ async function carregarRelatorio() {
     // Destroy existing charts
     [chartMes, chartValor, chartServico].forEach(c => c && c.destroy());
 
-    const meses = Object.keys(d.porMes).sort();
+    // Chaves no formato "MM/yyyy" — ordenamos por ano e depois por mês
+    const meses = Object.keys(d.porMes).sort((a, b) => {
+      const [ma, ya] = a.split('/');
+      const [mb, yb] = b.split('/');
+      return (ya + ma).localeCompare(yb + mb);
+    });
+    const nomesMeses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const mesesLabels = meses.map(m => {
+      const [mm, yyyy] = m.split('/');
+      return nomesMeses[parseInt(mm, 10) - 1] + '/' + yyyy.slice(2);
+    });
     const cores = ['#1A73C8','#2EC4A5','#F4A100','#E24B4A','#534AB7','#1D9E75'];
 
     chartMes = new Chart(document.getElementById('rel-chart-mes'), {
       type: 'bar',
-      data: { labels: meses, datasets: [{ label: 'Propostas', data: meses.map(m => d.porMes[m].qtd),
+      data: { labels: mesesLabels, datasets: [{ label: 'Propostas', data: meses.map(m => d.porMes[m].qtd),
         backgroundColor: '#1A73C8', borderRadius: 4 }] },
       options: { responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
@@ -24993,7 +25012,7 @@ async function carregarRelatorio() {
 
     chartValor = new Chart(document.getElementById('rel-chart-valor'), {
       type: 'line',
-      data: { labels: meses, datasets: [{ label: 'Valor', data: meses.map(m => d.porMes[m].valor),
+      data: { labels: mesesLabels, datasets: [{ label: 'Valor', data: meses.map(m => d.porMes[m].valor),
         borderColor: '#2EC4A5', backgroundColor: 'rgba(46,196,165,0.1)', tension: 0.4, fill: true, pointRadius: 4 }] },
       options: { responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
