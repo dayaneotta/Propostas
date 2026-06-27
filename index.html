@@ -23507,7 +23507,11 @@ var __async = (__this, __arguments, generator) => {
       <div style="font-size:15px;font-weight:600;color:#1A2A3A;margin-bottom:4px">Editar proposta existente</div>
       <div style="font-size:12px;color:#888;margin-bottom:14px">Informe o número completo da proposta (ex: 202606101)</div>
       <input type="text" id="input-num-proposta-editar" placeholder="Número da proposta"
-        style="width:100%;padding:9px 12px;border:1px solid #D5DCE3;border-radius:8px;font-size:13px;margin-bottom:14px;box-sizing:border-box">
+        style="width:100%;padding:9px 12px;border:1px solid #D5DCE3;border-radius:8px;font-size:13px;margin-bottom:10px;box-sizing:border-box">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:10px 12px;background:#F8F9FB;border-radius:8px;margin-bottom:14px;cursor:pointer;color:#1A2A3A">
+        <input type="checkbox" id="chk-marcar-aprovada" style="width:16px;height:16px;cursor:pointer">
+        Marcar esta proposta como aprovada
+      </label>
       <div id="msg-carregar-proposta" style="font-size:12px;color:#C0392B;margin-bottom:10px;display:none"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button class="btn-secondary" id="btn-cancelar-carregar" style="padding:8px 14px">Cancelar</button>
@@ -24378,6 +24382,7 @@ function collectData(){
 // Abre/fecha o modal
 document.getElementById('btn-carregar-proposta').addEventListener('click', () => {
   document.getElementById('input-num-proposta-editar').value = '';
+  document.getElementById('chk-marcar-aprovada').checked = false;
   document.getElementById('msg-carregar-proposta').style.display = 'none';
   document.getElementById('modal-carregar-proposta').style.display = 'flex';
 });
@@ -24437,6 +24442,7 @@ async function buscarPropostaParaEditar(num) {
 
 document.getElementById('btn-confirmar-carregar').addEventListener('click', async () => {
   const num = document.getElementById('input-num-proposta-editar').value.trim();
+  const marcarAprovada = document.getElementById('chk-marcar-aprovada').checked;
   const msgEl = document.getElementById('msg-carregar-proposta');
   msgEl.style.display = 'none';
   if (!num) {
@@ -24446,8 +24452,25 @@ document.getElementById('btn-confirmar-carregar').addEventListener('click', asyn
   }
   const btn = document.getElementById('btn-confirmar-carregar');
   btn.disabled = true;
-  btn.textContent = 'Buscando…';
+  btn.textContent = marcarAprovada ? 'Atualizando…' : 'Buscando…';
   try {
+    if (marcarAprovada) {
+      const resp = await fetch(SHEETS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'marcarStatus', token: sessionStorage.getItem('bl_auth_token') || '', num: num, status: 'Aprovada' }),
+      });
+      const data = await resp.json();
+      if (data && data.naoAutorizado) { _blSessaoExpirada(); return; }
+      if (!data || data.error) {
+        msgEl.textContent = (data && data.error) ? data.error : 'Não foi possível atualizar o status.';
+        msgEl.style.display = 'block';
+        return;
+      }
+      document.getElementById('modal-carregar-proposta').style.display = 'none';
+      showToast('✓ Proposta #' + num + ' marcada como aprovada.');
+      return;
+    }
     const data = await buscarPropostaParaEditar(num);
     if (!data || data.error) {
       msgEl.textContent = (data && data.error) ? data.error : 'Não foi possível carregar a proposta.';
