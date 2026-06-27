@@ -25137,8 +25137,18 @@ async function carregarRelatorio() {
     const servicoLabels = Object.keys(d.porServico).sort((a,b) => d.porServico[b]-d.porServico[a]).slice(0,8);
     chartServico = new Chart(document.getElementById('rel-chart-servico'), {
       type: 'bar',
-      data: { labels: servicoLabels, datasets: [{ data: servicoLabels.map(s => d.porServico[s]),
-        backgroundColor: '#534AB7', borderRadius: 4 }] },
+      data: { labels: servicoLabels, datasets: [{
+        data: servicoLabels.map(s => d.porServico[s]),
+        backgroundColor: function(ctx) {
+          const chart = ctx.chart;
+          const {ctx: c, chartArea} = chart;
+          if (!chartArea) return '#1A73C8';
+          const g = c.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+          g.addColorStop(0, '#0D4E8A');
+          g.addColorStop(1, '#2EC4A5');
+          return g;
+        },
+        borderRadius: 4 }] },
       options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y',
         plugins: { legend: { display: false } },
         scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } },
