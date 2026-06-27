@@ -23966,9 +23966,15 @@ var __async = (__this, __arguments, generator) => {
       <div id="rel-tab-geral" class="rel-tab-content">
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px" id="rel-metricas"></div>
         <div id="rel-comparacao" style="margin-bottom:12px"></div>
-        <div>
-          <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Serviços mais solicitados</div>
-          <div style="position:relative;height:180px"><canvas id="rel-chart-servico-mini"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <div>
+            <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Últimas propostas</div>
+            <div id="rel-ultimas-propostas"></div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Próximos vencimentos</div>
+            <div id="rel-proximos-vencimentos"></div>
+          </div>
         </div>
       </div>
 
@@ -24930,7 +24936,7 @@ document.getElementById('tpl-org-outro-text').addEventListener('input', updatePr
 // Numeração via Google Sheets — URL configurada diretamente no código
 
 // ── Relatórios ───────────────────────────────────────────────────────────────
-let chartCombo, chartServico, chartServicoMini;
+let chartCombo, chartServico;
 
 document.getElementById('btn-relatorios').addEventListener('click', async () => {
   document.getElementById('relatorios-modal').classList.add('open');
@@ -25095,18 +25101,49 @@ async function carregarRelatorio() {
           y: { ticks: { font: { size: 11 } } } } }
     });
 
-    // Versão compacta na aba Visão geral — top 5 serviços apenas
-    const servicoLabelsMini = servicoLabels.slice(0, 5);
-    if (chartServicoMini) chartServicoMini.destroy();
-    chartServicoMini = new Chart(document.getElementById('rel-chart-servico-mini'), {
-      type: 'bar',
-      data: { labels: servicoLabelsMini, datasets: [{ data: servicoLabelsMini.map(s => d.porServico[s]),
-        backgroundColor: '#534AB7', borderRadius: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-        plugins: { legend: { display: false } },
-        scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } },
-          y: { ticks: { font: { size: 11 } } } } }
+    // ── Visão geral: últimas propostas + próximos vencimentos ────────────────
+    const propostasOrdenadas = (d.propostas || []).slice().sort((a, b) => {
+      return (b.dataISO || '').localeCompare(a.dataISO || '');
     });
+
+    const ultimasHtml = propostasOrdenadas.slice(0, 5).map(p => {
+      const valorFmt = 'R$ ' + (p.valor || 0).toLocaleString('pt-BR', {maximumFractionDigits:0});
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #E5E8EC">
+        <span style="font-size:12px;font-family:'Courier New',monospace;color:#aaa;flex-shrink:0">#${p.num}</span>
+        <span style="font-size:13px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${p.cliente || '—'}</span>
+        <span style="font-size:13px;font-weight:600;color:#1A2A3A;flex-shrink:0">${valorFmt}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('rel-ultimas-propostas').innerHTML = ultimasHtml ||
+      '<div style="font-size:12px;color:#aaa;padding:10px 0">Nenhuma proposta registrada ainda.</div>';
+
+    // Próximos vencimentos: data envio + validade(dias), só propostas ainda não vencidas, sem status final
+    const hoje = new Date();
+    const vencimentos = propostasOrdenadas
+      .filter(p => p.dataISO && p.status !== 'Aprovada')
+      .map(p => {
+        const dataEnvio = new Date(p.dataISO + 'T12:00:00');
+        const dataVenc = new Date(dataEnvio);
+        dataVenc.setDate(dataVenc.getDate() + (p.validadeDias || 30));
+        const diasRestantes = Math.ceil((dataVenc - hoje) / (1000*60*60*24));
+        return { ...p, diasRestantes };
+      })
+      .filter(p => p.diasRestantes >= 0)
+      .sort((a, b) => a.diasRestantes - b.diasRestantes)
+      .slice(0, 5);
+
+    const vencimentosHtml = vencimentos.map(p => {
+      let bg = '#F8F9FB', cor = '#888';
+      if (p.diasRestantes <= 5) { bg = '#FCEBEB'; cor = '#A32D2D'; }
+      else if (p.diasRestantes <= 10) { bg = '#FAEEDA'; cor = '#854F0B'; }
+      const texto = p.diasRestantes === 0 ? 'vence hoje' : 'vence em ' + p.diasRestantes + (p.diasRestantes === 1 ? ' dia' : ' dias');
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #E5E8EC">
+        <span style="font-size:13px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${p.cliente || '—'}</span>
+        <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${bg};color:${cor};flex-shrink:0;white-space:nowrap">${texto}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('rel-proximos-vencimentos').innerHTML = vencimentosHtml ||
+      '<div style="font-size:12px;color:#aaa;padding:10px 0">Nenhum vencimento próximo.</div>';
 
     document.getElementById('rel-updated').textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
     document.getElementById('rel-loading').style.display = 'none';
