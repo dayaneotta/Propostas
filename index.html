@@ -23990,6 +23990,7 @@ var __async = (__this, __arguments, generator) => {
           <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#1A73C8"></span>Propostas (eixo esquerdo)</span>
           <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:2px;background:#2EC4A5"></span>Valor total, em milhares (eixo direito)</span>
         </div>
+        <div id="rel-outlier-nota" style="margin-top:8px;text-align:center"></div>
       </div>
 
       <div style="margin-top:16px;font-size:11px;color:#aaa;text-align:right" id="rel-updated"></div>
@@ -25041,6 +25042,26 @@ async function carregarRelatorio() {
     });
     const cores = ['#1A73C8','#2EC4A5','#F4A100','#E24B4A','#534AB7','#1D9E75'];
 
+    // Detecta meses com valor muito acima dos demais (outliers), usando o
+    // método do intervalo interquartil (IQR), para que não distorçam a
+    // escala do eixo de valor — sem esconder o dado, só exibindo uma nota.
+    const valoresMensais = meses.map(m => d.porMes[m].valor);
+    let outlierSet = new Set();
+    if (valoresMensais.length >= 4) {
+      const ordenados = valoresMensais.slice().sort((a,b) => a-b);
+      const q1 = ordenados[Math.floor(ordenados.length * 0.25)];
+      const q3 = ordenados[Math.floor(ordenados.length * 0.75)];
+      const iqr = q3 - q1;
+      const limiteSuperior = q3 + iqr * 1.5;
+      meses.forEach((m, i) => {
+        if (valoresMensais[i] > limiteSuperior && limiteSuperior > 0) outlierSet.add(i);
+      });
+    }
+
+    // Dados da linha de valor, com outliers substituídos por null (não
+    // entram no cálculo automático da escala do eixo direito do Chart.js)
+    const valorLinhaData = meses.map((m, i) => outlierSet.has(i) ? null : Math.round(d.porMes[m].valor / 1000));
+
     chartCombo = new Chart(document.getElementById('rel-chart-combo'), {
       data: {
         labels: mesesLabels,
@@ -25057,7 +25078,8 @@ async function carregarRelatorio() {
           {
             type: 'line',
             label: 'Valor (mil R$)',
-            data: meses.map(m => Math.round(d.porMes[m].valor / 1000)),
+            data: valorLinhaData,
+            spanGaps: true,
             borderColor: '#2EC4A5',
             backgroundColor: '#2EC4A5',
             tension: 0.3,
@@ -25087,6 +25109,18 @@ async function carregarRelatorio() {
         }
       }
     });
+
+    // Nota sobre meses fora de escala (outliers excluídos da linha de valor)
+    if (outlierSet.size > 0) {
+      const notaTexto = Array.from(outlierSet).map(i => {
+        const valorReal = d.porMes[meses[i]].valor;
+        return mesesLabels[i] + ': R$ ' + valorReal.toLocaleString('pt-BR', {maximumFractionDigits:0});
+      }).join(' · ');
+      document.getElementById('rel-outlier-nota').innerHTML =
+        '<span style="font-size:11px;color:#854F0B;background:#FAEEDA;padding:4px 10px;border-radius:6px">📌 Fora de escala (valor real): ' + notaTexto + '</span>';
+    } else {
+      document.getElementById('rel-outlier-nota').innerHTML = '';
+    }
 
     const servicoLabels = Object.keys(d.porServico).sort((a,b) => d.porServico[b]-d.porServico[a]).slice(0,8);
     chartServico = new Chart(document.getElementById('rel-chart-servico'), {
