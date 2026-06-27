@@ -25101,7 +25101,7 @@ async function carregarRelatorio() {
 
     // ── Visão geral: últimas propostas + próximos vencimentos ────────────────
     const propostasOrdenadas = (d.propostas || []).slice().sort((a, b) => {
-      return (b.dataISO || '').localeCompare(a.dataISO || '');
+      return String(b.num || '').localeCompare(String(a.num || ''));
     });
 
     const ultimasHtml = propostasOrdenadas.slice(0, 3).map(p => {
