@@ -23978,18 +23978,6 @@ function updateNum(){
 // ── Sequencial centralizado via Google Sheets ────────────────────────────────
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw9hKu9e5IlpCF1A_CjLM4qavd7s0sS281KyEDdersJ-42vyDRZddRL9F8OQrfXJk1MSA/exec';
 
-// Escapa texto antes de inserir em innerHTML (nome/CNPJ/contato de clientes
-// salvos anteriormente, exibidos no autocomplete).
-function escapeHtml(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 function applySeq(seq) {
   seqNum = seq;
   document.getElementById('seq-display').textContent = seqNum;
@@ -24518,10 +24506,10 @@ function renderSuggestions(list) {
     <div class="cli-item" data-idx="${i}"
       style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #EEF2F7;background:#fff;display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="font-size:13px;font-weight:600;color:#0D4E8A">${escapeHtml(c.nome)}</div>
-        <div style="font-size:11px;color:#999;margin-top:2px">${escapeHtml([c.sigla,c.cnpj,c.contato].filter(Boolean).join(' · '))}</div>
+        <div style="font-size:13px;font-weight:600;color:#0D4E8A">${c.nome}</div>
+        <div style="font-size:11px;color:#999;margin-top:2px">${[c.sigla,c.cnpj,c.contato].filter(Boolean).join(' · ')}</div>
       </div>
-      <button class="cli-del" data-key="${escapeHtml(c.cnpj||c.nome)}" style="background:transparent;border:none;cursor:pointer;color:#ccc;font-size:14px;padding:4px 6px" title="Remover">✕</button>
+      <button class="cli-del" data-key="${c.cnpj||c.nome}" style="background:transparent;border:none;cursor:pointer;color:#ccc;font-size:14px;padding:4px 6px" title="Remover">✕</button>
     </div>`).join('');
   box.style.display = 'block';
 
