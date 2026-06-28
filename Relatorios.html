@@ -121,22 +121,6 @@
 <script>
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw9hKu9e5IlpCF1A_CjLM4qavd7s0sS281KyEDdersJ-42vyDRZddRL9F8OQrfXJk1MSA/exec';
 
-// Escapa texto antes de inserir em innerHTML (nome de cliente, etc. vêm do
-// formulário de propostas e podem conter caracteres HTML).
-function escapeHtml(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-function escapeAttr(str) {
-  str = escapeHtml(str);
-  return /^\s*javascript:/i.test(str) ? '' : str;
-}
-
 function tokenAuthBL() {
   return encodeURIComponent(sessionStorage.getItem('bl_auth_token') || '');
 }
@@ -370,9 +354,9 @@ async function carregarRelatorio() {
     const ultimasHtml = propostasOrdenadas.map((p, i) => {
       const valorFmt = 'R$ ' + (p.valor || 0).toLocaleString('pt-BR', {maximumFractionDigits:0});
       const escondido = i >= 5 ? ' rel-accordion-extra' : '';
-      const nomeCliente = escapeHtml(p.cliente || '—');
+      const nomeCliente = p.cliente || '—';
       const nomeHtml = p.linkPasta
-        ? `<a href="${escapeAttr(p.linkPasta)}" target="_blank" rel="noopener" style="color:#1A73C8;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Abrir pasta da proposta no Drive">${nomeCliente}</a>`
+        ? `<a href="${p.linkPasta}" target="_blank" rel="noopener" style="color:#1A73C8;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Abrir pasta da proposta no Drive">${nomeCliente}</a>`
         : nomeCliente;
       return `<div class="rel-accordion-item${escondido}" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid #E5E8EC${i >= 5 ? ';display:none' : ''}">
         <span style="font-size:12px;font-family:'Courier New',monospace;color:#aaa;flex-shrink:0">#${p.num}</span>
@@ -403,9 +387,9 @@ async function carregarRelatorio() {
       else if (p.diasRestantes <= 10) { bg = '#FAEEDA'; cor = '#854F0B'; }
       const texto = p.diasRestantes === 0 ? 'vence hoje' : 'vence em ' + p.diasRestantes + (p.diasRestantes === 1 ? ' dia' : ' dias');
       const escondido = i >= 5 ? ' rel-accordion-extra' : '';
-      const nomeCliente = escapeHtml(p.cliente || '—');
+      const nomeCliente = p.cliente || '—';
       const nomeHtml = p.linkPasta
-        ? `<a href="${escapeAttr(p.linkPasta)}" target="_blank" rel="noopener" style="color:#1A73C8;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Abrir pasta da proposta no Drive">${nomeCliente}</a>`
+        ? `<a href="${p.linkPasta}" target="_blank" rel="noopener" style="color:#1A73C8;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Abrir pasta da proposta no Drive">${nomeCliente}</a>`
         : nomeCliente;
       return `<div class="rel-accordion-item${escondido}" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid #E5E8EC${i >= 5 ? ';display:none' : ''}">
         <span style="font-size:13px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${nomeHtml}</span>
