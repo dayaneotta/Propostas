@@ -561,6 +561,25 @@ let dados = [];
 let sortCol = 'nome', sortDir = 'asc', paginaAtual = 1;
 let _bioLeadCarregado = false;
 
+// Escapa texto antes de inserir em innerHTML. Sem isso, um lead com nome/e-mail
+// malicioso (ex: vindo do formulário público do site) poderia executar script
+// na sessão de quem estiver vendo a lista — incluindo roubar o token de login.
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+// Mesma ideia, mas para uso dentro de atributos como href="..." — bloqueia
+// URLs do tipo javascript:alert(1) além de escapar aspas.
+function escapeAttr(str) {
+  str = escapeHtml(str);
+  return /^\s*javascript:/i.test(str) ? '' : str;
+}
+
 // Token de login Google (sessionStorage), enviado em toda chamada ao Apps Script.
 // Sem ele (ou se estiver expirado), o servidor recusa a ação.
 function tokenAuthBL() {
@@ -1154,7 +1173,7 @@ function abrirModalEmail(id) {
     3: 'Gerar e-mail (3º contato — encerramento)'
   };
   const tituloBase = titulosPorNumero[numEmail] || titulosPorNumero[1];
-  document.getElementById('email-modal-titulo').innerHTML = `✉️ ${tituloBase} — <span id="email-modal-nome" style="font-weight:400;color:var(--text2)">${(p.nome||'').replace(/</g,'&lt;')}</span>`;
+  document.getElementById('email-modal-titulo').innerHTML = `✉️ ${tituloBase} — <span id="email-modal-nome" style="font-weight:400;color:var(--text2)">${escapeHtml(p.nome)}</span>`;
 
   // Resumo do Lattes é exibido quando ainda não há sequência automática definida (0) ou no 1º e-mail
   const wrapResumo = document.getElementById('resumo-lattes-wrap');
@@ -1294,16 +1313,16 @@ function render() {
     const cColor=nC===3?'#1b5e20':nC===0?'var(--text3)':'var(--bm-blue)';
     const stStyle=STATUS_STYLES[status]||'background:#EAF4FA;color:var(--text3)';
     const emoji=STATUS_EMOJI[status]||'';
-    const latBtn=p.lattes?`<a href="${p.lattes}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#185FA5;text-decoration:none;font-weight:500"><i class="ti ti-dna" style="font-size:13px"></i>Lattes</a>`:'';
-    const igBtn=p.instagram&&p.instagram.startsWith('@')?`<a href="https://instagram.com/${p.instagram.slice(1)}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#993556;text-decoration:none;font-weight:500"><i class="ti ti-brand-instagram" style="font-size:13px"></i>IG</a>`:'';
-    const liBtn=p.linkedin?`<a href="${p.linkedin}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#0A66C2;text-decoration:none;font-weight:500"><i class="ti ti-brand-linkedin" style="font-size:13px"></i>LinkedIn</a>`:'';
+    const latBtn=p.lattes?`<a href="${escapeAttr(p.lattes)}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#185FA5;text-decoration:none;font-weight:500"><i class="ti ti-dna" style="font-size:13px"></i>Lattes</a>`:'';
+    const igBtn=p.instagram&&p.instagram.startsWith('@')?`<a href="https://instagram.com/${encodeURIComponent(p.instagram.slice(1))}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#993556;text-decoration:none;font-weight:500"><i class="ti ti-brand-instagram" style="font-size:13px"></i>IG</a>`:'';
+    const liBtn=p.linkedin?`<a href="${escapeAttr(p.linkedin)}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#0A66C2;text-decoration:none;font-weight:500"><i class="ti ti-brand-linkedin" style="font-size:13px"></i>LinkedIn</a>`:'';
     return `<tr class="${p.desqualificado?'desq':''}">
-      <td><div class="name-cell"><div class="av ${av}">${ini}</div><div><div class="nmt">${p.nome}</div><div class="ins">${p.inst||'—'}</div></div></div></td>
-      <td><span style="font-size:10px;font-weight:700;color:var(--bm-blue);background:#E8F5FB;border-radius:4px;padding:2px 6px">${p.estado||'—'}</span></td>
-      <td><span class="badge badge-${p.score==='ALTO'?'alto':'medio'}">● ${p.score}</span></td>
+      <td><div class="name-cell"><div class="av ${av}">${ini}</div><div><div class="nmt">${escapeHtml(p.nome)}</div><div class="ins">${escapeHtml(p.inst)||'—'}</div></div></div></td>
+      <td><span style="font-size:10px;font-weight:700;color:var(--bm-blue);background:#E8F5FB;border-radius:4px;padding:2px 6px">${escapeHtml(p.estado)||'—'}</span></td>
+      <td><span class="badge badge-${p.score==='ALTO'?'alto':'medio'}">● ${escapeHtml(p.score)}</span></td>
       <td><div class="dots-wrap">${buildDotsBL(p)}</div></td>
-      <td><span class="sp" style="${stStyle}">${emoji} ${status}</span></td>
-      <td style="max-width:200px"><a href="mailto:${p.email}" style="font-size:12px;color:var(--bm-blue);text-decoration:none;font-style:italic;letter-spacing:-.01em" title="Clique para enviar e-mail">${p.email||'—'}</a></td>
+      <td><span class="sp" style="${stStyle}">${emoji} ${escapeHtml(status)}</span></td>
+      <td style="max-width:200px"><a href="mailto:${escapeAttr(p.email)}" style="font-size:12px;color:var(--bm-blue);text-decoration:none;font-style:italic;letter-spacing:-.01em" title="Clique para enviar e-mail">${escapeHtml(p.email)||'—'}</a></td>
       <td><div class="lc">${latBtn}${igBtn}${liBtn}</div></td>
       <td style="white-space:nowrap">
         <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer" onclick="abrirModal('${p.id}')" title="Editar"><i class="ti ti-pencil" style="font-size:14px"></i></button>
@@ -1354,14 +1373,14 @@ function renderInbound() {
     const ini=p.nome.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
     const mensagemCurta = (p.c1_nota||'').length>60 ? (p.c1_nota||'').slice(0,60)+'…' : (p.c1_nota||'—');
     return `<tr>
-      <td><div class="name-cell"><div class="av medio">${ini}</div><div class="nmt">${p.nome}</div></div></td>
+      <td><div class="name-cell"><div class="av medio">${ini}</div><div class="nmt">${escapeHtml(p.nome)}</div></div></td>
       <td><span style="font-size:11px;color:var(--text2)">${canalIcone}</span></td>
-      <td><span style="font-size:11px;color:var(--text3)">${p.c1_raw||'—'}</span></td>
-      <td style="max-width:280px"><span class="msg-tooltip" style="font-size:11px;color:var(--text2)">${mensagemCurta}<div class="msg-tooltip-box">${(p.c1_nota||'Sem mensagem registrada.').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></span></td>
-      <td><span class="sp" style="${stStyle}">${emoji} ${statusLabel}</span></td>
+      <td><span style="font-size:11px;color:var(--text3)">${escapeHtml(p.c1_raw)||'—'}</span></td>
+      <td style="max-width:280px"><span class="msg-tooltip" style="font-size:11px;color:var(--text2)">${escapeHtml(mensagemCurta)}<div class="msg-tooltip-box">${escapeHtml(p.c1_nota||'Sem mensagem registrada.')}</div></span></td>
+      <td><span class="sp" style="${stStyle}">${emoji} ${escapeHtml(statusLabel)}</span></td>
       <td style="max-width:180px">
-        <a href="mailto:${p.email}" style="font-size:11px;color:var(--bm-blue);text-decoration:none;display:block">${p.email||'—'}</a>
-        ${p.tel ? `<span style="font-size:10px;color:var(--text3)">${p.tel}</span>` : ''}
+        <a href="mailto:${escapeAttr(p.email)}" style="font-size:11px;color:var(--bm-blue);text-decoration:none;display:block">${escapeHtml(p.email)||'—'}</a>
+        ${p.tel ? `<span style="font-size:10px;color:var(--text3)">${escapeHtml(p.tel)}</span>` : ''}
       </td>
       <td style="white-space:nowrap">
         <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer" onclick="abrirModal('${p.id}')" title="Editar"><i class="ti ti-pencil" style="font-size:14px"></i></button>
@@ -1473,7 +1492,7 @@ function previewImport() {
   const validas=linhas.slice(inicio).filter(l=>{const p=parsearCSV(l,sep,idx);const n=(p.nome||'').trim();return n.length>=3&&!/^(sim|não|nao|solicitado)$/i.test(n)&&!n.startsWith(',');});
   document.getElementById('preview-import').style.display='block';
   document.getElementById('preview-count').textContent=`${validas.length} pesquisadores encontrados (sep: "${sep}")`;
-  document.getElementById('preview-lista').innerHTML=validas.slice(0,8).map((l,i)=>{const p=parsearCSV(l,sep,idx);return `<div style="padding:3px 0;border-bottom:.5px solid var(--border)">${i+1}. <strong>${p.nome||'—'}</strong> · ${p.inst||'—'} · ${p.estado||'—'} · ${p.email||'sem e-mail'}</div>`;}).join('')+(validas.length>8?`<div style="color:var(--text3);font-size:11px">...e mais ${validas.length-8}</div>`:'');
+  document.getElementById('preview-lista').innerHTML=validas.slice(0,8).map((l,i)=>{const p=parsearCSV(l,sep,idx);return `<div style="padding:3px 0;border-bottom:.5px solid var(--border)">${i+1}. <strong>${escapeHtml(p.nome)||'—'}</strong> · ${escapeHtml(p.inst)||'—'} · ${escapeHtml(p.estado)||'—'} · ${escapeHtml(p.email)||'sem e-mail'}</div>`;}).join('')+(validas.length>8?`<div style="color:var(--text3);font-size:11px">...e mais ${validas.length-8}</div>`:'');
 }
 
 function importarCSV() {
