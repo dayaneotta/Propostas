@@ -74,15 +74,15 @@
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px" id="rel-metricas"></div>
         <div id="rel-comparacao" style="margin-bottom:28px"></div>
         <div style="margin-bottom:36px">
-          <button class="rel-accordion-toggle" data-target="rel-ultimas-propostas" style="background:transparent;border:none;padding:0;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:14px;width:100%;text-align:left">
-            <span style="font-size:13px;color:#0D4E8A;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Últimas propostas</span>
+          <button class="rel-accordion-toggle" data-target="rel-ultimas-propostas" data-label-collapsed="Últimas propostas" data-label-expanded="Todas as propostas" style="background:transparent;border:none;padding:0;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:14px;width:100%;text-align:left">
+            <span class="rel-accordion-label" style="font-size:13px;color:#0D4E8A;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Últimas propostas</span>
             <i class="ti ti-chevron-down rel-accordion-icon" style="font-size:15px;color:#0D4E8A;transition:transform .2s" aria-hidden="true"></i>
           </button>
           <div id="rel-ultimas-propostas"></div>
         </div>
         <div>
-          <button class="rel-accordion-toggle" data-target="rel-proximos-vencimentos" style="background:transparent;border:none;padding:0;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:14px;width:100%;text-align:left">
-            <span style="font-size:13px;color:#0D4E8A;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Próximos vencimentos</span>
+          <button class="rel-accordion-toggle" data-target="rel-proximos-vencimentos" data-label-collapsed="Próximos vencimentos" data-label-expanded="Todos os vencimentos" style="background:transparent;border:none;padding:0;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:14px;width:100%;text-align:left">
+            <span class="rel-accordion-label" style="font-size:13px;color:#0D4E8A;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Próximos vencimentos</span>
             <i class="ti ti-chevron-down rel-accordion-icon" style="font-size:15px;color:#0D4E8A;transition:transform .2s" aria-hidden="true"></i>
           </button>
           <div id="rel-proximos-vencimentos"></div>
@@ -403,9 +403,13 @@ async function carregarRelatorio() {
         const container = document.getElementById(btn.dataset.target);
         const extras = container.querySelectorAll('.rel-accordion-extra');
         const icon = btn.querySelector('.rel-accordion-icon');
+        const label = btn.querySelector('.rel-accordion-label');
         const expandido = extras.length > 0 && extras[0].style.display !== 'none';
         extras.forEach(el => { el.style.display = expandido ? 'none' : 'flex'; });
         icon.style.transform = expandido ? 'rotate(0deg)' : 'rotate(180deg)';
+        if (label && btn.dataset.labelCollapsed && btn.dataset.labelExpanded) {
+          label.textContent = expandido ? btn.dataset.labelCollapsed : btn.dataset.labelExpanded;
+        }
       };
     });
 
