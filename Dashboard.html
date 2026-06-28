@@ -152,6 +152,17 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 <script>
 const SHEETS_URL_DASH = 'https://script.google.com/macros/s/AKfycbw9hKu9e5IlpCF1A_CjLM4qavd7s0sS281KyEDdersJ-42vyDRZddRL9F8OQrfXJk1MSA/exec';
 const STORAGE_KEY = 'biolead-v3';
+
+// Token de login Google (sessionStorage), enviado em toda chamada ao Apps Script.
+// Sem ele (ou se estiver expirado), o servidor recusa a ação.
+function tokenAuthDash() {
+  return encodeURIComponent(sessionStorage.getItem('bl_auth_token') || '');
+}
+function _dashSessaoExpirada() {
+  sessionStorage.removeItem('bl_auth_token');
+  sessionStorage.removeItem('bl_auth_email');
+  window.location.href = '/Propostas/home.html';
+}
 let ALL = [], filtrado = [], sortCol = 'nome', sortDir = 1, pag = 1, POR_PAG = 25;
 let cE = null; let cEstados = null;
 
@@ -531,6 +542,7 @@ function carregarEIniciar() {
   const cbName = '_dashBlCb';
   window[cbName] = function(res) {
     document.getElementById('loading-overlay').style.display = 'none';
+    if (res.naoAutorizado) { _dashSessaoExpirada(); return; }
     if (res.ok) {
       window._dashDados = res.dados.map(p => ({
         ...p,
@@ -550,7 +562,7 @@ function carregarEIniciar() {
     }
   };
   const script = document.createElement('script');
-  script.src = SHEETS_URL_DASH + '?action=biolead&sub=listar&params=%7B%7D&callback=' + cbName + '&t=' + Date.now();
+  script.src = SHEETS_URL_DASH + '?action=biolead&sub=listar&params=%7B%7D&token=' + tokenAuthDash() + '&callback=' + cbName + '&t=' + Date.now();
   script.onerror = () => { document.getElementById('loading-overlay').style.display = 'none'; alert('Erro ao carregar dados.'); };
   document.head.appendChild(script);
 }
