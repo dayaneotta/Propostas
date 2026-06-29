@@ -155,15 +155,18 @@ function escapeAttr(str) {
 }
 
 let _relTipTimer = null;
-let _relMouseX = 0, _relMouseY = 0;
-function _relAtualizarPos(ev) { _relMouseX = ev.clientX; _relMouseY = ev.clientY; }
+let _relMouseX = 0;
+let _relHoverEl = null;
+function _relAtualizarX(ev) { _relMouseX = ev.clientX; }
 function mostrarDicaPasta(ev) {
   clearTimeout(_relTipTimer);
-  _relMouseX = ev.clientX; _relMouseY = ev.clientY;
-  ev.currentTarget.addEventListener('mousemove', _relAtualizarPos);
+  _relMouseX = ev.clientX;
+  _relHoverEl = ev.currentTarget;
+  _relHoverEl.addEventListener('mousemove', _relAtualizarX);
   _relTipTimer = setTimeout(() => {
     const tip = document.getElementById('rel-tip-flutuante');
-    tip.style.top = (_relMouseY + 18) + 'px';
+    const r = _relHoverEl.getBoundingClientRect();
+    tip.style.top = (r.bottom + 6) + 'px';
     const esquerdaDesejada = _relMouseX + 4;
     const esquerdaMax = window.innerWidth - tip.offsetWidth - 8;
     tip.style.left = Math.min(esquerdaDesejada, esquerdaMax) + 'px';
@@ -172,7 +175,7 @@ function mostrarDicaPasta(ev) {
 }
 function esconderDicaPasta(ev) {
   clearTimeout(_relTipTimer);
-  if (ev && ev.currentTarget) ev.currentTarget.removeEventListener('mousemove', _relAtualizarPos);
+  if (ev && ev.currentTarget) ev.currentTarget.removeEventListener('mousemove', _relAtualizarX);
   document.getElementById('rel-tip-flutuante').classList.remove('show');
 }
 
