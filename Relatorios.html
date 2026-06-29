@@ -103,8 +103,8 @@
         <div id="rel-comparacao" style="margin-bottom:28px"></div>
         <div id="rel-clientes-ativos" style="margin-bottom:28px"></div>
         <div style="margin-bottom:36px">
-          <button class="rel-accordion-toggle" data-target="rel-ultimas-propostas" data-label-collapsed="Últimas propostas" data-label-expanded="Todas as propostas" style="background:transparent;border:none;padding:0;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:14px;width:100%;text-align:left">
-            <span class="rel-accordion-label" style="font-size:13px;color:#0D4E8A;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Últimas propostas</span>
+          <button class="rel-accordion-toggle" data-target="rel-ultimas-propostas" data-label-collapsed="Últimas propostas enviadas" data-label-expanded="Todas as propostas enviadas" style="background:transparent;border:none;padding:0;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:14px;width:100%;text-align:left">
+            <span class="rel-accordion-label" style="font-size:13px;color:#0D4E8A;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Últimas propostas enviadas</span>
             <i class="ti ti-chevron-down rel-accordion-icon" style="font-size:15px;color:#0D4E8A;transition:transform .2s" aria-hidden="true"></i>
           </button>
           <div id="rel-ultimas-propostas"></div>
@@ -219,7 +219,7 @@ function renderClientesAtivos(d) {
   }).join('') : `<div style="padding:20px;text-align:center;color:#9aa7b5;font-size:13px">Nenhuma proposta aprovada${_filtroClientesAtivos!=='todas' ? ' nesse estágio' : ''} ainda.</div>`;
   const verMaisHtml = listaAtual.length > 5
     ? `<button onclick="_relToggleExpandirAprovadas()" style="background:transparent;border:none;padding:10px 0 0;display:flex;align-items:center;gap:6px;cursor:pointer;color:#0D4E8A;font-size:12px;font-weight:600">
-        ${_caExpandido ? 'Ver menos' : 'Ver todas (' + listaAtual.length + ')'}
+        ${_caExpandido ? 'Todas as propostas aprovadas' : 'Últimas propostas aprovadas'}
         <i class="ti ti-chevron-down" style="font-size:14px;transition:transform .2s;transform:${_caExpandido?'rotate(180deg)':'rotate(0deg)'}" aria-hidden="true"></i>
       </button>`
     : '';
