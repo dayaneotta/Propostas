@@ -194,7 +194,9 @@ function renderClientesAtivos(d) {
     return `<button class="ca-chip" style="background:${ativo?c.bgAtivo:'#fff'};border-color:${ativo?c.ac:'#E5E8EC'};color:${ativo?c.ac:'#5a7080'}" onclick="_relMudarFiltroClientes('${c.key}')">${c.label} <span style="opacity:.65">${c.lista.length}</span></button>`;
   }).join('');
 
-  const listaAtual = grupos[_filtroClientesAtivos].slice().sort((a,b) => (b.valor||0)-(a.valor||0));
+  const listaAtual = grupos[_filtroClientesAtivos].slice().sort((a, b) => {
+    return String(b.num || '').localeCompare(String(a.num || ''));
+  });
   const linhasHtml = listaAtual.length ? listaAtual.map((p,i) => {
     const nomeCliente = escapeHtml(p.cliente || '—');
     const nomeHtml = p.linkPasta
@@ -216,7 +218,7 @@ function renderClientesAtivos(d) {
 
   document.getElementById('rel-clientes-ativos').innerHTML = `
     <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.05em;color:#0D4E8A;text-transform:uppercase">Clientes ativos</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.05em;color:#0D4E8A;text-transform:uppercase">Propostas aprovadas</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${chipsHtml}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
