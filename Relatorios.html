@@ -38,6 +38,25 @@
     font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Link "abrir pasta no Drive" — tooltip customizado no lugar do balão nativo do navegador */
+  .rel-folder-link{position:relative;display:inline-flex;align-items:center;gap:6px;color:#1A73C8;text-decoration:none}
+  .rel-folder-link:hover{text-decoration:underline}
+  .rel-folder-link .rel-tip{
+    position:absolute;bottom:calc(100% + 9px);left:0;
+    background:#1A2A3A;color:#fff;font-size:11px;font-weight:600;letter-spacing:.02em;
+    padding:6px 11px;border-radius:7px;white-space:nowrap;
+    opacity:0;pointer-events:none;
+    transform:translateY(4px) scale(.96);transform-origin:left bottom;
+    transition:opacity .15s ease,transform .15s ease;
+    box-shadow:0 6px 16px rgba(13,78,138,.22);
+    z-index:5;
+  }
+  .rel-folder-link .rel-tip::after{
+    content:'';position:absolute;top:100%;left:14px;
+    border:5px solid transparent;border-top-color:#1A2A3A;
+  }
+  .rel-folder-link:hover .rel-tip{opacity:1;transform:translateY(0) scale(1)}
 </style>
 </head>
 <body>
@@ -372,7 +391,7 @@ async function carregarRelatorio() {
       const escondido = i >= 5 ? ' rel-accordion-extra' : '';
       const nomeCliente = escapeHtml(p.cliente || '—');
       const nomeHtml = p.linkPasta
-        ? `<a href="${escapeAttr(p.linkPasta)}" target="_blank" rel="noopener" style="color:#1A73C8;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Abrir pasta da proposta no Drive">${nomeCliente}</a>`
+        ? `<a href="${escapeAttr(p.linkPasta)}" target="_blank" rel="noopener" class="rel-folder-link" aria-label="Abrir pasta de ${nomeCliente} no Drive">${nomeCliente}<span class="rel-tip">Abrir no Drive</span></a>`
         : nomeCliente;
       return `<div class="rel-accordion-item${escondido}" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid #E5E8EC${i >= 5 ? ';display:none' : ''}">
         <span style="font-size:12px;font-family:'Courier New',monospace;color:#aaa;flex-shrink:0">#${p.num}</span>
@@ -405,7 +424,7 @@ async function carregarRelatorio() {
       const escondido = i >= 5 ? ' rel-accordion-extra' : '';
       const nomeCliente = escapeHtml(p.cliente || '—');
       const nomeHtml = p.linkPasta
-        ? `<a href="${escapeAttr(p.linkPasta)}" target="_blank" rel="noopener" style="color:#1A73C8;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Abrir pasta da proposta no Drive">${nomeCliente}</a>`
+        ? `<a href="${escapeAttr(p.linkPasta)}" target="_blank" rel="noopener" class="rel-folder-link" aria-label="Abrir pasta de ${nomeCliente} no Drive">${nomeCliente}<span class="rel-tip">Abrir no Drive</span></a>`
         : nomeCliente;
       return `<div class="rel-accordion-item${escondido}" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid #E5E8EC${i >= 5 ? ';display:none' : ''}">
         <span style="font-size:13px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${nomeHtml}</span>
