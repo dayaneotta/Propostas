@@ -217,16 +217,13 @@ function renderClientesAtivos(d) {
       <span style="font-size:13px;font-weight:600;color:#1A2A3A;width:90px;text-align:right;flex-shrink:0">${valorFmt}</span>
     </div>`;
   }).join('') : `<div style="padding:20px;text-align:center;color:#9aa7b5;font-size:13px">Nenhuma proposta aprovada${_filtroClientesAtivos!=='todas' ? ' nesse estágio' : ''} ainda.</div>`;
-  const verMaisHtml = listaAtual.length > 5
-    ? `<button onclick="_relToggleExpandirAprovadas()" style="background:transparent;border:none;padding:10px 0 0;display:flex;align-items:center;gap:6px;cursor:pointer;color:#0D4E8A;font-size:12px;font-weight:600">
-        ${_caExpandido ? 'Todas as propostas aprovadas' : 'Últimas propostas aprovadas'}
-        <i class="ti ti-chevron-down" style="font-size:14px;transition:transform .2s;transform:${_caExpandido?'rotate(180deg)':'rotate(0deg)'}" aria-hidden="true"></i>
-      </button>`
-    : '';
 
   document.getElementById('rel-clientes-ativos').innerHTML = `
-    <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
-      <div style="font-size:13px;font-weight:700;letter-spacing:.05em;color:#0D4E8A;text-transform:uppercase">Propostas aprovadas</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+      <button onclick="_relToggleExpandirAprovadas()" style="background:transparent;border:none;padding:0;display:flex;align-items:center;gap:6px;cursor:pointer">
+        <span style="font-size:13px;color:#0D4E8A;font-weight:700;text-transform:uppercase;letter-spacing:.05em">${_caExpandido ? 'Todas as propostas aprovadas' : 'Últimas propostas aprovadas'}</span>
+        <i class="ti ti-chevron-down" style="font-size:15px;color:#0D4E8A;transition:transform .2s;transform:${_caExpandido?'rotate(180deg)':'rotate(0deg)'}" aria-hidden="true"></i>
+      </button>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${chipsHtml}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
@@ -237,7 +234,6 @@ function renderClientesAtivos(d) {
       <span style="font-size:11px;color:#9aa7b5;white-space:nowrap">${aprovadas.length ? pctAndamento+'% / '+pctFinalizada+'% finalizadas' : '—'}</span>
     </div>
     <div style="background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(13,78,138,.08);padding:0 18px">${linhasHtml}</div>
-    ${verMaisHtml}
   `;
 }
 
