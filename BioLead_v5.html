@@ -540,6 +540,10 @@ textarea{resize:vertical;min-height:60px}
     </div>
     <div class="form-full">
       <button type="button" class="btn btn-primary" style="margin-top:8px;font-size:12px" onclick="gerarEmailLattes()" id="btn-gerar-email">✉️ Gerar e-mail</button>
+      <!-- Só visível no 1º e-mail — controlado por abrirModalEmail() -->
+      <div id="email1-wrap" style="display:none;margin-top:8px">
+        <button type="button" class="btn" onclick="abrirGmailDoContato()"><i class="ti ti-mail-plus" style="font-size:14px"></i> Abrir e-mail</button>
+      </div>
       <button type="button" class="btn btn-green" style="margin-top:8px" onclick="marcarContatoEnviado()"><i class="ti ti-circle-check" style="font-size:14px"></i> Marcar contato enviado</button>
       <div id="email-gerado-wrap" style="display:none;margin-top:14px">
         <label>Rascunho gerado <span style="font-weight:400;color:var(--text3);font-size:10px">(revise antes de enviar)</span></label>
@@ -1011,6 +1015,19 @@ function renderLembretes() {
 }
 
 // ── Atalho ChatGPT ────────────────────────────────────────────────────────────
+function abrirGmailDoContato() {
+  const id = document.getElementById('email-modal-id').value;
+  const p = dados.find(x => String(x.id) === String(id));
+  if (!p || !p.email) {
+    toast('⚠ Este pesquisador não tem e-mail cadastrado.');
+    return;
+  }
+  window.open(
+    'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(p.email),
+    '_blank'
+  );
+}
+
 async function marcarContatoEnviado() {
   const id = document.getElementById('email-modal-id').value;
   const numEmail = parseInt(document.getElementById('email-modal-numero').value || '1');
@@ -1218,6 +1235,9 @@ function abrirModalEmail(id) {
 
   // No 1º e-mail o e-mail é gerado via ChatGPT — esconde o botão de geração automática
   document.getElementById('btn-gerar-email').style.display = numEmail === 1 ? 'none' : '';
+
+  // Botão "Abrir e-mail" (abre Gmail com destinatário preenchido) — só no 1º e-mail
+  document.getElementById('email1-wrap').style.display = numEmail === 1 ? '' : 'none';
 
   if (numEmail === 0) {
     document.getElementById('resumo-lattes-label').innerHTML = 'Contexto da resposta <span style="font-weight:400;color:var(--text3);font-size:10px">(cole aqui o que o pesquisador respondeu, ou descreva o contexto da conversa)</span>';
