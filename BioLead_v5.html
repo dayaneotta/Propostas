@@ -537,16 +537,7 @@ textarea{resize:vertical;min-height:60px}
       <textarea id="ed-resumo-lattes" style="min-height:110px" placeholder="Ex: Doutor em Genética pela USP, atua com bioestimulantes em soja, publicou 3 artigos sobre microbiologia do solo em 2024..."></textarea>
     </div>
     <div class="form-full">
-      <!-- Atalho ChatGPT — só visível no 1º e-mail; controlado por abrirModalEmail() -->
-      <div id="chatgpt-wrap" style="display:none">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <button type="button" class="btn btn-primary" onclick="copiarDadosParaChatGPT()">Copiar dados para ChatGPT</button>
-          <button type="button" class="btn" onclick="marcarContatoEnviado()">Marcar contato enviado</button>
-        </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--text3);line-height:1.45">
-          Copie os dados, cole no ChatGPT, cole o e-mail final no Gmail e depois marque o envio aqui.
-        </div>
-      </div>
+      <button type="button" class="btn" style="margin-top:8px" onclick="marcarContatoEnviado()">✅ Marcar contato enviado</button>
       <button type="button" class="btn btn-primary" style="margin-top:8px;font-size:12px" onclick="gerarEmailLattes()" id="btn-gerar-email">✉️ Gerar e-mail</button>
       <div id="email-gerado-wrap" style="display:none;margin-top:14px">
         <label>Rascunho gerado <span style="font-weight:400;color:var(--text3);font-size:10px">(revise antes de enviar)</span></label>
@@ -1018,37 +1009,6 @@ function renderLembretes() {
 }
 
 // ── Atalho ChatGPT ────────────────────────────────────────────────────────────
-function copiarDadosParaChatGPT() {
-  const id = document.getElementById('email-modal-id').value;
-  const p = dados.find(x => String(x.id) === String(id));
-  if (!p) return;
-  const resumo = document.getElementById('ed-resumo-lattes')
-    ? document.getElementById('ed-resumo-lattes').value.trim()
-    : '';
-  const texto = [
-    'Gera o primeiro e-mail de prospecção no nosso estilo para este professor/pesquisador.',
-    '',
-    'Nome: ' + (p.nome || ''),
-    'Instituição: ' + (p.inst || ''),
-    'E-mail: ' + (p.email || ''),
-    'UF: ' + (p.estado || ''),
-    'Currículo Lattes: ' + (p.lattes || ''),
-    '',
-    'Linha de pesquisa:',
-    p.linha || '',
-    '',
-    'Resumo do Lattes / contexto:',
-    resumo || '',
-    '',
-    'Quero um e-mail curto, natural, personalizado com base no Lattes, sem parecer template, com CTA leve e uma sugestão de assunto. Não inclua assinatura.'
-  ].join('\n');
-  navigator.clipboard.writeText(texto).then(() => {
-    toast('✅ Dados copiados. Agora cole no ChatGPT.');
-  }).catch(() => {
-    toast('⚠ Não consegui copiar automaticamente.');
-  });
-}
-
 async function marcarContatoEnviado() {
   const id = document.getElementById('email-modal-id').value;
   const numEmail = parseInt(document.getElementById('email-modal-numero').value || '1');
@@ -1252,9 +1212,6 @@ function abrirModalEmail(id) {
   // Resumo do Lattes é exibido quando ainda não há sequência automática definida (0) ou no 1º e-mail
   const wrapResumo = document.getElementById('resumo-lattes-wrap');
   wrapResumo.style.display = (numEmail === 0 || numEmail === 1) ? '' : 'none';
-
-  // Bloco ChatGPT (Copiar dados + Marcar enviado) só faz sentido no 1º e-mail
-  document.getElementById('chatgpt-wrap').style.display = numEmail === 1 ? '' : 'none';
 
   if (numEmail === 0) {
     document.getElementById('resumo-lattes-label').innerHTML = 'Contexto da resposta <span style="font-weight:400;color:var(--text3);font-size:10px">(cole aqui o que o pesquisador respondeu, ou descreva o contexto da conversa)</span>';
