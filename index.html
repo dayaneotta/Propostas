@@ -15,6 +15,57 @@ function _blSessaoExpirada() {
   sessionStorage.removeItem('bl_auth_email');
   window.location.href = '/Propostas/home.html';
 }
+// ── Renovação silenciosa de sessão ────────────────────────────────────────
+// Renova o token do Google ~5 min antes de expirar, MAS só se o usuário
+// esteve ativo nos últimos 60 min. Se estiver ocioso, deixa expirar
+// normalmente — o próximo uso do app redireciona pro login.
+(function() {
+  const _GCI = '625326722614-e7pcrbr2qdcbbo33ee7599s31fov43mt.apps.googleusercontent.com';
+  const _DOM = 'biomelting.com.br';
+  let _ult = Date.now();
+  ['click','keydown','mousemove','touchstart','scroll'].forEach(function(e) {
+    window.addEventListener(e, function(){ _ult = Date.now(); }, {passive:true});
+  });
+  function _exp() {
+    const t = sessionStorage.getItem('bl_auth_token');
+    if (!t) return null;
+    try { return JSON.parse(atob(t.split('.')[1])).exp * 1000; } catch(e){ return null; }
+  }
+  function _agendar() {
+    const ms = (_exp() || 0) - Date.now() - 5*60*1000;
+    if (ms > 0) setTimeout(_tentar, ms);
+  }
+  function _tentar() {
+    if (Date.now() - _ult > 60*60*1000) return;
+    function _renovar() {
+      google.accounts.id.initialize({
+        client_id: _GCI,
+        auto_select: true,
+        hosted_domain: _DOM,
+        callback: function(r) {
+          if (!r || !r.credential) return;
+          try {
+            const p = JSON.parse(atob(r.credential.split('.')[1]));
+            if ((p.email||'').toLowerCase().endsWith('@'+_DOM)) {
+              sessionStorage.setItem('bl_auth_token', r.credential);
+              _agendar();
+            }
+          } catch(e){}
+        }
+      });
+      google.accounts.id.prompt();
+    }
+    if (typeof google !== 'undefined' && google.accounts) { _renovar(); }
+    else {
+      var s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.onload = _renovar;
+      document.head.appendChild(s);
+    }
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', _agendar); }
+  else { _agendar(); }
+})();
 </script>
 
 <meta charset="UTF-8">
