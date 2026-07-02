@@ -1095,9 +1095,6 @@ async function marcarContatoEnviado() {
     if (!confirm(rotulo + ' já está registrado. Substituir pela data de hoje?')) return;
   }
   p[campoData] = Utilities_formatarDataHoje();
-  p[campoNota] = p[campoNota] && p[campoNota].trim()
-    ? p[campoNota]
-    : 'E-mail enviado.';
   if (!STATUS_SEM_LEMBRETE.includes(p.status)) {
     p.status = 'Aguardando';
   }
