@@ -1096,7 +1096,8 @@ async function marcarContatoEnviado() {
   }
   p[campoData] = Utilities_formatarDataHoje();
   if (!STATUS_SEM_LEMBRETE.includes(p.status)) {
-    p.status = 'Aguardando';
+    // 3º contato (encerramento) de pesquisador que nunca respondeu → Inativo
+    p.status = (numEmail === 3) ? 'Inativo' : 'Aguardando';
   }
   const ok = await salvar(p);
   if (!ok) return;
