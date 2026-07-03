@@ -23582,6 +23582,16 @@ var __async = (__this, __arguments, generator) => {
         <option value="andamento">Em andamento</option>
         <option value="finalizada">Finalizada</option>
       </select>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:10px 12px;background:#F8F9FB;border-radius:8px;margin-bottom:10px;cursor:pointer;color:#1A2A3A">
+        <input type="checkbox" id="chk-carta-credito" style="width:16px;height:16px;cursor:pointer">
+        Proposta com carta de crédito
+      </label>
+      <div id="wrap-lote-credito" style="display:none;margin-bottom:14px">
+        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px">Valor do lote consumido (R$)</label>
+        <input type="number" id="inp-lote-credito" min="0" step="0.01" placeholder="ex: 1750"
+          style="width:100%;padding:9px 12px;border:1px solid #D5DCE3;border-radius:8px;font-size:13px;box-sizing:border-box">
+        <div style="font-size:11px;color:#9aa7b5;margin-top:4px">Será somado ao valor já utilizado anteriormente.</div>
+      </div>
       <div id="msg-carregar-proposta" style="font-size:12px;color:#C0392B;margin-bottom:10px;display:none"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button class="btn-secondary" id="btn-cancelar-carregar" style="padding:8px 14px">Cancelar</button>
@@ -24409,11 +24419,19 @@ document.getElementById('btn-carregar-proposta').addEventListener('click', () =>
   document.getElementById('input-num-proposta-editar').value = '';
   document.getElementById('chk-marcar-aprovada').checked = false;
   document.getElementById('sel-execucao').value = '';
+  document.getElementById('chk-carta-credito').checked = false;
+  document.getElementById('inp-lote-credito').value = '';
+  document.getElementById('wrap-lote-credito').style.display = 'none';
   document.getElementById('msg-carregar-proposta').style.display = 'none';
   document.getElementById('modal-carregar-proposta').style.display = 'flex';
 });
 document.getElementById('btn-cancelar-carregar').addEventListener('click', () => {
   document.getElementById('modal-carregar-proposta').style.display = 'none';
+});
+
+document.getElementById('chk-carta-credito').addEventListener('change', function() {
+  document.getElementById('wrap-lote-credito').style.display = this.checked ? 'block' : 'none';
+  if (!this.checked) document.getElementById('inp-lote-credito').value = '';
 });
 
 // Limpa todos os itens da tabela
@@ -24470,6 +24488,9 @@ document.getElementById('btn-confirmar-carregar').addEventListener('click', asyn
   const num = document.getElementById('input-num-proposta-editar').value.trim();
   const marcarAprovada = document.getElementById('chk-marcar-aprovada').checked;
   const novaExecucao = document.getElementById('sel-execucao').value;
+  const cartaCredito = document.getElementById('chk-carta-credito').checked;
+  const loteCreditoStr = document.getElementById('inp-lote-credito').value.trim();
+  const loteCredito = cartaCredito && loteCreditoStr ? parseFloat(loteCreditoStr.replace(',', '.')) : 0;
   const msgEl = document.getElementById('msg-carregar-proposta');
   msgEl.style.display = 'none';
   if (!num) {
@@ -24477,14 +24498,17 @@ document.getElementById('btn-confirmar-carregar').addEventListener('click', asyn
     msgEl.style.display = 'block';
     return;
   }
+  const temAtualizacao = marcarAprovada || novaExecucao || cartaCredito;
   const btn = document.getElementById('btn-confirmar-carregar');
   btn.disabled = true;
-  btn.textContent = (marcarAprovada || novaExecucao) ? 'Atualizando…' : 'Buscando…';
+  btn.textContent = temAtualizacao ? 'Atualizando…' : 'Buscando…';
   try {
-    if (marcarAprovada || novaExecucao) {
+    if (temAtualizacao) {
       const corpo = { action: 'marcarStatus', token: sessionStorage.getItem('bl_auth_token') || '', num: num };
       if (marcarAprovada) corpo.status = 'Aprovada';
       if (novaExecucao) corpo.execucao = novaExecucao;
+      if (cartaCredito) corpo.carta_credito = 'sim';
+      if (loteCredito > 0) corpo.lote_credito = loteCredito;
       const resp = await fetch(SHEETS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
@@ -24502,6 +24526,8 @@ document.getElementById('btn-confirmar-carregar').addEventListener('click', asyn
       if (marcarAprovada) partes.push('marcada como aprovada');
       if (novaExecucao === 'andamento') partes.push('com execução em andamento');
       if (novaExecucao === 'finalizada') partes.push('com execução finalizada');
+      if (cartaCredito && loteCredito > 0) partes.push('carta de crédito atualizada (+ R$ ' + loteCredito.toLocaleString('pt-BR') + ')');
+      else if (cartaCredito) partes.push('marcada como carta de crédito');
       showToast('✓ Proposta #' + num + ' ' + partes.join(' e ') + '.');
       return;
     }
