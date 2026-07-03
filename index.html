@@ -23576,14 +23576,12 @@ var __async = (__this, __arguments, generator) => {
         <input type="checkbox" id="chk-marcar-aprovada" style="width:16px;height:16px;cursor:pointer">
         Marcar esta proposta como aprovada
       </label>
-      <div id="wrap-execucao" style="display:none">
-        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px">Status de execução (opcional)</label>
-        <select id="sel-execucao" style="width:100%;padding:9px 12px;border:1px solid #D5DCE3;border-radius:8px;font-size:13px;margin-bottom:14px;box-sizing:border-box;background:#fff">
-          <option value="">— não alterar —</option>
-          <option value="andamento">Em andamento</option>
-          <option value="finalizada">Finalizada</option>
-        </select>
-      </div>
+      <label style="display:block;font-size:12px;color:#666;margin-bottom:4px">Status de execução (opcional)</label>
+      <select id="sel-execucao" style="width:100%;padding:9px 12px;border:1px solid #D5DCE3;border-radius:8px;font-size:13px;margin-bottom:14px;box-sizing:border-box;background:#fff">
+        <option value="">— não alterar —</option>
+        <option value="andamento">Em andamento</option>
+        <option value="finalizada">Finalizada</option>
+      </select>
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:10px 12px;background:#F8F9FB;border-radius:8px;margin-bottom:4px;cursor:pointer;color:#1A2A3A">
         <input type="checkbox" id="chk-carta-credito" style="width:16px;height:16px;cursor:pointer">
         Proposta com carta de crédito
@@ -24422,7 +24420,6 @@ document.getElementById('btn-carregar-proposta').addEventListener('click', () =>
   document.getElementById('input-num-proposta-editar').value = '';
   document.getElementById('chk-marcar-aprovada').checked = false;
   document.getElementById('sel-execucao').value = '';
-  document.getElementById('wrap-execucao').style.display = 'none';
   document.getElementById('chk-carta-credito').checked = false;
   document.getElementById('inp-lote-credito').value = '';
   document.getElementById('wrap-lote-credito').style.display = 'none';
@@ -24436,11 +24433,6 @@ document.getElementById('btn-cancelar-carregar').addEventListener('click', () =>
 document.getElementById('chk-carta-credito').addEventListener('change', function() {
   document.getElementById('wrap-lote-credito').style.display = this.checked ? 'block' : 'none';
   if (!this.checked) document.getElementById('inp-lote-credito').value = '';
-});
-
-document.getElementById('chk-marcar-aprovada').addEventListener('change', function() {
-  document.getElementById('wrap-execucao').style.display = this.checked ? 'block' : 'none';
-  if (!this.checked) document.getElementById('sel-execucao').value = '';
 });
 
 // Limpa todos os itens da tabela
