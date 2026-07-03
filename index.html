@@ -23582,11 +23582,13 @@ var __async = (__this, __arguments, generator) => {
         <option value="andamento">Em andamento</option>
         <option value="finalizada">Finalizada</option>
       </select>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:10px 12px;background:#F8F9FB;border-radius:8px;margin-bottom:2px;cursor:pointer;color:#1A2A3A">
-        <input type="checkbox" id="chk-carta-credito" style="width:16px;height:16px;cursor:pointer">
-        Proposta com carta de crédito
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;padding:10px 12px;background:#F8F9FB;border-radius:8px;margin-bottom:10px;cursor:pointer;color:#1A2A3A">
+        <input type="checkbox" id="chk-carta-credito" style="width:16px;height:16px;cursor:pointer;margin-top:2px;flex-shrink:0">
+        <div>
+          Proposta com carta de crédito
+          <div style="font-size:11px;color:#9aa7b5;font-style:italic;margin-top:3px">Aplicável apenas a propostas aprovadas.</div>
+        </div>
       </label>
-      <div style="font-size:11px;color:#9aa7b5;margin-bottom:10px;padding-left:36px;font-style:italic">Aplicável apenas a propostas aprovadas.</div>
       <div id="wrap-lote-credito" style="display:none;margin-bottom:14px">
         <label style="display:block;font-size:12px;color:#666;margin-bottom:4px">Crédito utilizado (R$)</label>
         <input type="number" id="inp-lote-credito" min="0" step="0.01" placeholder="ex: 1750"
