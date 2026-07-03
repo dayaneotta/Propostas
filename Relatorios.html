@@ -13,57 +13,6 @@
     window.location.href = '/Propostas/home.html';
   }
 })();
-function _blSessaoExpirada() {
-  sessionStorage.removeItem('bl_auth_token');
-  sessionStorage.removeItem('bl_auth_email');
-  window.location.href = '/Propostas/home.html';
-}
-// ── Renovação silenciosa de sessão ────────────────────────────────────────
-(function() {
-  const _GCI = '625326722614-e7pcrbr2qdcbbo33ee7599s31fov43mt.apps.googleusercontent.com';
-  const _DOM = 'biomelting.com.br';
-  let _ult = Date.now();
-  ['click','keydown','mousemove','touchstart','scroll'].forEach(function(e) {
-    window.addEventListener(e, function(){ _ult = Date.now(); }, {passive:true});
-  });
-  function _exp() {
-    const t = sessionStorage.getItem('bl_auth_token');
-    if (!t) return null;
-    try { return JSON.parse(atob(t.split('.')[1])).exp * 1000; } catch(e){ return null; }
-  }
-  function _agendar() {
-    const ms = (_exp() || 0) - Date.now() - 5*60*1000;
-    if (ms > 0) setTimeout(_tentar, ms);
-  }
-  function _tentar() {
-    if (Date.now() - _ult > 60*60*1000) return;
-    function _renovar() {
-      google.accounts.id.initialize({
-        client_id: _GCI, auto_select: true, hosted_domain: _DOM,
-        callback: function(r) {
-          if (!r || !r.credential) return;
-          try {
-            const p = JSON.parse(atob(r.credential.split('.')[1]));
-            if ((p.email||'').toLowerCase().endsWith('@'+_DOM)) {
-              sessionStorage.setItem('bl_auth_token', r.credential);
-              _agendar();
-            }
-          } catch(e){}
-        }
-      });
-      google.accounts.id.prompt();
-    }
-    if (typeof google !== 'undefined' && google.accounts) { _renovar(); }
-    else {
-      var s = document.createElement('script');
-      s.src = 'https://accounts.google.com/gsi/client';
-      s.onload = _renovar;
-      document.head.appendChild(s);
-    }
-  }
-  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', _agendar); }
-  else { _agendar(); }
-})();
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -167,6 +116,10 @@ function _blSessaoExpirada() {
           </button>
           <div id="rel-proximos-vencimentos" style="background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(13,78,138,.08);padding:0 18px"></div>
         </div>
+
+        <!-- Cartas de crédito — só aparece quando há saldo ativo -->
+        <div id="rel-cartas-credito" style="display:none;margin-top:28px"></div>
+
       </div>
 
       <!-- ABA: Por serviço -->
@@ -288,6 +241,55 @@ function renderClientesAtivos(d) {
   `;
 }
 
+function renderCartasCredito(d) {
+  const propostas = (d.propostas || []).filter(function(p) {
+    return p.carta_credito === 'sim' || p.carta_credito === true;
+  });
+
+  const comSaldo = propostas.filter(function(p) {
+    const utilizado = parseFloat(String(p.valor_utilizado || '0').replace('R$','').replace(/\./g,'').replace(',','.').trim()) || 0;
+    const total = p.valor || 0;
+    return (total - utilizado) > 0;
+  }).sort(function(a, b) {
+    // Mais recentes primeiro
+    return String(b.num || '').localeCompare(String(a.num || ''));
+  });
+
+  const el = document.getElementById('rel-cartas-credito');
+  if (!comSaldo.length) { el.style.display = 'none'; return; }
+
+  const linhas = comSaldo.map(function(p, i) {
+    const utilizado = parseFloat(String(p.valor_utilizado || '0').replace('R$','').replace(/\./g,'').replace(',','.').trim()) || 0;
+    const total = p.valor || 0;
+    const saldo = total - utilizado;
+    const pct = total > 0 ? Math.round((utilizado / total) * 100) : 0;
+    const nomeCliente = escapeHtml(p.cliente || '—');
+    const nomeHtml = p.linkPasta
+      ? `<a href="${escapeAttr(p.linkPasta)}" target="_blank" rel="noopener" class="rel-folder-link" onmouseenter="mostrarDicaPasta(event)" onmouseleave="esconderDicaPasta(event)"><span class="rel-name-text">${nomeCliente}</span></a>`
+      : `<span class="rel-name-text">${nomeCliente}</span>`;
+    return `<div class="ca-row" style="animation-delay:${i*30}ms">
+      <span style="font-size:11px;color:#9aa7b5;flex-shrink:0;width:90px">#${escapeHtml(p.num)}</span>
+      <span style="font-size:13px;flex:1;min-width:0">${nomeHtml}</span>
+      <div style="flex-shrink:0;width:140px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#9aa7b5;margin-bottom:3px">
+          <span>Utilizado ${pct}%</span>
+          <span>R$ ${utilizado.toLocaleString('pt-BR',{maximumFractionDigits:0})} / R$ ${total.toLocaleString('pt-BR',{maximumFractionDigits:0})}</span>
+        </div>
+        <div style="height:5px;border-radius:3px;background:#EDF1F5;overflow:hidden">
+          <div style="height:100%;background:#1A73C8;width:${pct}%"></div>
+        </div>
+      </div>
+      <span style="font-size:13px;font-weight:700;color:#1D9E75;width:100px;text-align:right;flex-shrink:0">R$ ${saldo.toLocaleString('pt-BR',{maximumFractionDigits:0})}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="font-size:13px;font-weight:700;letter-spacing:.05em;color:#0D4E8A;text-transform:uppercase;margin-bottom:10px">Cartas de crédito ativas</div>
+    <div style="background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(13,78,138,.08);padding:0 18px">${linhas}</div>
+  `;
+  el.style.display = 'block';
+}
+
 function _relMudarFiltroClientes(key) {
   _filtroClientesAtivos = key;
   _caExpandido = false;
@@ -372,6 +374,7 @@ async function carregarRelatorio() {
 
     // Clientes ativos (propostas aprovadas, por estágio de execução)
     renderClientesAtivos(d);
+    renderCartasCredito(d);
 
     // Comparação mês a mês — mês mais recente com dados vs o mês anterior
     const mesesOrdenados = Object.keys(d.porMes).sort((a, b) => {
