@@ -56,6 +56,7 @@
   .card.st-novo { border-left-color: var(--teal); }
   .card.st-atualiza { border-left-color: var(--mid); }
   .card.st-duplicata { border-left-color: var(--amber); }
+  .card.st-descartado { border-left-color: #C3CBD3; opacity: .62; }
 
   .left > * { margin-top:6px; }
   .left > *:first-child { margin-top:0; }
@@ -79,6 +80,7 @@
   .status.novo { background:var(--teal-bg); color:#177A63; }
   .status.atualiza { background:var(--blue-bg); color:var(--deep); }
   .status.duplicata { background:var(--amber-bg); color:var(--amber); }
+  .status.descartado { background:#EEF1F4; color:#7C8896; }
 
   .ver-edital { font-size:12px; font-weight:700; color:var(--mid); text-decoration:none; margin-top:4px; }
   .ver-edital:hover { text-decoration:underline; }
@@ -125,7 +127,17 @@
 <script>
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxWyCIZPQBT-IyuVZ9Xm0dwAepXTsRJofVeHsnRL5pHZNY4wlwrK84YMA3fQ1UipL1b/exec';
 
-const STATUS_CLASSE = { 'Novo': 'novo', 'Já no BioLead': 'atualiza', 'Possível duplicata': 'duplicata' };
+// Função em vez de dicionário fixo porque "Não consta na Fase X" e "Não
+// avançou (parou na Fase X)" têm texto variável (o X muda) — um dicionário
+// de match exato nunca ia reconhecer essas. O fallback só cai em 'novo' se
+// o status for algo genuinamente desconhecido, o que deveria ser raro.
+function classeDoStatus(status) {
+  if (status === 'Novo') return 'novo';
+  if (status === 'Já no BioLead') return 'atualiza';
+  if (status === 'Possível duplicata') return 'duplicata';
+  if (status && (status.indexOf('fora do limite') !== -1 || status.indexOf('Não consta') !== -1 || status.indexOf('Não avançou') !== -1)) return 'descartado';
+  return 'novo';
+}
 
 let TODOS_OS_ITENS = [];
 let fonteAtiva = 'todas';
@@ -201,7 +213,7 @@ function renderizarLista() {
   }
 
   const listaHtml = itensFiltrados.map(function(item) {
-    const classe = STATUS_CLASSE[item.status] || 'novo';
+    const classe = classeDoStatus(item.status);
     const forte = item.sinal === 'forte';
     return `
       <div class="card st-${classe}">
