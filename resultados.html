@@ -207,7 +207,10 @@ function renderizarLista() {
       <div class="card st-${classe}">
         <div class="left">
           <div><span class="who">${item.pesquisador || ''}</span><span class="inst">${item.instituicao || ''}${item.uf ? ' · ' + item.uf : ''}</span></div>
-          <div class="meta-row"><span class="badge">${item.fonte || ''}</span></div>
+          <div class="meta-row">
+            <span class="badge">${item.fonte || ''}</span>
+            ${item.fase || item.situacao ? `<span class="badge">${[item.situacao, item.fase ? 'Fase ' + item.fase : ''].filter(Boolean).join(' · ')}</span>` : ''}
+          </div>
           <div class="chamada">${item.chamada || ''}</div>
           <div class="signal">
             <span class="ticks">
