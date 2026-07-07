@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resultados de Editais — Fila de Revisão</title>
+<style>
+  :root {
+    --bg: #F5F7FA;
+    --surface: #FFFFFF;
+    --border: #E2E7EE;
+    --text: #16232E;
+    --text-muted: #5B6B7A;
+    --text-faint: #94A3B3;
+    --deep: #0D4E8A;
+    --mid: #1A73C8;
+    --teal: #2EC4A5;
+    --amber: #B9832E;
+    --amber-bg: #FBF2E2;
+    --teal-bg: #E4F7F2;
+    --blue-bg: #E9F1FB;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 880px; margin: 0 auto; padding: 32px 20px 60px; }
+
+  .masthead { display:flex; align-items:center; gap:14px; margin-bottom: 28px; }
+  .mark { width: 34px; height:34px; border-radius:9px; background: linear-gradient(135deg, var(--deep), var(--mid) 55%, var(--teal)); flex-shrink:0; }
+  .masthead h1 { font-size: 22px; margin:0; letter-spacing:-0.01em; font-weight:700; }
+  .masthead p { margin:2px 0 0; font-size:13px; color:var(--text-muted); }
+
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px; }
+  .stat { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+  .stat .n { font-family:var(--font-mono); font-size:26px; font-weight:600; line-height:1; }
+  .stat .l { font-size:12.5px; color:var(--text-muted); margin-top:6px; }
+  .stat.novo .n { color: var(--teal); }
+  .stat.atualiza .n { color: var(--mid); }
+  .stat.duplicata .n { color: var(--amber); }
+
+  .filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .chip { border:1px solid var(--border); background:var(--surface); color:var(--text-muted); font-size:12.5px; padding:6px 12px; border-radius:20px; cursor:pointer; user-select:none; transition:.15s; }
+  .chip:hover { border-color: var(--mid); color:var(--text); }
+  .chip.active { background:var(--deep); border-color:var(--deep); color:#fff; }
+  button:focus-visible, .chip:focus-visible { outline: 2px solid var(--mid); outline-offset:2px; }
+
+  .list { display:flex; flex-direction:column; gap:10px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--border); border-radius:10px; padding:16px 18px; display:grid; grid-template-columns: 1fr auto; gap:16px; align-items:start; }
+  .card.st-novo { border-left-color: var(--teal); }
+  .card.st-atualiza { border-left-color: var(--mid); }
+  .card.st-duplicata { border-left-color: var(--amber); }
+
+  .left > * { margin-top:6px; }
+  .left > *:first-child { margin-top:0; }
+  .who { font-weight:600; font-size:15px; }
+  .inst { color:var(--text-muted); font-size:13px; margin-left:6px; font-weight:400; }
+  .meta-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .badge { font-size:11.5px; padding:3px 8px; border-radius:6px; background:var(--bg); color:var(--text-muted); border:1px solid var(--border); }
+  .chamada { font-size:13px; color:var(--text-muted); max-width:56ch; }
+
+  .signal { display:flex; align-items:center; gap:5px; }
+  .signal .ticks { display:flex; gap:2px; }
+  .signal .tick { width:10px; height:5px; border-radius:2px; background:var(--border); }
+  .signal .tick.on { background: var(--teal); }
+  .signal .label { font-size:11px; color:var(--text-faint); }
+  .match-note { font-size:11.5px; color:var(--text-muted); }
+
+  .right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; min-width:160px; }
+  .value { font-family:var(--font-mono); font-weight:600; font-size:15px; }
+  .date { font-size:11.5px; color:var(--text-faint); }
+  .status { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:3px 8px; border-radius:5px; }
+  .status.novo { background:var(--teal-bg); color:#177A63; }
+  .status.atualiza { background:var(--blue-bg); color:var(--deep); }
+  .status.duplicata { background:var(--amber-bg); color:var(--amber); }
+
+  .ver-edital { font-size:12px; font-weight:700; color:var(--mid); text-decoration:none; margin-top:4px; }
+  .ver-edital:hover { text-decoration:underline; }
+
+  .estado { text-align:center; padding:60px 20px; color:var(--text-muted); font-size:14px; }
+  .estado.erro { color:var(--amber); }
+
+  .footnote { text-align:center; color:var(--text-faint); font-size:11.5px; margin-top:32px; }
+
+  @media (max-width: 620px) {
+    .card { grid-template-columns: 1fr; }
+    .right { align-items:flex-start; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="masthead">
+    <div class="mark"></div>
+    <div>
+      <h1>Resultados de Editais</h1>
+      <p>Fila de revisão · candidatos detectados no CNPq</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat novo"><div class="n" id="count-novo">–</div><div class="l">novos leads candidatos</div></div>
+    <div class="stat atualiza"><div class="n" id="count-atualiza">–</div><div class="l">já no BioLead</div></div>
+    <div class="stat duplicata"><div class="n" id="count-duplicata">–</div><div class="l">possíveis duplicatas</div></div>
+  </div>
+
+  <div class="filters" id="filters"></div>
+
+  <div id="conteudo">
+    <div class="estado" id="carregando">Carregando fila de revisão…</div>
+  </div>
+
+  <p class="footnote">Resultados de Editais · CNPq</p>
+</div>
+
+<script>
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxWyCIZPQBT-IyuVZ9Xm0dwAepXTsRJofVeHsnRL5pHZNY4wlwrK84YMA3fQ1UipL1b/exec';
+
+const STATUS_CLASSE = { 'Novo': 'novo', 'Já no BioLead': 'atualiza', 'Possível duplicata': 'duplicata' };
+
+let TODOS_OS_ITENS = [];
+let fonteAtiva = 'todas';
+
+function formatarValor(v) {
+  if (!v && v !== 0) return '';
+  const num = typeof v === 'number' ? v : parseFloat(v);
+  if (isNaN(num)) return String(v);
+  return 'R$ ' + num.toLocaleString('pt-BR');
+}
+
+function formatarData(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('pt-BR');
+}
+
+function montarFiltros(itens) {
+  const fontes = [...new Set(itens.map(function(i) { return i.fonte; }))].sort();
+  const container = document.getElementById('filters');
+  container.innerHTML = '';
+
+  const chipTodas = document.createElement('div');
+  chipTodas.className = 'chip active';
+  chipTodas.tabIndex = 0;
+  chipTodas.dataset.fonte = 'todas';
+  chipTodas.textContent = 'Todas as fontes';
+  container.appendChild(chipTodas);
+
+  fontes.forEach(function(f) {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.tabIndex = 0;
+    chip.dataset.fonte = f;
+    chip.textContent = f;
+    container.appendChild(chip);
+  });
+
+  container.addEventListener('click', function(e) {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    container.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('active'); });
+    chip.classList.add('active');
+    fonteAtiva = chip.dataset.fonte;
+    renderizarLista();
+  });
+  container.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      const chip = e.target.closest('.chip');
+      if (chip) { e.preventDefault(); chip.click(); }
+    }
+  });
+}
+
+function atualizarContadores(itens) {
+  const cont = { Novo: 0, 'Já no BioLead': 0, 'Possível duplicata': 0 };
+  itens.forEach(function(i) { if (cont[i.status] !== undefined) cont[i.status]++; });
+  document.getElementById('count-novo').textContent = cont['Novo'];
+  document.getElementById('count-atualiza').textContent = cont['Já no BioLead'];
+  document.getElementById('count-duplicata').textContent = cont['Possível duplicata'];
+}
+
+function renderizarLista() {
+  const conteudo = document.getElementById('conteudo');
+  const itensFiltrados = TODOS_OS_ITENS.filter(function(i) {
+    return fonteAtiva === 'todas' || i.fonte === fonteAtiva;
+  });
+
+  if (itensFiltrados.length === 0) {
+    conteudo.innerHTML = '<div class="estado">Nada na fila por aqui — tudo revisado, ou nenhum resultado novo ainda.</div>';
+    return;
+  }
+
+  const listaHtml = itensFiltrados.map(function(item) {
+    const classe = STATUS_CLASSE[item.status] || 'novo';
+    const forte = item.sinal === 'forte';
+    return `
+      <div class="card st-${classe}">
+        <div class="left">
+          <div><span class="who">${item.pesquisador || ''}</span><span class="inst">${item.instituicao || ''}${item.uf ? ' · ' + item.uf : ''}</span></div>
+          <div class="meta-row"><span class="badge">${item.fonte || ''}</span></div>
+          <div class="chamada">${item.chamada || ''}</div>
+          <div class="signal">
+            <span class="ticks">
+              <span class="tick on"></span>
+              <span class="tick ${forte ? 'on' : ''}"></span>
+            </span>
+            <span class="label">sinal ${forte ? 'forte' : 'médio'}</span>
+          </div>
+          ${item.matchBioLead ? `<div class="meta-row"><span class="match-note">${item.matchBioLead}</span></div>` : ''}
+        </div>
+        <div class="right">
+          <span class="status ${classe}">${item.status}</span>
+          <span class="value">${formatarValor(item.valor)}</span>
+          <span class="date">${formatarData(item.detectadoEm)}</span>
+          ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  conteudo.innerHTML = '<div class="list">' + listaHtml + '</div>';
+}
+
+function mostrarErro(msg) {
+  document.getElementById('conteudo').innerHTML = '<div class="estado erro">' + msg + '</div>';
+}
+
+function carregarDados() {
+  const token = sessionStorage.getItem('bl_auth_token');
+  if (!token) {
+    window.location.href = 'home.html';
+    return;
+  }
+
+  const callbackName = 'jsonpCallback_' + Date.now();
+  window[callbackName] = function(dados) {
+    delete window[callbackName];
+    const scriptTag = document.getElementById(callbackName);
+    if (scriptTag) scriptTag.remove();
+
+    if (dados.naoAutorizado) {
+      sessionStorage.removeItem('bl_auth_token');
+      window.location.href = 'home.html';
+      return;
+    }
+    if (dados.error) {
+      mostrarErro('Erro ao carregar: ' + dados.error);
+      return;
+    }
+
+    TODOS_OS_ITENS = dados.itens || [];
+    montarFiltros(TODOS_OS_ITENS);
+    atualizarContadores(TODOS_OS_ITENS);
+    renderizarLista();
+  };
+
+  const scriptEl = document.createElement('script');
+  scriptEl.id = callbackName;
+  scriptEl.src = WEB_APP_URL + '?action=listar&token=' + encodeURIComponent(token) + '&callback=' + callbackName;
+  scriptEl.onerror = function() { mostrarErro('Não foi possível conectar ao servidor. Tente recarregar a página.'); };
+  document.body.appendChild(scriptEl);
+}
+
+carregarDados();
+</script>
+</body>
+</html>
