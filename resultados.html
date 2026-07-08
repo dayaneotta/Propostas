@@ -87,6 +87,13 @@
   .status.descartado { background:#EEF1F4; color:#7C8896; }
 
   .ver-edital { font-size:12px; font-weight:700; color:var(--mid); text-decoration:none; margin-top:4px; }
+
+  .actions { display:flex; flex-direction:column; gap:6px; width:100%; margin-top:10px; min-width:150px; }
+  .btn-decisao { font-family:inherit; font-size:12px; font-weight:600; border:none; padding:8px 12px; border-radius:7px; cursor:pointer; width:100%; transition:opacity .15s; }
+  .btn-decisao:hover { opacity:.85; }
+  .btn-decisao:disabled { opacity:.5; cursor:default; }
+  .btn-funil { background:var(--teal); color:#fff; }
+  .btn-descartar { background:var(--bg); color:var(--text-muted); border:1px solid var(--border) !important; }
   .ver-edital:hover { text-decoration:underline; }
 
   .estado { text-align:center; padding:60px 20px; color:var(--text-muted); font-size:14px; }
@@ -262,6 +269,10 @@ function renderizarLista() {
           <span class="value">${formatarValor(item.valor)}</span>
           <span class="date">${formatarData(item.detectadoEm)}</span>
           ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
+          <div class="actions">
+            <button class="btn-decisao btn-funil" data-processo="${item.processo || ''}" data-decisao="Entrou no funil">Entrou no funil</button>
+            <button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Descartado">Descartar</button>
+          </div>
         </div>
       </div>
     `;
@@ -273,6 +284,60 @@ function renderizarLista() {
 function mostrarErro(msg) {
   document.getElementById('conteudo').innerHTML = '<div class="estado erro">' + msg + '</div>';
 }
+
+// Grava a decisão (Entrou no funil / Descartado) no backend, e — só se der
+// certo — tira o item da lista local sem precisar recarregar tudo. Mesmo
+// padrão JSONP das outras chamadas, já que é a forma que já funciona
+// autenticada nesse projeto.
+function decidir(processo, decisao, botoesDoCard) {
+  const token = sessionStorage.getItem('bl_auth_token');
+  if (!token) { window.location.href = 'home.html'; return; }
+
+  botoesDoCard.forEach(function(b) { b.disabled = true; });
+
+  const callbackName = 'decidirCb_' + Date.now();
+  window[callbackName] = function(resp) {
+    delete window[callbackName];
+    const scriptTag = document.getElementById(callbackName);
+    if (scriptTag) scriptTag.remove();
+
+    if (resp && resp.naoAutorizado) {
+      sessionStorage.removeItem('bl_auth_token');
+      window.location.href = 'home.html';
+      return;
+    }
+    if (!resp || !resp.ok) {
+      alert('Não foi possível salvar a decisão. Tenta de novo.');
+      botoesDoCard.forEach(function(b) { b.disabled = false; });
+      return;
+    }
+
+    TODOS_OS_ITENS = TODOS_OS_ITENS.filter(function(i) { return i.processo !== processo; });
+    montarFiltros(TODOS_OS_ITENS);
+    atualizarContadores(TODOS_OS_ITENS);
+    renderizarLista();
+  };
+
+  const scriptEl = document.createElement('script');
+  scriptEl.id = callbackName;
+  scriptEl.src = WEB_APP_URL + '?action=decidir&processo=' + encodeURIComponent(processo)
+    + '&decisao=' + encodeURIComponent(decisao) + '&token=' + encodeURIComponent(token) + '&callback=' + callbackName;
+  scriptEl.onerror = function() {
+    alert('Não foi possível salvar a decisão (falha de conexão). Tenta de novo.');
+    botoesDoCard.forEach(function(b) { b.disabled = false; });
+  };
+  document.body.appendChild(scriptEl);
+}
+
+document.getElementById('conteudo').addEventListener('click', function(e) {
+  const btn = e.target.closest('.btn-decisao');
+  if (!btn) return;
+  const processo = btn.dataset.processo;
+  const decisao = btn.dataset.decisao;
+  if (!processo) return;
+  const botoesDoCard = Array.from(btn.closest('.actions').querySelectorAll('.btn-decisao'));
+  decidir(processo, decisao, botoesDoCard);
+});
 
 function carregarDados() {
   const token = sessionStorage.getItem('bl_auth_token');
