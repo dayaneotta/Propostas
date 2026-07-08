@@ -203,10 +203,19 @@ function montarFiltros(itens) {
 
 function atualizarContadores(itens) {
   const cont = { Novo: 0, 'Já no BioLead': 0, 'Possível duplicata': 0 };
-  itens.forEach(function(i) { if (cont[i.status] !== undefined) cont[i.status]++; });
+  let jaCadastradoViaNota = 0;
+  itens.forEach(function(i) {
+    if (cont[i.status] !== undefined) cont[i.status]++;
+    // Categorias fora do fluxo principal (fora do limite, recomendado
+    // parcial) não têm status "Já no BioLead" — só uma nota no
+    // matchBioLead, pra não perder a informação de fase. Conta aqui
+    // também, senão o card mostra menos gente do que realmente está
+    // cadastrada.
+    else if ((i.matchBioLead || '').indexOf('Já cadastrado no BioLead') !== -1) jaCadastradoViaNota++;
+  });
   document.getElementById('count-total').textContent = itens.length;
   document.getElementById('count-novo').textContent = cont['Novo'];
-  document.getElementById('count-atualiza').textContent = cont['Já no BioLead'];
+  document.getElementById('count-atualiza').textContent = cont['Já no BioLead'] + jaCadastradoViaNota;
   document.getElementById('count-duplicata').textContent = cont['Possível duplicata'];
 }
 
