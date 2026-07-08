@@ -46,6 +46,10 @@
   .stat.novo-prelim .n { color: #6FAE9E; }
   .stat.atualiza .n { color: var(--mid); }
   .stat.duplicata .n { color: var(--amber); }
+  .stat { cursor:pointer; transition:.15s; }
+  .stat:hover { border-color: var(--mid); }
+  .stat:focus-visible { outline: 2px solid var(--mid); outline-offset:2px; }
+  .stat.card-ativo { border-color: var(--deep); border-width:2px; padding:13px; box-shadow:0 2px 8px rgba(13,78,138,.1); }
 
   .busca { width:100%; box-sizing:border-box; border:1px solid var(--border); background:var(--surface); font-size:13.5px; padding:10px 14px; border-radius:8px; margin-bottom:14px; font-family:inherit; color:var(--text); }
   .busca:focus { outline:none; border-color:var(--mid); }
@@ -122,12 +126,12 @@
     </div>
   </div>
 
-  <div class="stats">
-    <div class="stat total"><div class="n" id="count-total">–</div><div class="l">total na fila</div></div>
-    <div class="stat novo"><div class="n" id="count-novo-final">–</div><div class="l">novo · fase final</div></div>
-    <div class="stat novo-prelim"><div class="n" id="count-novo-prelim">–</div><div class="l">novo · fase preliminar</div></div>
-    <div class="stat atualiza"><div class="n" id="count-atualiza">–</div><div class="l">já no BioLead</div></div>
-    <div class="stat duplicata"><div class="n" id="count-duplicata">–</div><div class="l">possíveis duplicatas</div></div>
+  <div class="stats" id="stats">
+    <div class="stat total" data-filtro="" tabindex="0"><div class="n" id="count-total">–</div><div class="l">total na fila</div></div>
+    <div class="stat novo" data-filtro="novo-final" tabindex="0"><div class="n" id="count-novo-final">–</div><div class="l">novo · fase final</div></div>
+    <div class="stat novo-prelim" data-filtro="novo-prelim" tabindex="0"><div class="n" id="count-novo-prelim">–</div><div class="l">novo · fase preliminar</div></div>
+    <div class="stat atualiza" data-filtro="atualiza" tabindex="0"><div class="n" id="count-atualiza">–</div><div class="l">já no BioLead</div></div>
+    <div class="stat duplicata" data-filtro="duplicata" tabindex="0"><div class="n" id="count-duplicata">–</div><div class="l">possíveis duplicatas</div></div>
   </div>
 
   <input type="text" id="busca" class="busca" placeholder="Buscar por nome, instituição, ou &quot;já cadastrado&quot;...">
@@ -159,6 +163,7 @@ function classeDoStatus(status) {
 let TODOS_OS_ITENS = [];
 let fonteAtiva = 'todas';
 let termoBusca = '';
+let filtroCard = null; // 'novo-final' | 'novo-prelim' | 'atualiza' | 'duplicata' | null (= total, sem filtro)
 
 function formatarValor(v) {
   if (!v && v !== 0) return '';
@@ -211,31 +216,30 @@ function montarFiltros(itens) {
   });
 }
 
+// Única fonte de verdade pra "qual card esse item conta" — usada tanto em
+// atualizarContadores (contagem) quanto em renderizarLista (filtro ao
+// clicar no card). Antes essa lógica existia só dentro do loop de
+// contagem; separar evita os dois se desalinharem se um for editado sem o
+// outro.
+function classificarParaCard(item) {
+  if (item.status === 'Novo') return item.situacao === 'Final' ? 'novo-final' : 'novo-prelim';
+  if (item.status === 'Já no BioLead') return 'atualiza';
+  if (item.status === 'Possível duplicata') return 'duplicata';
+  if ((item.matchBioLead || '').indexOf('Já cadastrado no BioLead') !== -1) return 'atualiza';
+  return null; // outras categorias (fora do limite, recomendado parcial, não consta) não têm card próprio
+}
+
 function atualizarContadores(itens) {
-  const cont = { 'Já no BioLead': 0, 'Possível duplicata': 0 };
-  let novoFinal = 0, novoPrelim = 0, jaCadastradoViaNota = 0;
+  const cont = { 'novo-final': 0, 'novo-prelim': 0, 'atualiza': 0, 'duplicata': 0 };
   itens.forEach(function(i) {
-    if (i.status === 'Novo') {
-      // Em branco entra junto com Preliminar (menor confiança) por
-      // precaução — são as linhas antigas preenchidas retroativamente
-      // sem saber se eram Preliminar ou Final de verdade.
-      if (i.situacao === 'Final') novoFinal++;
-      else novoPrelim++;
-    } else if (cont[i.status] !== undefined) {
-      cont[i.status]++;
-    }
-    // Categorias fora do fluxo principal (fora do limite, recomendado
-    // parcial) não têm status "Já no BioLead" — só uma nota no
-    // matchBioLead, pra não perder a informação de fase. Conta aqui
-    // também, senão o card mostra menos gente do que realmente está
-    // cadastrada.
-    else if ((i.matchBioLead || '').indexOf('Já cadastrado no BioLead') !== -1) jaCadastradoViaNota++;
+    const c = classificarParaCard(i);
+    if (c) cont[c]++;
   });
   document.getElementById('count-total').textContent = itens.length;
-  document.getElementById('count-novo-final').textContent = novoFinal;
-  document.getElementById('count-novo-prelim').textContent = novoPrelim;
-  document.getElementById('count-atualiza').textContent = cont['Já no BioLead'] + jaCadastradoViaNota;
-  document.getElementById('count-duplicata').textContent = cont['Possível duplicata'];
+  document.getElementById('count-novo-final').textContent = cont['novo-final'];
+  document.getElementById('count-novo-prelim').textContent = cont['novo-prelim'];
+  document.getElementById('count-atualiza').textContent = cont['atualiza'];
+  document.getElementById('count-duplicata').textContent = cont['duplicata'];
 }
 
 function renderizarLista() {
@@ -243,6 +247,7 @@ function renderizarLista() {
   const busca = termoBusca.toLowerCase();
   const itensFiltrados = TODOS_OS_ITENS.filter(function(i) {
     if (fonteAtiva !== 'todas' && i.fonte !== fonteAtiva) return false;
+    if (filtroCard && classificarParaCard(i) !== filtroCard) return false;
     if (!busca) return true;
     return (i.pesquisador || '').toLowerCase().indexOf(busca) !== -1
       || (i.instituicao || '').toLowerCase().indexOf(busca) !== -1
@@ -390,6 +395,24 @@ function carregarDados() {
 document.getElementById('busca').addEventListener('input', function(e) {
   termoBusca = e.target.value;
   renderizarLista();
+});
+
+document.getElementById('stats').addEventListener('click', function(e) {
+  const card = e.target.closest('.stat');
+  if (!card) return;
+  const valor = card.dataset.filtro || null;
+  // Clicar no card já ativo limpa o filtro (volta pro total) — clicar em
+  // "Total" também limpa, já que o data-filtro dele é vazio.
+  filtroCard = (filtroCard === valor) ? null : valor;
+  document.querySelectorAll('#stats .stat').forEach(function(s) { s.classList.remove('card-ativo'); });
+  if (filtroCard) card.classList.add('card-ativo');
+  renderizarLista();
+});
+document.getElementById('stats').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const card = e.target.closest('.stat');
+    if (card) { e.preventDefault(); card.click(); }
+  }
 });
 
 carregarDados();
