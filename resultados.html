@@ -75,6 +75,7 @@
 
   .right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; min-width:160px; }
   .value { font-family:var(--font-mono); font-weight:600; font-size:15px; }
+  .value-note { font-size:10.5px; color:var(--text-faint); }
   .date { font-size:11.5px; color:var(--text-faint); }
   .status { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:3px 8px; border-radius:5px; }
   .status.novo { background:var(--teal-bg); color:#177A63; }
@@ -135,7 +136,7 @@ function classeDoStatus(status) {
   if (status === 'Novo') return 'novo';
   if (status === 'Já no BioLead') return 'atualiza';
   if (status === 'Possível duplicata') return 'duplicata';
-  if (status && (status.indexOf('fora do limite') !== -1 || status.indexOf('Não consta') !== -1 || status.indexOf('Não avançou') !== -1)) return 'descartado';
+  if (status && (status.indexOf('fora do limite') !== -1 || status.indexOf('Não consta') !== -1 || status.indexOf('Não avançou') !== -1 || status.indexOf('Recomendado (mérito') !== -1)) return 'descartado';
   return 'novo';
 }
 
@@ -235,6 +236,7 @@ function renderizarLista() {
         </div>
         <div class="right">
           <span class="status ${classe}">${item.status}</span>
+          ${classe === 'descartado' && item.fase ? `<span class="value-note">Valor na Fase ${item.fase}:</span>` : ''}
           <span class="value">${formatarValor(item.valor)}</span>
           <span class="date">${formatarData(item.detectadoEm)}</span>
           ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
