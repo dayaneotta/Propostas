@@ -288,7 +288,7 @@ function renderizarLista() {
           <span class="date">${formatarData(item.detectadoEm)}</span>
           ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
           <div class="actions">
-            <button class="btn-decisao btn-funil" data-processo="${item.processo || ''}" data-decisao="Entrou no funil">Entrou no funil</button>
+            <button class="btn-decisao btn-funil" data-processo="${item.processo || ''}" data-decisao="Aprovar">Aprovar</button>
             <button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Descartado">Descartar</button>
           </div>
         </div>
@@ -303,7 +303,7 @@ function mostrarErro(msg) {
   document.getElementById('conteudo').innerHTML = '<div class="estado erro">' + msg + '</div>';
 }
 
-// Grava a decisão (Entrou no funil / Descartado) no backend, e — só se der
+// Grava a decisão (Aprovar / Descartado) no backend, e — só se der
 // certo — tira o item da lista local sem precisar recarregar tudo. Mesmo
 // padrão JSONP das outras chamadas, já que é a forma que já funciona
 // autenticada nesse projeto.
