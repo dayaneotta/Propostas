@@ -129,8 +129,8 @@
 
   <div class="stats" id="stats">
     <div class="stat total" data-filtro="" tabindex="0"><div class="n" id="count-total">–</div><div class="l">total na fila</div></div>
-    <div class="stat novo" data-filtro="novo-final" tabindex="0"><div class="n" id="count-novo-final">–</div><div class="l">novo · fase final</div></div>
-    <div class="stat novo-prelim" data-filtro="novo-prelim" tabindex="0"><div class="n" id="count-novo-prelim">–</div><div class="l">novo · fase preliminar</div></div>
+    <div class="stat novo" data-filtro="novo-final" tabindex="0"><div class="n" id="count-novo-final">–</div><div class="l">novo · fase avançada</div></div>
+    <div class="stat novo-prelim" data-filtro="novo-prelim" tabindex="0"><div class="n" id="count-novo-prelim">–</div><div class="l">novo · fase inicial</div></div>
     <div class="stat atualiza" data-filtro="atualiza" tabindex="0"><div class="n" id="count-atualiza">–</div><div class="l">já no BioLead</div></div>
     <div class="stat duplicata" data-filtro="duplicata" tabindex="0"><div class="n" id="count-duplicata">–</div><div class="l">possíveis duplicatas</div></div>
   </div>
@@ -217,13 +217,29 @@ function montarFiltros(itens) {
   });
 }
 
+// Pontuação combinando fase (peso maior) e situação (desempate dentro da
+// mesma fase) — mesma lógica de faseSituacaoMaisAvancada no backend,
+// convertida em número em vez de comparação direta. Confirmado com a
+// Dayane: Fase 2 Preliminar (21) deve pesar mais que Fase 1 Final (12),
+// já que chegar numa fase seguinte já passou por uma peneira que a
+// primeira fase sozinha não impõe — mesmo que essa fase específica ainda
+// não esteja "fechada".
+function pontuacaoFase(item) {
+  const fase = parseInt(item.fase, 10) || 0;
+  const peso = { 'Final': 2, 'Preliminar': 1 };
+  return fase * 10 + (peso[item.situacao] || 0);
+}
+
 // Única fonte de verdade pra "qual card esse item conta" — usada tanto em
 // atualizarContadores (contagem) quanto em renderizarLista (filtro ao
 // clicar no card). Antes essa lógica existia só dentro do loop de
 // contagem; separar evita os dois se desalinharem se um for editado sem o
 // outro.
 function classificarParaCard(item) {
-  if (item.status === 'Novo') return item.situacao === 'Final' ? 'novo-final' : 'novo-prelim';
+  // Corte em pontuação 20 = "chegou na fase 2 (ou além), qualquer
+  // situação" vs "ainda só na fase 1 (ou sem fase identificada), qualquer
+  // situação, mesmo que Final".
+  if (item.status === 'Novo') return pontuacaoFase(item) >= 20 ? 'novo-final' : 'novo-prelim';
   if (item.status === 'Já no BioLead') return 'atualiza';
   if (item.status === 'Possível duplicata') return 'duplicata';
   if ((item.matchBioLead || '').indexOf('Já cadastrado no BioLead') !== -1) return 'atualiza';
