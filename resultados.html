@@ -236,10 +236,14 @@ function pontuacaoFase(item) {
 // contagem; separar evita os dois se desalinharem se um for editado sem o
 // outro.
 function classificarParaCard(item) {
-  // Corte em pontuação 20 = "chegou na fase 2 (ou além), qualquer
-  // situação" vs "ainda só na fase 1 (ou sem fase identificada), qualquer
-  // situação, mesmo que Final".
-  if (item.status === 'Novo') return pontuacaoFase(item) >= 20 ? 'novo-final' : 'novo-prelim';
+  // Corte em pontuação 12 = tudo que é Fase 1 Preliminar (11) ou menos
+  // (fase/situação desconhecida) fica em "inicial" — o único caso
+  // genuinamente incerto (nem avançou de fase, nem esse resultado
+  // específico está fechado). Fase 1 Final (12) já entra em "avançada":
+  // mesmo sem progredir de fase, é um resultado assentado, não sujeito a
+  // mudar dentro dessa mesma etapa — não devia ficar junto com quem ainda
+  // está em aberto.
+  if (item.status === 'Novo') return pontuacaoFase(item) >= 12 ? 'novo-final' : 'novo-prelim';
   if (item.status === 'Já no BioLead') return 'atualiza';
   if (item.status === 'Possível duplicata') return 'duplicata';
   if ((item.matchBioLead || '').indexOf('Já cadastrado no BioLead') !== -1) return 'atualiza';
