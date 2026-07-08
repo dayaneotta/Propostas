@@ -249,7 +249,7 @@ function renderizarLista() {
         </div>
         <div class="right">
           <span class="status ${classe}">${item.status}</span>
-          ${classe === 'descartado' && item.fase ? `<span class="value-note">Valor na Fase ${item.fase}:</span>` : ''}
+          ${item.valorFase && item.valor && item.valorFase !== item.fase ? `<span class="value-note">Valor na Fase ${item.valorFase}:</span>` : ''}
           <span class="value">${formatarValor(item.valor)}</span>
           <span class="date">${formatarData(item.detectadoEm)}</span>
           ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
