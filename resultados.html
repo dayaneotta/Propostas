@@ -46,6 +46,8 @@
   .stat.atualiza .n { color: var(--mid); }
   .stat.duplicata .n { color: var(--amber); }
 
+  .busca { width:100%; box-sizing:border-box; border:1px solid var(--border); background:var(--surface); font-size:13.5px; padding:10px 14px; border-radius:8px; margin-bottom:14px; font-family:inherit; color:var(--text); }
+  .busca:focus { outline:none; border-color:var(--mid); }
   .filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
   .chip { border:1px solid var(--border); background:var(--surface); color:var(--text-muted); font-size:12.5px; padding:6px 12px; border-radius:20px; cursor:pointer; user-select:none; transition:.15s; }
   .chip:hover { border-color: var(--mid); color:var(--text); }
@@ -118,6 +120,8 @@
     <div class="stat duplicata"><div class="n" id="count-duplicata">–</div><div class="l">possíveis duplicatas</div></div>
   </div>
 
+  <input type="text" id="busca" class="busca" placeholder="Buscar por nome, instituição, ou &quot;já cadastrado&quot;...">
+
   <div class="filters" id="filters"></div>
 
   <div id="conteudo">
@@ -144,6 +148,7 @@ function classeDoStatus(status) {
 
 let TODOS_OS_ITENS = [];
 let fonteAtiva = 'todas';
+let termoBusca = '';
 
 function formatarValor(v) {
   if (!v && v !== 0) return '';
@@ -207,12 +212,17 @@ function atualizarContadores(itens) {
 
 function renderizarLista() {
   const conteudo = document.getElementById('conteudo');
+  const busca = termoBusca.toLowerCase();
   const itensFiltrados = TODOS_OS_ITENS.filter(function(i) {
-    return fonteAtiva === 'todas' || i.fonte === fonteAtiva;
+    if (fonteAtiva !== 'todas' && i.fonte !== fonteAtiva) return false;
+    if (!busca) return true;
+    return (i.pesquisador || '').toLowerCase().indexOf(busca) !== -1
+      || (i.instituicao || '').toLowerCase().indexOf(busca) !== -1
+      || (i.matchBioLead || '').toLowerCase().indexOf(busca) !== -1;
   });
 
   if (itensFiltrados.length === 0) {
-    conteudo.innerHTML = '<div class="estado">Nada na fila por aqui — tudo revisado, ou nenhum resultado novo ainda.</div>';
+    conteudo.innerHTML = '<div class="estado">Nada encontrado com esse filtro.</div>';
     return;
   }
 
@@ -290,6 +300,11 @@ function carregarDados() {
   scriptEl.onerror = function() { mostrarErro('Não foi possível conectar ao servidor. Tente recarregar a página.'); };
   document.body.appendChild(scriptEl);
 }
+
+document.getElementById('busca').addEventListener('input', function(e) {
+  termoBusca = e.target.value;
+  renderizarLista();
+});
 
 carregarDados();
 </script>
