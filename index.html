@@ -23363,14 +23363,6 @@ var __async = (__this, __arguments, generator) => {
   .extracao-toggle input[type=checkbox] { width:16px; height:16px; accent-color:var(--blue); cursor:pointer; flex-shrink:0; }
   .extracao-toggle .tgl-label { font-size:13px; font-weight:500; color:var(--text); }
   .extracao-toggle .tgl-sub { font-size:11px; color:var(--gray-text); margin-top:1px; }
-  .item-manual-toggle {
-    display:flex; align-items:center; flex-wrap:wrap; gap:8px;
-    background:var(--blue-light); border-radius:var(--radius-sm);
-    padding:6px 9px; margin-top:6px; font-size:12px;
-  }
-  .item-manual-toggle label { display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:500; color:var(--text); }
-  .item-manual-toggle input[type=checkbox] { width:14px; height:14px; accent-color:var(--blue); cursor:pointer; }
-  .item-manual-toggle select { font-size:12px; padding:3px 6px; border:1px solid var(--gray-border); border-radius:5px; background:#fff; color:var(--text); }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 </head>
@@ -24225,33 +24217,14 @@ function calcTotals(){
   });
   document.getElementById('grand-total').textContent = fmtBRL(grand);
 }
-function addItem(desc='',qtd='1',unit='',valor='',extracaoManual=null,tipoAcidoManual=null,mostrarExtracao=true){
+function addItem(desc='',qtd='1',unit='',valor=''){
   itemCount++;
   const tbody = document.getElementById('items-body');
   const tr = document.createElement('tr');
   tr.className = 'item-row';
-  // Prioridade: valor explícito passado > sinal do texto (só serve pra propostas
-  // antigas, salvas antes desse campo existir) > padrão (igual ao modal: marcado).
-  const sinalTexto = detectarSinalItem(desc);
-  const extracaoFinal = extracaoManual !== null ? extracaoManual
-                       : sinalTexto.extracao !== null ? sinalTexto.extracao
-                       : true;
-  const tipoFinal = tipoAcidoManual !== null ? tipoAcidoManual : (sinalTexto.tipo || '');
-  const extracaoChecked = extracaoFinal ? 'checked' : '';
   tr.innerHTML = `
     <td class="item-num" style="color:#999;font-size:12px;text-align:center">${itemCount}</td>
-    <td>
-      <textarea class="desc" rows="2" placeholder="Descreva o serviço ou use o botão 'Inserir serviço pré-definido' abaixo…">${desc}</textarea>
-      ${mostrarExtracao ? `
-      <div class="item-manual-toggle">
-        <label><input type="checkbox" class="item-manual-extracao" ${extracaoChecked}>Inclui extração de material genético</label>
-        <select class="item-manual-tipo">
-          <option value="dna" ${tipoFinal==='dna'?'selected':''}>DNA</option>
-          <option value="rna" ${tipoFinal==='rna'?'selected':''}>RNA</option>
-          <option value="" ${tipoFinal===''?'selected':''}>Não sei / genérico</option>
-        </select>
-      </div>` : ''}
-    </td>
+    <td><textarea class="desc" rows="2" placeholder="Descreva o serviço ou use o botão 'Inserir serviço pré-definido' abaixo…">${desc}</textarea></td>
     <td><input class="qty" type="number" value="${qtd||1}" min="0.01" step="any"></td>
     <td><input class="unit-label" type="text" placeholder="Ex: amostras, pares…" value="${unit}"></td>
     <td><input class="unit-val" type="text" value="${valor}" placeholder="0,00" style="text-align:right"></td>
@@ -24285,47 +24258,25 @@ document.getElementById('add-item').addEventListener('click',()=>addItem());
 
 // ── Toast ──
 
-// ── Detecta DNA/RNA/extração a partir do texto de UM item. Tipo (DNA/RNA):
-// os templates de serviço pré-definido gravam "DNA total"/"RNA total" na
-// descrição. Extração: qualquer menção à palavra "extração" já conta — na
-// prática ela quase sempre aparece quando o serviço inclui essa etapa, tanto
-// nos templates quanto em descrições manuais. temSinal (usado pra mostrar ou
-// não o toggle manual) fica true se PELO MENOS UM dos dois for identificado;
-// o toggle vira exceção, só aparecendo quando nada é identificável no texto.
-function detectarSinalItem(texto) {
-  texto = texto || '';
-  const temDNA = /DNA total/i.test(texto);
-  const temRNA = /RNA total/i.test(texto);
-  const tipo = (temDNA && !temRNA) ? 'dna' : (temRNA && !temDNA) ? 'rna' : null;
-  const extracao = /extra[çc][ãa]o/i.test(texto) ? true : null;
-  return { tipo, extracao, temSinal: temDNA || temRNA || extracao === true };
-}
-
 // ── Regras de envio de amostras — usada na pré-visualização E no Word/PDF ──
-// Para cada item: usa a escolha manual explícita (toggle no item), se houver;
-// senão cai no texto (detectarSinalItem). Depois combina os itens: se todos
-// concordam em DNA ou todos em RNA, usa esse termo; senão usa o genérico.
+// Frase única, redigida pra cobrir tanto o caso em que a Biomelting extrai o
+// material quanto o caso em que o cliente já envia o DNA/RNA extraído — não
+// precisa mais decidir qual dos dois cenários se aplica a cada proposta.
+// O termo DNA total / RNA total / genérico continua vindo do texto dos itens
+// (os templates de serviço pré-definido já gravam "DNA total"/"RNA total").
 function textoRegrasEnvioAmostras(d) {
   const bioFrase = d.bioinformatica === 'sim'
     ? 'Esta proposta inclui análise bioinformática dos dados gerados.'
     : 'O escopo desta proposta não inclui análises bioinformáticas dos dados gerados.';
 
-  const sinais = (d.items || []).map(it => {
-    if (it.extracaoManual !== undefined || it.tipoAcidoManual !== undefined) {
-      return { tipo: it.tipoAcidoManual || null, extracao: it.extracaoManual === true ? true : null };
-    }
-    return detectarSinalItem(it.desc);
-  });
+  const textoItens = (d.items || []).map(it => it.desc || '').join('\n');
+  const temDNA = /DNA total/i.test(textoItens);
+  const temRNA = /RNA total/i.test(textoItens);
+  const termo = (temRNA && !temDNA) ? 'RNA total'
+              : (temDNA && !temRNA) ? 'DNA total'
+              : 'DNA e/ou RNA total'; // misto, manual, ou não identificado
 
-  const tipos = sinais.map(s => s.tipo).filter(Boolean);
-  const termo = (tipos.length && tipos.every(t => t === 'rna')) ? 'RNA total'
-              : (tipos.length && tipos.every(t => t === 'dna')) ? 'DNA total'
-              : 'DNA e/ou RNA total'; // manual sem indicação, misto, ou não identificado
-  const extracaoIncluida = sinais.some(s => s.extracao === true);
-
-  const primeiraFrase = extracaoIncluida
-    ? `As amostras devem ser encaminhadas à Biomelting em condições adequadas de quantidade e qualidade para a realização dos ensaios de sequenciamento, contendo material suficiente para a extração de no mínimo 1 µg de ${termo}, livre de contaminantes exógenos, excetuando-se aqueles inerentes à metodologia empregada.`
-    : `As amostras devem ser enviadas à Biomelting em quantidade e qualidade suficientes para ensaios de sequenciamento, contendo, no mínimo, 1 µg de ${termo}, livre de contaminantes exógenos, excetuando-se aqueles inerentes à metodologia empregada.`;
+  const primeiraFrase = `As amostras devem ser enviadas à Biomelting em condições adequadas de quantidade e qualidade para a realização dos ensaios de sequenciamento, de forma a garantir no mínimo 1 µg de ${termo}, livre de contaminantes exógenos, excetuando-se aqueles inerentes à metodologia empregada.`;
 
   return `${primeiraFrase} Os custos de envio estão incluídos nesta proposta; contudo, a responsabilidade pela integridade e qualidade das amostras no momento do envio é exclusiva do contratante. ${bioFrase}`;
 }
@@ -24450,20 +24401,14 @@ function showToast(msg){
 function collectData(){
   const items = [];
   document.querySelectorAll('.item-row').forEach((row,i)=>{
-    const item = {
+    items.push({
       num: i+1,
       desc: row.querySelector('.desc').value,
       qty: row.querySelector('.qty').value,
       unit: row.querySelector('.unit-label').value,
       unitVal: row.querySelector('.unit-val').value,
       total: 'R$ ' + (row.querySelector('.row-total-input').value || '0,00')
-    };
-    const toggle = row.querySelector('.item-manual-toggle');
-    if (toggle) {
-      item.extracaoManual = row.querySelector('.item-manual-extracao').checked;
-      item.tipoAcidoManual = row.querySelector('.item-manual-tipo').value;
-    }
-    items.push(item);
+    });
   });
   const formData = {
     num: buildNum(),
@@ -24547,7 +24492,7 @@ function preencherFormulario(d) {
 
   limparItens();
   (d.items || []).forEach(it => {
-    addItem(it.desc || '', it.qty || '1', it.unit || '', it.unitVal || '', it.extracaoManual, it.tipoAcidoManual);
+    addItem(it.desc || '', it.qty || '1', it.unit || '', it.unitVal || '');
     // Se o total veio salvo mas o valor unitário não bate, força o total na última linha
     const rows = document.querySelectorAll('#items-body .item-row');
     const lastRow = rows[rows.length - 1];
@@ -25065,9 +25010,7 @@ document.getElementById('tpl-insert').addEventListener('click', () => {
   const desc = templates[tipo](params);
   const qty  = document.getElementById('tpl-qty').value || '1';
   const unit = document.getElementById('tpl-unit').value || 'amostras';
-  const isRna = tipo === 'transcritoma' || tipo === 'isoseq' || tipo === 'metatranscritoma';
-  const tipoAcido = tipo === 'bioinformatica' ? '' : (isRna ? 'rna' : 'dna');
-  addItem(desc, qty, unit, '', params.extracao, tipoAcido, tipo !== 'bioinformatica');
+  addItem(desc, qty, unit, '');
   document.getElementById('template-modal').classList.remove('open');
 });
 
