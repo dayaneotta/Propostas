@@ -24281,18 +24281,20 @@ document.getElementById('add-item').addEventListener('click',()=>addItem());
 
 // ── Toast ──
 
-// ── Detecta DNA/RNA/extração a partir do texto de UM item — os templates de
-// serviço pré-definido já gravam "DNA total"/"RNA total" e "Extração de
-// DNA/RNA total das amostras" na descrição, então não precisamos guardar
-// isso separadamente para esses casos. temSinal indica se algo foi achado
-// (usado pra decidir se mostramos o toggle manual naquele item ou não).
+// ── Detecta DNA/RNA/extração a partir do texto de UM item. Tipo (DNA/RNA):
+// os templates de serviço pré-definido gravam "DNA total"/"RNA total" na
+// descrição. Extração: qualquer menção à palavra "extração" já conta — na
+// prática ela quase sempre aparece quando o serviço inclui essa etapa, tanto
+// nos templates quanto em descrições manuais. temSinal (usado pra mostrar ou
+// não o toggle manual) fica true se PELO MENOS UM dos dois for identificado;
+// o toggle vira exceção, só aparecendo quando nada é identificável no texto.
 function detectarSinalItem(texto) {
   texto = texto || '';
   const temDNA = /DNA total/i.test(texto);
   const temRNA = /RNA total/i.test(texto);
   const tipo = (temDNA && !temRNA) ? 'dna' : (temRNA && !temDNA) ? 'rna' : null;
-  const extracao = /Extração de (DNA|RNA) total das amostras/i.test(texto) ? true : null;
-  return { tipo, extracao, temSinal: temDNA || temRNA };
+  const extracao = /extra[çc][ãa]o/i.test(texto) ? true : null;
+  return { tipo, extracao, temSinal: temDNA || temRNA || extracao === true };
 }
 
 // ── Regras de envio de amostras — usada na pré-visualização E no Word/PDF ──
