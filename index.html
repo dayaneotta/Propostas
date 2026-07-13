@@ -24225,25 +24225,32 @@ function calcTotals(){
   });
   document.getElementById('grand-total').textContent = fmtBRL(grand);
 }
-function addItem(desc='',qtd='1',unit='',valor='',extracaoManual=null,tipoAcidoManual=''){
+function addItem(desc='',qtd='1',unit='',valor='',extracaoManual=null,tipoAcidoManual=null,mostrarExtracao=true){
   itemCount++;
   const tbody = document.getElementById('items-body');
   const tr = document.createElement('tr');
   tr.className = 'item-row';
-  const mostrarToggle = !detectarSinalItem(desc).temSinal;
-  const extracaoChecked = extracaoManual === false ? '' : 'checked';
+  // Prioridade: valor explícito passado > sinal do texto (só serve pra propostas
+  // antigas, salvas antes desse campo existir) > padrão (igual ao modal: marcado).
+  const sinalTexto = detectarSinalItem(desc);
+  const extracaoFinal = extracaoManual !== null ? extracaoManual
+                       : sinalTexto.extracao !== null ? sinalTexto.extracao
+                       : true;
+  const tipoFinal = tipoAcidoManual !== null ? tipoAcidoManual : (sinalTexto.tipo || '');
+  const extracaoChecked = extracaoFinal ? 'checked' : '';
   tr.innerHTML = `
     <td class="item-num" style="color:#999;font-size:12px;text-align:center">${itemCount}</td>
     <td>
       <textarea class="desc" rows="2" placeholder="Descreva o serviço ou use o botão 'Inserir serviço pré-definido' abaixo…">${desc}</textarea>
-      <div class="item-manual-toggle" style="${mostrarToggle ? '' : 'display:none'}">
+      ${mostrarExtracao ? `
+      <div class="item-manual-toggle">
         <label><input type="checkbox" class="item-manual-extracao" ${extracaoChecked}>Inclui extração de material genético</label>
         <select class="item-manual-tipo">
-          <option value="dna" ${tipoAcidoManual==='dna'?'selected':''}>DNA</option>
-          <option value="rna" ${tipoAcidoManual==='rna'?'selected':''}>RNA</option>
-          <option value="" ${tipoAcidoManual===''?'selected':''}>Não sei / genérico</option>
+          <option value="dna" ${tipoFinal==='dna'?'selected':''}>DNA</option>
+          <option value="rna" ${tipoFinal==='rna'?'selected':''}>RNA</option>
+          <option value="" ${tipoFinal===''?'selected':''}>Não sei / genérico</option>
         </select>
-      </div>
+      </div>` : ''}
     </td>
     <td><input class="qty" type="number" value="${qtd||1}" min="0.01" step="any"></td>
     <td><input class="unit-label" type="text" placeholder="Ex: amostras, pares…" value="${unit}"></td>
@@ -24252,9 +24259,6 @@ function addItem(desc='',qtd='1',unit='',valor='',extracaoManual=null,tipoAcidoM
     <td><button class="btn-remove" title="Remover">✕</button></td>`;
   tbody.appendChild(tr);
   tr.querySelector('.qty').addEventListener('input', calcTotals);
-  tr.querySelector('.desc').addEventListener('input', e=>{
-    tr.querySelector('.item-manual-toggle').style.display = detectarSinalItem(e.target.value).temSinal ? 'none' : '';
-  });
   tr.querySelector('.unit-val').addEventListener('input', e=>{ formatCurrency(e.target); calcTotals(); });
   tr.querySelector('.row-total-input').addEventListener('input', e=>{
     formatCurrency(e.target);
@@ -24455,7 +24459,7 @@ function collectData(){
       total: 'R$ ' + (row.querySelector('.row-total-input').value || '0,00')
     };
     const toggle = row.querySelector('.item-manual-toggle');
-    if (toggle && toggle.style.display !== 'none') {
+    if (toggle) {
       item.extracaoManual = row.querySelector('.item-manual-extracao').checked;
       item.tipoAcidoManual = row.querySelector('.item-manual-tipo').value;
     }
@@ -24543,7 +24547,7 @@ function preencherFormulario(d) {
 
   limparItens();
   (d.items || []).forEach(it => {
-    addItem(it.desc || '', it.qty || '1', it.unit || '', it.unitVal || '', it.extracaoManual, it.tipoAcidoManual || '');
+    addItem(it.desc || '', it.qty || '1', it.unit || '', it.unitVal || '', it.extracaoManual, it.tipoAcidoManual);
     // Se o total veio salvo mas o valor unitário não bate, força o total na última linha
     const rows = document.querySelectorAll('#items-body .item-row');
     const lastRow = rows[rows.length - 1];
@@ -25061,7 +25065,9 @@ document.getElementById('tpl-insert').addEventListener('click', () => {
   const desc = templates[tipo](params);
   const qty  = document.getElementById('tpl-qty').value || '1';
   const unit = document.getElementById('tpl-unit').value || 'amostras';
-  addItem(desc, qty, unit, '');
+  const isRna = tipo === 'transcritoma' || tipo === 'isoseq' || tipo === 'metatranscritoma';
+  const tipoAcido = tipo === 'bioinformatica' ? '' : (isRna ? 'rna' : 'dna');
+  addItem(desc, qty, unit, '', params.extracao, tipoAcido, tipo !== 'bioinformatica');
   document.getElementById('template-modal').classList.remove('open');
 });
 
