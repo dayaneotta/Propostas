@@ -24258,6 +24258,30 @@ document.getElementById('add-item').addEventListener('click',()=>addItem());
 
 // ── Toast ──
 
+// ── Regras de envio de amostras — usada na pré-visualização E no Word/PDF ──
+// Detecta DNA/RNA/extração a partir do texto dos itens (os templates de serviço
+// pré-definido já gravam "DNA total"/"RNA total" e "Extração de DNA/RNA total
+// das amostras" na descrição, então não precisamos guardar isso separadamente).
+function textoRegrasEnvioAmostras(d) {
+  const bioFrase = d.bioinformatica === 'sim'
+    ? 'Esta proposta inclui análise bioinformática dos dados gerados.'
+    : 'O escopo desta proposta não inclui análises bioinformáticas dos dados gerados.';
+
+  const textoItens = (d.items || []).map(it => it.desc || '').join('\n');
+  const temRNA = /RNA total/i.test(textoItens);
+  const temDNA = /DNA total/i.test(textoItens);
+  const termo = (temRNA && !temDNA) ? 'RNA total'
+              : (temDNA && !temRNA) ? 'DNA total'
+              : 'DNA e/ou RNA total'; // manual, misto, ou não identificado
+  const extracaoIncluida = /Extração de (DNA|RNA) total das amostras/i.test(textoItens);
+
+  const primeiraFrase = extracaoIncluida
+    ? `As amostras devem ser encaminhadas à Biomelting em condições adequadas de quantidade e qualidade para a realização dos ensaios de sequenciamento, contendo material suficiente para a extração de no mínimo 1 µg de ${termo}, livre de contaminantes exógenos, excetuando-se aqueles inerentes à metodologia empregada.`
+    : `As amostras devem ser enviadas à Biomelting em quantidade e qualidade suficientes para ensaios de sequenciamento, contendo, no mínimo, 1 µg de ${termo}, livre de contaminantes exógenos, excetuando-se aqueles inerentes à metodologia empregada.`;
+
+  return `${primeiraFrase} Os custos de envio estão incluídos nesta proposta; contudo, a responsabilidade pela integridade e qualidade das amostras no momento do envio é exclusiva do contratante. ${bioFrase}`;
+}
+
 // ── Pré-visualizar proposta ───────────────────────────────────────────────────
 function gerarResumoHTML(d, dateStr) {
   const logoSrc = 'data:image/png;base64,' + LOGO_B64;
@@ -24344,7 +24368,7 @@ function gerarResumoHTML(d, dateStr) {
       ${[
         ['Formas de pagamento','Boleto bancário ou depósito no BANCO DO BRASIL / AGÊNCIA: 3493-2 / CONTA: 58.600-5. A existência de títulos em aberto impede a prestação de novos serviços.'],
         ['Cancelamento e devoluções','Os pedidos referentes a serviços sob encomenda não poderão ser cancelados após o início da execução.'],
-        ['Regras de envio de amostras','As amostras devem ser encaminhadas em condições adequadas, contendo material suficiente para extração de no mínimo 1 µg de DNA total, livre de contaminantes exógenos. Os custos de envio estão incluídos nesta proposta.'],
+        ['Regras de envio de amostras', textoRegrasEnvioAmostras(d)],
       ].map(([t,v],i) => `<div style="padding:8px 12px;background:${i%2===0?'#F8F9FB':'#fff'}">
         <div style="font-weight:600;color:#0D4E8A;margin-bottom:3px">${t}</div>
         <div style="color:#555;line-height:1.5">${v}</div>
@@ -25384,12 +25408,7 @@ async function gerarDocx(d, dateStr){
     },
     {
       title: 'Regras de envio de amostras',
-      text: (() => {
-        const bioFrase = d.bioinformatica === 'sim'
-          ? 'Esta proposta inclui análise bioinformática dos dados gerados.'
-          : 'O escopo desta proposta não inclui análises bioinformáticas dos dados gerados.';
-        return `As amostras devem ser encaminhadas à Biomelting em condições adequadas de quantidade e qualidade para a realização dos ensaios de sequenciamento, contendo material suficiente para a extração de no mínimo 1 µg de DNA total, livre de contaminantes exógenos, excetuando-se aqueles inerentes à metodologia empregada. Os custos de envio estão incluídos nesta proposta; contudo, a responsabilidade pela integridade e qualidade das amostras no momento do envio é exclusiva do contratante. ${bioFrase}`;
-      })()
+      text: textoRegrasEnvioAmostras(d)
     },
   ];
 
