@@ -1934,9 +1934,8 @@ function gerarProposta(id) {
   const p = dados.find(x=>String(x.id)===String(id));
   if (!p) return;
   const sigla = (p.inst || '').trim();
-  const nomeCompleto = INST_NOMES[sigla.toUpperCase()] || '';
   const params = new URLSearchParams({
-    'cli-nome': nomeCompleto,
+    'cli-nome': p.nome || '',
     'cli-sigla': sigla,
     'cli-contato': p.nome || '',
     'cli-email': p.email || '',
