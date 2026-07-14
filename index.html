@@ -24004,25 +24004,6 @@ var __async = (__this, __arguments, generator) => {
             </select>
           </div>
           <div class="field">
-            <label>Kit de captura</label>
-            <select id="tpl-kit-ex">
-              <option value="twist">Twist Exome 2.0</option>
-              <option value="agilent">Agilent SureSelect Human All Exon</option>
-              <option value="idt">IDT xGen Exome Hybridization Panel</option>
-              <option value="outro_kit">A definir com o cliente</option>
-            </select>
-          </div>
-        </div>
-        <div class="row two">
-          <div class="field">
-            <label>Modalidade</label>
-            <select id="tpl-modalidade-ex">
-              <option value="individual">Individual</option>
-              <option value="trio">Trio (paciente + 2 genitores)</option>
-              <option value="familia">Família estendida</option>
-            </select>
-          </div>
-          <div class="field">
             <label>Tipo de organismo</label>
             <select id="tpl-org-ex">
               <option value="humano">Humano</option>
@@ -24897,16 +24878,9 @@ const templates = {
   },
   exoma: (p) => {
     const modoStr = p.paired === 'paired' ? `Paired-end ${p.bp} pb` : `Single-end ${p.bp.replace(/^\d+x/,'')} pb`;
-    const kitMap = {
-      twist:     'Twist Exome 2.0',
-      agilent:   'Agilent SureSelect Human All Exon',
-      idt:       'IDT xGen Exome Hybridization Panel',
-      outro_kit: 'kit de captura a definir com o cliente',
-    };
-    const modalidadeMap = { individual: '', trio: ' — Trio (paciente e dois genitores)', familia: ' — Família estendida' };
     const orgPart = p.org === 'outro' ? (getOrgOutro() ? ` (${getOrgOutro()})` : ' (Outro organismo)') : '';
     const extEx = p.extracao ? '- Extração de DNA total das amostras;\n' : '';
-    return `Sequenciamento de Exoma Completo${orgPart}${modalidadeMap[p.modalidade]}:\n${extEx}- Quantificação e análise de qualidade do DNA total;\n- Preparação de biblioteca com captura e enriquecimento do exoma (${kitMap[p.kit]});\n- Quantificação e análise de qualidade das bibliotecas;\n- Sequenciamento ${modoStr} com cobertura média de ${p.cob}× sobre as regiões-alvo (éxons e sítios de splicing).`;
+    return `Sequenciamento de Exoma Completo${orgPart}:\n${extEx}- Quantificação e análise de qualidade do DNA total;\n- Preparação de biblioteca com captura e enriquecimento do exoma;\n- Quantificação e análise de qualidade das bibliotecas;\n- Sequenciamento ${modoStr} com cobertura média de ${p.cob}× sobre as regiões-alvo (éxons e sítios de splicing).`;
   },
   bioinformatica: (p) => {
     const objetivoMap = {
@@ -24979,8 +24953,6 @@ function getTemplateParams() {
     paired:      document.getElementById('tpl-paired-ex').value,
     bp:          document.getElementById('tpl-bp-ex').value,
     cob:         document.getElementById('tpl-cob-ex').value,
-    kit:         document.getElementById('tpl-kit-ex').value,
-    modalidade:  document.getElementById('tpl-modalidade-ex').value,
     org:         document.getElementById('tpl-org-ex').value,
     extracao: document.getElementById('tpl-extracao').checked,
   };
@@ -25026,7 +24998,7 @@ document.getElementById('tpl-tipo').addEventListener('change', function() {
  'tpl-org-16s','tpl-org-its',
  'tpl-paired-sh','tpl-bp-sh','tpl-reads-sh','tpl-org-sh',
  'tpl-bib-iso','tpl-reads-iso','tpl-org-iso',
- 'tpl-paired-ex','tpl-bp-ex','tpl-cob-ex','tpl-kit-ex','tpl-modalidade-ex','tpl-org-ex',
+ 'tpl-paired-ex','tpl-bp-ex','tpl-cob-ex','tpl-org-ex',
  'tpl-seq-bio']
   .forEach(id => {
     const el = document.getElementById(id);
