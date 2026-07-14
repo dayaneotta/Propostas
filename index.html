@@ -25361,7 +25361,7 @@ async function gerarDocx(d, dateStr){
       secHeader('DADOS DO CLIENTE',4,10440),
       dataRow('Cliente:',d.cliente,'CNPJ/CPF:',d.cnpj),
       dataRow('Instituição:',d.sigla,'Telefone:',d.tel),
-      dataRow('Endereço:',d.end,'Processo:',d.processo),
+      dataRow('Endereço:',d.end,'Processo:',d.processo || 'Não se aplica'),
       dataRow('Contato:',d.contato,'E-mail:',d.email),
     ]
   });
@@ -25435,11 +25435,11 @@ async function gerarDocx(d, dateStr){
   ]});
 
   const itensTable = new Table({
-    width:{size:10440,type:WidthType.DXA}, columnWidths:[460,5000,1580,1800,1600],
+    width:{size:10440,type:WidthType.DXA}, columnWidths:[620,4840,1580,1800,1600],
     rows:[
       new TableRow({children:[
-        thB('Nº',460,AlignmentType.CENTER),
-        thB('Descrição do serviço',5000),
+        thB('Nº',620,AlignmentType.CENTER),
+        thB('Descrição do serviço',4840),
         thB('Qtd / Unidade',1580,AlignmentType.CENTER),
         thB('Valor unit. R$',1800,AlignmentType.RIGHT),
         thB('Total R$',1600,AlignmentType.RIGHT),
@@ -25526,46 +25526,35 @@ async function gerarDocx(d, dateStr){
           new Paragraph({spacing:{before:120,after:80},children:[txt(d.obs,{size:18,color:MID})]}),
           new Paragraph({spacing:{before:160,after:0},children:[]}),
         ]:[]),
-        // Bloco de informações importantes — fundo levemente cinza, elegante
-        new Table({
-          width:{size:10440,type:WidthType.DXA}, columnWidths:[10440],
-          borders:{top:b0,bottom:b0,left:b0,right:b0,insideH:b0,insideV:b0},
-          rows:[
-            // Cabeçalho da seção
-            new TableRow({children:[
-              new TableCell({
-                columnSpan:1,
-                borders:{top:b0,bottom:{style:BorderStyle.SINGLE,size:4,color:BLUE},left:b0,right:b0},
-                shading:{fill:BLUE_DARK,type:ShadingType.CLEAR},
-                margins:{top:80,bottom:80,left:140,right:140},
-                width:{size:10440,type:WidthType.DXA},
-                children:[para(txt('INFORMAÇÕES IMPORTANTES E CONDIÇÕES DE FORNECIMENTO',{bold:true,size:18,color:WHITE}))]
-              })
-            ]}),
-            // Linhas de cada seção — zebra suave
-            ...infoSections.map((sec,i)=>{
-              const fill = i%2===0 ? GRAY_BG : WHITE;
-              const rowBorder = {top:b0,bottom:{style:BorderStyle.SINGLE,size:2,color:'EEF2F7'},left:b0,right:b0};
-              const textLines = sec.text.split('\n\n');
-              const runs = [];
-              textLines.forEach((line,li)=>{
-                if(li>0){ runs.push(new TextRun({break:1})); runs.push(new TextRun({break:1})); }
-                runs.push(txt(line,{size:17,color:MID}));
-              });
-              return new TableRow({children:[
-                new TableCell({
-                  borders:rowBorder,
-                  shading:{fill,type:ShadingType.CLEAR},
-                  margins:{top:120,bottom:120,left:200,right:200},
-                  width:{size:10440,type:WidthType.DXA},
-                  children:[
-                    new Paragraph({spacing:{before:0,after:60},children:[txt(sec.title+':',{bold:true,size:18,color:BLUE_DARK})]}),
-                    new Paragraph({alignment:AlignmentType.BOTH,spacing:{before:0,after:0},children:runs}),
-                  ]
-                })
-              ]});
+        // Bloco de informações importantes — título simples + corpo com borda
+        // lateral azul. keepNext nos títulos evita um título ficar sozinho no
+        // fim da página, separado do parágrafo de conteúdo que o segue.
+        new Paragraph({
+          keepNext: true,
+          spacing:{before:0,after:120},
+          children:[txt('INFORMAÇÕES IMPORTANTES E CONDIÇÕES DE FORNECIMENTO',{bold:true,size:18,color:BLUE_DARK})]
+        }),
+        ...infoSections.flatMap((sec,i) => {
+          const textLines = sec.text.split('\n\n');
+          const runs = [];
+          textLines.forEach((line,li)=>{
+            if(li>0){ runs.push(new TextRun({break:1})); runs.push(new TextRun({break:1})); }
+            runs.push(txt(line,{size:17,color:MID}));
+          });
+          return [
+            new Paragraph({
+              keepNext: true,
+              spacing:{before: i===0?0:180, after:60},
+              children:[txt(sec.title,{bold:true,size:18,color:BLUE_DARK})]
             }),
-          ]
+            new Paragraph({
+              alignment:AlignmentType.BOTH,
+              spacing:{before:0,after:0},
+              border:{left:{style:BorderStyle.SINGLE,size:16,color:BLUE,space:8}},
+              indent:{left:160},
+              children:runs
+            }),
+          ];
         }),
         // Nota de validade
         new Paragraph({
