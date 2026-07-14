@@ -23643,6 +23643,7 @@ var __async = (__this, __arguments, generator) => {
           <option value="isoseq">Sequenciamento de RNA de Sequência Longa (ISO-seq)</option>
           <option value="shotgun">Sequenciamento Shotgun (Metagenoma)</option>
           <option value="genoma_completo">Sequenciamento de Genoma Completo</option>
+          <option value="exoma">Sequenciamento de Exoma Completo</option>
           <option value="bioinformatica">Análise por Bioinformática</option>
         </select>
       </div>
@@ -23973,6 +23974,64 @@ var __async = (__this, __arguments, generator) => {
         </div>
       </div>
 
+      <!-- Exoma params -->
+      <div id="params-exoma" style="display:none">
+        <div class="row two">
+          <div class="field">
+            <label>Modo de sequenciamento</label>
+            <select id="tpl-paired-ex">
+              <option value="paired">Paired-end</option>
+              <option value="single">Single-end</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tamanho do read</label>
+            <select id="tpl-bp-ex">
+              <option value="2x150">2×150 pb</option>
+              <option value="2x100">2×100 pb</option>
+            </select>
+          </div>
+        </div>
+        <div class="row two">
+          <div class="field">
+            <label>Cobertura média sobre o exoma</label>
+            <select id="tpl-cob-ex">
+              <option value="100">100×</option>
+              <option value="150">150×</option>
+              <option value="200">200×</option>
+              <option value="70">70×</option>
+              <option value="50">50×</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Kit de captura</label>
+            <select id="tpl-kit-ex">
+              <option value="twist">Twist Exome 2.0</option>
+              <option value="agilent">Agilent SureSelect Human All Exon</option>
+              <option value="idt">IDT xGen Exome Hybridization Panel</option>
+              <option value="outro_kit">A definir com o cliente</option>
+            </select>
+          </div>
+        </div>
+        <div class="row two">
+          <div class="field">
+            <label>Modalidade</label>
+            <select id="tpl-modalidade-ex">
+              <option value="individual">Individual</option>
+              <option value="trio">Trio (paciente + 2 genitores)</option>
+              <option value="familia">Família estendida</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo de organismo</label>
+            <select id="tpl-org-ex">
+              <option value="humano">Humano</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <!-- Bioinformática params -->
       <div id="params-bioinformatica" style="display:none">
         <div class="row one">
@@ -23986,6 +24045,7 @@ var __async = (__this, __arguments, generator) => {
               <option value="isoseq">Transcritoma Completo (ISO-seq)</option>
               <option value="genoma_bac">Genoma Completo (Bacteriano / Procariótico)</option>
               <option value="genoma_euc">Genoma Completo (Eucariótico)</option>
+              <option value="exoma">Exoma Completo</option>
             </select>
           </div>
         </div>
@@ -24259,9 +24319,9 @@ document.getElementById('add-item').addEventListener('click',()=>addItem());
 // ── Toast ──
 
 // ── Regras de envio de amostras — usada na pré-visualização E no Word/PDF ──
-// Frase única, redigida pra cobrir tanto o caso em que a Biomelting extrai o
-// material quanto o caso em que o cliente já envia o DNA/RNA extraído — não
-// precisa mais decidir qual dos dois cenários se aplica a cada proposta.
+// Frase única: "de forma a garantir no mínimo 1 µg" cobre qualquer forma que
+// a amostra assuma (biológica, ambiental, já extraída etc.) sem precisar
+// enumerar categorias nem decidir qual cenário vale pra cada item.
 // O termo DNA total / RNA total / genérico continua vindo do texto dos itens
 // (os templates de serviço pré-definido já gravam "DNA total"/"RNA total").
 function textoRegrasEnvioAmostras(d) {
@@ -24835,6 +24895,19 @@ const templates = {
     const extGc = p.extracao ? '- Extração de DNA total das amostras;\n' : '';
     return `${orgMap[p.org]}:\n${extGc}- Quantificação e análise de qualidade do DNA total;\n- Preparação de bibliotecas de sequenciamento;\n- Quantificação e análise de qualidade das bibliotecas;\n- Sequenciamento ${modoStr} com ${p.cob}× de cobertura por amostra.`;
   },
+  exoma: (p) => {
+    const modoStr = p.paired === 'paired' ? `Paired-end ${p.bp} pb` : `Single-end ${p.bp.replace(/^\d+x/,'')} pb`;
+    const kitMap = {
+      twist:     'Twist Exome 2.0',
+      agilent:   'Agilent SureSelect Human All Exon',
+      idt:       'IDT xGen Exome Hybridization Panel',
+      outro_kit: 'kit de captura a definir com o cliente',
+    };
+    const modalidadeMap = { individual: '', trio: ' — Trio (paciente e dois genitores)', familia: ' — Família estendida' };
+    const orgPart = p.org === 'outro' ? (getOrgOutro() ? ` (${getOrgOutro()})` : ' (Outro organismo)') : '';
+    const extEx = p.extracao ? '- Extração de DNA total das amostras;\n' : '';
+    return `Sequenciamento de Exoma Completo${orgPart}${modalidadeMap[p.modalidade]}:\n${extEx}- Quantificação e análise de qualidade do DNA total;\n- Preparação de biblioteca com captura e enriquecimento do exoma (${kitMap[p.kit]});\n- Quantificação e análise de qualidade das bibliotecas;\n- Sequenciamento ${modoStr} com cobertura média de ${p.cob}× sobre as regiões-alvo (éxons e sítios de splicing).`;
+  },
   bioinformatica: (p) => {
     const objetivoMap = {
       '16s':        'Classificação taxonômica a partir de dados de amplicon 16S rRNA',
@@ -24844,6 +24917,7 @@ const templates = {
       'isoseq':     'Identificação e caracterização de isoformas de transcritos a partir de dados de sequenciamento de longa leitura (ISO-seq)',
       'genoma_bac': 'Montagem, anotação e identificação taxonômica do genoma a partir de dados de sequenciamento de genoma completo bacteriano',
       'genoma_euc': 'Montagem e anotação genômica a partir de dados de sequenciamento de genoma completo eucariótico',
+      'exoma':      'Identificação, anotação e priorização de variantes a partir de dados de sequenciamento de exoma',
     };
     return `Análise por Bioinformática:\n- ${objetivoMap[p.seq]}.`;
   },
@@ -24901,6 +24975,15 @@ function getTemplateParams() {
     org:    document.getElementById('tpl-org-gc').value,
     extracao: document.getElementById('tpl-extracao').checked,
   };
+  if(tipo === 'exoma') return {
+    paired:      document.getElementById('tpl-paired-ex').value,
+    bp:          document.getElementById('tpl-bp-ex').value,
+    cob:         document.getElementById('tpl-cob-ex').value,
+    kit:         document.getElementById('tpl-kit-ex').value,
+    modalidade:  document.getElementById('tpl-modalidade-ex').value,
+    org:         document.getElementById('tpl-org-ex').value,
+    extracao: document.getElementById('tpl-extracao').checked,
+  };
   if(tipo === 'bioinformatica') return {
     seq: document.getElementById('tpl-seq-bio').value,
     extracao: false,
@@ -24925,9 +25008,10 @@ document.getElementById('tpl-tipo').addEventListener('change', function() {
   document.getElementById('params-isoseq').style.display = tipo === 'isoseq' ? '' : 'none';
   document.getElementById('params-shotgun').style.display = tipo === 'shotgun' ? '' : 'none';
   document.getElementById('params-genoma_completo').style.display = tipo === 'genoma_completo' ? '' : 'none';
+  document.getElementById('params-exoma').style.display = tipo === 'exoma' ? '' : 'none';
   document.getElementById('params-bioinformatica').style.display = tipo === 'bioinformatica' ? '' : 'none';
   document.getElementById('tpl-qty-row').style.display = '';
-  const unidades = {transcritoma:'amostras', metatranscritoma:'amostras', metagenoma16S:'amostras'};
+  const unidades = {transcritoma:'amostras', metatranscritoma:'amostras', metagenoma16S:'amostras', exoma:'amostras'};
   if(unidades[tipo]) document.getElementById('tpl-unit').value = unidades[tipo];
   updateExtracaoLabel();
   checkOutroVisible();
@@ -24942,6 +25026,7 @@ document.getElementById('tpl-tipo').addEventListener('change', function() {
  'tpl-org-16s','tpl-org-its',
  'tpl-paired-sh','tpl-bp-sh','tpl-reads-sh','tpl-org-sh',
  'tpl-bib-iso','tpl-reads-iso','tpl-org-iso',
+ 'tpl-paired-ex','tpl-bp-ex','tpl-cob-ex','tpl-kit-ex','tpl-modalidade-ex','tpl-org-ex',
  'tpl-seq-bio']
   .forEach(id => {
     const el = document.getElementById(id);
@@ -24972,6 +25057,7 @@ function checkOutroVisible() {
     isoseq:          'tpl-org-iso',
     shotgun:         'tpl-org-sh',
     genoma_completo: 'tpl-org-gc',
+    exoma:           'tpl-org-ex',
     bioinformatica:  null,
   }[tipo];
   const activeEl = activeOrgId ? document.getElementById(activeOrgId) : null;
@@ -24984,7 +25070,7 @@ function checkOutroVisible() {
   }
 }
 
-['tpl-org-rna','tpl-org-mt','tpl-org-16s','tpl-org-its','tpl-org-iso','tpl-org-sh','tpl-org-gc'].forEach(id => {
+['tpl-org-rna','tpl-org-mt','tpl-org-16s','tpl-org-its','tpl-org-iso','tpl-org-sh','tpl-org-gc','tpl-org-ex'].forEach(id => {
   const el = document.getElementById(id);
   if(!el) return;
   el.addEventListener('change', () => { checkOutroVisible(); updatePreview(); });
