@@ -24305,14 +24305,10 @@ document.getElementById('add-item').addEventListener('click',()=>addItem());
 // enumerar categorias nem decidir qual cenário vale pra cada item.
 // O termo DNA total / RNA total / genérico continua vindo do texto dos itens
 // (os templates de serviço pré-definido já gravam "DNA total"/"RNA total").
-// O escopo de extração é declarado à parte (igual ao de bioinformática),
-// detectado pela mesma frase que os templates gravam quando "Inclui extração"
-// está marcado no modal de serviço pré-definido.
+// Extração e bioinformática são declaradas em frases sempre separadas; quando
+// as duas têm a mesma polaridade, a segunda varia a abertura (também/tampouco)
+// pra não repetir literalmente a primeira.
 function textoRegrasEnvioAmostras(d) {
-  const bioFrase = d.bioinformatica === 'sim'
-    ? 'Esta proposta inclui análise bioinformática dos dados gerados.'
-    : 'O escopo desta proposta não inclui análises bioinformáticas dos dados gerados.';
-
   const textoItens = (d.items || []).map(it => it.desc || '').join('\n');
   const temDNA = /DNA total/i.test(textoItens);
   const temRNA = /RNA total/i.test(textoItens);
@@ -24324,6 +24320,18 @@ function textoRegrasEnvioAmostras(d) {
   const extracaoFrase = extracaoIncluida
     ? 'Esta proposta inclui a extração de material genético das amostras.'
     : 'O escopo desta proposta não inclui a extração de material genético das amostras.';
+
+  const bioIncluida = d.bioinformatica === 'sim';
+  let bioFrase;
+  if (bioIncluida && extracaoIncluida) {
+    bioFrase = 'A análise bioinformática dos dados gerados também está incluída nesta proposta.';
+  } else if (!bioIncluida && !extracaoIncluida) {
+    bioFrase = 'Tampouco estão incluídas análises bioinformáticas dos dados gerados.';
+  } else if (bioIncluida) {
+    bioFrase = 'Esta proposta inclui análise bioinformática dos dados gerados.';
+  } else {
+    bioFrase = 'O escopo desta proposta não inclui análises bioinformáticas dos dados gerados.';
+  }
 
   const primeiraFrase = `As amostras devem ser enviadas à Biomelting em condições adequadas de quantidade e qualidade para a realização dos ensaios de sequenciamento, de forma a garantir no mínimo 1 µg de ${termo}, livre de contaminantes exógenos, excetuando-se aqueles inerentes à metodologia empregada.`;
 
