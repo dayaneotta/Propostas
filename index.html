@@ -24305,6 +24305,9 @@ document.getElementById('add-item').addEventListener('click',()=>addItem());
 // enumerar categorias nem decidir qual cenário vale pra cada item.
 // O termo DNA total / RNA total / genérico continua vindo do texto dos itens
 // (os templates de serviço pré-definido já gravam "DNA total"/"RNA total").
+// O escopo de extração é declarado à parte (igual ao de bioinformática),
+// detectado pela mesma frase que os templates gravam quando "Inclui extração"
+// está marcado no modal de serviço pré-definido.
 function textoRegrasEnvioAmostras(d) {
   const bioFrase = d.bioinformatica === 'sim'
     ? 'Esta proposta inclui análise bioinformática dos dados gerados.'
@@ -24317,9 +24320,14 @@ function textoRegrasEnvioAmostras(d) {
               : (temDNA && !temRNA) ? 'DNA total'
               : 'DNA e/ou RNA total'; // misto, manual, ou não identificado
 
+  const extracaoIncluida = /Extração de (DNA|RNA) total das amostras/i.test(textoItens);
+  const extracaoFrase = extracaoIncluida
+    ? 'Esta proposta inclui a extração de material genético das amostras.'
+    : 'O escopo desta proposta não inclui a extração de material genético das amostras.';
+
   const primeiraFrase = `As amostras devem ser enviadas à Biomelting em condições adequadas de quantidade e qualidade para a realização dos ensaios de sequenciamento, de forma a garantir no mínimo 1 µg de ${termo}, livre de contaminantes exógenos, excetuando-se aqueles inerentes à metodologia empregada.`;
 
-  return `${primeiraFrase} Os custos de envio estão incluídos nesta proposta; contudo, a responsabilidade pela integridade e qualidade das amostras no momento do envio é exclusiva do contratante. ${bioFrase}`;
+  return `${primeiraFrase} Os custos de envio estão incluídos nesta proposta; contudo, a responsabilidade pela integridade e qualidade das amostras no momento do envio é exclusiva do contratante. ${extracaoFrase} ${bioFrase}`;
 }
 
 // ── Pré-visualizar proposta ───────────────────────────────────────────────────
