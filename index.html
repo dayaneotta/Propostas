@@ -24316,7 +24316,7 @@ function textoRegrasEnvioAmostras(d) {
               : (temDNA && !temRNA) ? 'DNA total'
               : 'DNA e/ou RNA total'; // misto, manual, ou não identificado
 
-  const extracaoIncluida = /Extração de (DNA|RNA) total das amostras/i.test(textoItens);
+  const extracaoIncluida = /extra[çc][ãa]o/i.test(textoItens);
   const extracaoFrase = extracaoIncluida
     ? 'Esta proposta inclui a extração de material genético das amostras.'
     : 'O escopo desta proposta não inclui a extração de material genético das amostras.';
