@@ -24880,7 +24880,7 @@ const templates = {
     const modoStr = p.paired === 'paired' ? `Paired-end ${p.bp} pb` : `Single-end ${p.bp.replace(/^\d+x/,'')} pb`;
     const orgPart = p.org === 'outro' ? (getOrgOutro() ? ` (${getOrgOutro()})` : ' (Outro organismo)') : '';
     const extEx = p.extracao ? '- Extração de DNA total das amostras;\n' : '';
-    return `Sequenciamento de Exoma Completo${orgPart}:\n${extEx}- Quantificação e análise de qualidade do DNA total;\n- Preparação de biblioteca com captura e enriquecimento do exoma;\n- Quantificação e análise de qualidade das bibliotecas;\n- Sequenciamento ${modoStr} com cobertura média de ${p.cob}× sobre as regiões-alvo (éxons e sítios de splicing).`;
+    return `Sequenciamento de Exoma Completo${orgPart}:\n${extEx}- Quantificação e análise de qualidade do DNA total;\n- Preparação de biblioteca com captura e enriquecimento do exoma;\n- Quantificação e análise de qualidade das bibliotecas;\n- Sequenciamento ${modoStr} com cobertura média de ${p.cob}× sobre as regiões-alvo.`;
   },
   bioinformatica: (p) => {
     const objetivoMap = {
