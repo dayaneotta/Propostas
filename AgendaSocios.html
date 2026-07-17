@@ -48,11 +48,13 @@
   .resultados { display: flex; flex-direction: column; gap: 4px; }
   .grupo-label { font-size: 11px; color: var(--text-muted); margin: 10px 0 4px; }
   .grupo-label:first-child { margin-top: 0; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 8px; }
   .chip {
-    font-size: 13px; padding: 8px 12px; border-radius: 8px; border: 1px solid;
-    white-space: nowrap;
+    display: flex; flex-direction: column; gap: 3px; text-align: left;
+    font-size: 13px; padding: 10px 12px; border-radius: 8px; border: 1px solid;
   }
+  .chip-dia { font-weight: 600; text-transform: capitalize; }
+  .chip-hora { font-size: 12px; opacity: 0.8; }
   .chip.ambos { background: var(--green-bg); color: var(--green-text); border-color: var(--green-border); }
   .chip.parcial { background: var(--blue-bg); color: var(--blue-text); border-color: var(--blue-border); }
   .vazio { font-size: 13px; color: var(--text-muted); padding: 4px 0; }
@@ -153,23 +155,28 @@
     aviso.style.display = 'block';
   }
 
+  function chipHTML(j, classe) {
+    const hora = j.diaTodo ? 'dia todo' : `${j.horaInicio} – ${j.horaFim}`;
+    return `<span class="chip ${classe}"><span class="chip-dia">${j.diaSemana} ${j.data}</span><span class="chip-hora">${hora}</span></span>`;
+  }
+
   function renderResultados(r) {
     const div = document.getElementById('resultados');
     let html = '';
 
     if (r.ambos.length) {
       html += '<div class="grupo-label">Fábio e Letícia livres</div><div class="chips">';
-      html += r.ambos.map(j => `<span class="chip ambos">${j.inicio} – ${j.fim}</span>`).join('');
+      html += r.ambos.map(j => chipHTML(j, 'ambos')).join('');
       html += '</div>';
     }
     if (r.fabio.length) {
       html += '<div class="grupo-label">Só Fábio livre</div><div class="chips">';
-      html += r.fabio.map(j => `<span class="chip parcial">${j.inicio} – ${j.fim} · Fábio</span>`).join('');
+      html += r.fabio.map(j => chipHTML(j, 'parcial')).join('');
       html += '</div>';
     }
     if (r.leticia.length) {
       html += '<div class="grupo-label">Só Letícia livre</div><div class="chips">';
-      html += r.leticia.map(j => `<span class="chip parcial">${j.inicio} – ${j.fim} · Letícia</span>`).join('');
+      html += r.leticia.map(j => chipHTML(j, 'parcial')).join('');
       html += '</div>';
     }
     if (!html) html = '<div class="vazio">Nenhum horário livre encontrado nesse intervalo.</div>';
