@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda dos sócios — Biomelting</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f7f6f2;
+    --border: #e4e2da;
+    --text: #1a1a18;
+    --text-muted: #6b6a63;
+    --green-bg: #e1f5ee; --green-text: #085041; --green-border: #5dcaa5;
+    --blue-bg: #e6f1fb;  --blue-text: #0c447c;  --blue-border: #85b7eb;
+    --amber-bg: #faeeda;  --amber-text: #633806;  --amber-border: #ef9f27;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem;
+  }
+  h1 { font-size: 18px; font-weight: 500; margin: 0 0 4px; }
+  .subtitle { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; }
+  .aviso {
+    background: var(--amber-bg); color: var(--amber-text);
+    border: 1px solid var(--amber-border); border-radius: 8px;
+    padding: 10px 14px; font-size: 13px; margin-bottom: 20px; display: none;
+  }
+  .painel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+  .painel-titulo { font-size: 14px; font-weight: 500; margin-bottom: 12px; }
+  .controles { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  button.dur, button.buscar {
+    font-size: 13px; padding: 7px 14px; border-radius: 8px;
+    border: 1px solid var(--border); background: #fff; color: var(--text);
+    cursor: pointer;
+  }
+  button.dur.active { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); }
+  button.buscar { background: var(--text); color: #fff; border: none; margin-left: auto; }
+  button.buscar:disabled { opacity: 0.5; cursor: default; }
+  .resultados { display: flex; flex-direction: column; gap: 4px; }
+  .grupo-label { font-size: 11px; color: var(--text-muted); margin: 10px 0 4px; }
+  .grupo-label:first-child { margin-top: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-size: 13px; padding: 8px 12px; border-radius: 8px; border: 1px solid;
+    white-space: nowrap;
+  }
+  .chip.ambos { background: var(--green-bg); color: var(--green-text); border-color: var(--green-border); }
+  .chip.parcial { background: var(--blue-bg); color: var(--blue-text); border-color: var(--blue-border); }
+  .vazio { font-size: 13px; color: var(--text-muted); padding: 4px 0; }
+</style>
+</head>
+<body>
+  <h1>Agenda dos sócios</h1>
+  <p class="subtitle">Fábio e Letícia — Biomelting</p>
+
+  <div class="aviso" id="aviso">
+    Aguardando os tokens do Calendly de Fábio e Letícia — clique em "Buscar" pra ver o estado atual.
+  </div>
+
+  <div class="painel">
+    <div class="painel-titulo">Buscar horário em comum</div>
+    <div class="controles">
+      <button class="dur active" data-dur="30" onclick="setDuracao(30)">30 min</button>
+      <button class="dur" data-dur="60" onclick="setDuracao(60)">1 hora</button>
+      <button class="buscar" id="btnBuscar" onclick="buscar()">Buscar</button>
+    </div>
+    <div class="resultados" id="resultados">
+      <div class="vazio">Clique em "Buscar" pra ver os próximos horários disponíveis (próximos 30 dias).</div>
+    </div>
+  </div>
+
+<script>
+  // ATENÇÃO: substituir pela URL do Web App depois do deploy.
+  // (No Apps Script: Implantar → Nova implantação → Tipo: App da Web
+  //  → Executar como: Eu → Quem pode acessar: qualquer pessoa com a conta do Google)
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxSXXIU0MBUKX75ojzP6BwYib84F8T0qHA3lGKuCYFVxsKcinbOGer-qvVTur5tN4q2A/exec';
+
+  let duracao = 30;
+
+  function setDuracao(d) {
+    duracao = d;
+    document.querySelectorAll('.dur').forEach(b => b.classList.toggle('active', Number(b.dataset.dur) === d));
+  }
+
+  async function buscar() {
+    const btn = document.getElementById('btnBuscar');
+    const div = document.getElementById('resultados');
+    btn.disabled = true;
+    div.innerHTML = '<div class="vazio">Buscando…</div>';
+
+    try {
+      const url = `${APPS_SCRIPT_URL}?action=buscar&dias=30&duracao=${duracao}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+
+      if (!data.ok) throw new Error(data.error || 'erro desconhecido');
+
+      atualizarAviso(data.resultado);
+      renderResultados(data.resultado);
+    } catch (err) {
+      div.innerHTML = `<div class="vazio">Não deu pra buscar: ${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function atualizarAviso(r) {
+    const aviso = document.getElementById('aviso');
+    if (r.fabioIntegrado && r.leticiaIntegrada) {
+      aviso.style.display = 'none';
+      return;
+    }
+    if (!r.fabioIntegrado && !r.leticiaIntegrada) {
+      aviso.textContent = 'Fábio e Letícia ainda não estão conectados (aguardando os tokens do Calendly dos dois). Sem dados pra mostrar por enquanto.';
+    } else {
+      const conectado = r.fabioIntegrado ? 'Fábio' : 'Letícia';
+      const pendente = r.fabioIntegrado ? 'Letícia' : 'Fábio';
+      aviso.textContent = `${pendente} ainda não está conectado(a) (aguardando o token do Calendly). Por enquanto, os resultados mostram só a disponibilidade de ${conectado}.`;
+    }
+    aviso.style.display = 'block';
+  }
+
+  function renderResultados(r) {
+    const div = document.getElementById('resultados');
+    let html = '';
+
+    if (r.ambos.length) {
+      html += '<div class="grupo-label">Fábio e Letícia livres</div><div class="chips">';
+      html += r.ambos.map(j => `<span class="chip ambos">${j.inicio} – ${j.fim}</span>`).join('');
+      html += '</div>';
+    }
+    if (r.fabio.length) {
+      html += '<div class="grupo-label">Só Fábio livre</div><div class="chips">';
+      html += r.fabio.map(j => `<span class="chip parcial">${j.inicio} – ${j.fim} · Fábio</span>`).join('');
+      html += '</div>';
+    }
+    if (r.leticia.length) {
+      html += '<div class="grupo-label">Só Letícia livre</div><div class="chips">';
+      html += r.leticia.map(j => `<span class="chip parcial">${j.inicio} – ${j.fim} · Letícia</span>`).join('');
+      html += '</div>';
+    }
+    if (!html) html = '<div class="vazio">Nenhum horário livre encontrado nesse intervalo.</div>';
+
+    div.innerHTML = html;
+  }
+</script>
+</body>
+</html>
