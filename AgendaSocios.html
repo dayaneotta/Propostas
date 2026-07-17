@@ -155,9 +155,9 @@
     aviso.style.display = 'block';
   }
 
-  function chipHTML(j, classe) {
-    const hora = j.diaTodo ? 'dia todo' : `${j.horaInicio} – ${j.horaFim}`;
-    return `<span class="chip ${classe}"><span class="chip-dia">${j.diaSemana} ${j.data}</span><span class="chip-hora">${hora}</span></span>`;
+  function chipHTML(g, classe) {
+    const hora = g.janelas.map(j => j.diaTodo ? 'dia todo' : `${j.horaInicio}–${j.horaFim}`).join(', ');
+    return `<span class="chip ${classe}"><span class="chip-dia">${g.diaSemana} ${g.data}</span><span class="chip-hora">${hora}</span></span>`;
   }
 
   function renderResultados(r) {
