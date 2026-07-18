@@ -57,6 +57,8 @@
   .chip-hora { font-size: 12px; opacity: 0.8; }
   .chip.ambos { background: var(--green-bg); color: var(--green-text); border-color: var(--green-border); }
   .chip.parcial { background: var(--blue-bg); color: var(--blue-text); border-color: var(--blue-border); }
+  .mes-divisor { grid-column: 1 / -1; font-size: 11px; font-weight: 600; text-transform: capitalize; color: var(--text-muted); margin: 4px 0 -2px; }
+  .mes-divisor:not(:first-child) { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
   .vazio { font-size: 13px; color: var(--text-muted); padding: 4px 0; }
 </style>
 </head>
@@ -156,8 +158,24 @@
   }
 
   function chipHTML(g, classe) {
-    const hora = g.janelas.map(j => j.diaTodo ? 'dia todo' : `${j.horaInicio}–${j.horaFim}`).join(', ');
+    const hora = g.janelas.map(j => `${j.horaInicio}–${j.horaFim}`).join(', ');
     return `<span class="chip ${classe}"><span class="chip-dia">${g.diaSemana} ${g.data}</span><span class="chip-hora">${hora}</span></span>`;
+  }
+
+  const MESES_PT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+  function chipsComDivisorMes(grupos, classe) {
+    let mesAtual = null;
+    let html = '';
+    grupos.forEach(g => {
+      const mesNum = Number(g.data.split('/')[1]) - 1;
+      if (mesNum !== mesAtual) {
+        html += `<div class="mes-divisor">${MESES_PT[mesNum]}</div>`;
+        mesAtual = mesNum;
+      }
+      html += chipHTML(g, classe);
+    });
+    return html;
   }
 
   function renderResultados(r) {
@@ -166,17 +184,17 @@
 
     if (r.ambos.length) {
       html += '<div class="grupo-label">Fábio e Letícia livres</div><div class="chips">';
-      html += r.ambos.map(j => chipHTML(j, 'ambos')).join('');
+      html += chipsComDivisorMes(r.ambos, 'ambos');
       html += '</div>';
     }
     if (r.fabio.length) {
       html += '<div class="grupo-label">Só Fábio livre</div><div class="chips">';
-      html += r.fabio.map(j => chipHTML(j, 'parcial')).join('');
+      html += chipsComDivisorMes(r.fabio, 'parcial');
       html += '</div>';
     }
     if (r.leticia.length) {
       html += '<div class="grupo-label">Só Letícia livre</div><div class="chips">';
-      html += r.leticia.map(j => chipHTML(j, 'parcial')).join('');
+      html += chipsComDivisorMes(r.leticia, 'parcial');
       html += '</div>';
     }
     if (!html) html = '<div class="vazio">Nenhum horário livre encontrado nesse intervalo.</div>';
