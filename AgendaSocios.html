@@ -107,6 +107,11 @@
   .modal-erro { color: #c0392b; font-size: 12px; min-height: 16px; margin-top: 8px; }
   .modal-botoes { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
   .modal-botoes button:first-child { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 13px; cursor: pointer; }
+  .pergunta-lead { display: none; background: var(--amber-bg); border: 1px solid var(--amber-border); border-radius: 8px; padding: 12px; margin-top: 12px; }
+  .pergunta-lead p { margin: 0 0 10px; font-size: 13px; color: var(--amber-text); line-height: 1.4; }
+  .pergunta-lead-botoes { display: flex; gap: 8px; }
+  .pergunta-lead-botoes button { flex: 1; padding: 8px; font-size: 13px; border-radius: 8px; cursor: pointer; font-family: inherit; }
+  .pergunta-lead-botoes button:first-child { background: #fff; border: 1px solid var(--amber-border); color: var(--amber-text); }
 </style>
 </head>
 <body>
@@ -331,7 +336,14 @@
       <label for="modalTitulo">Título da reunião</label>
       <input type="text" id="modalTitulo" value="Reunião Biomelting">
       <div class="modal-erro" id="modalErro"></div>
-      <div class="modal-botoes">
+      <div class="pergunta-lead" id="perguntaLead">
+        <p id="perguntaLeadTexto"></p>
+        <div class="pergunta-lead-botoes">
+          <button type="button" id="btnLeadNao">Não é o pesquisador</button>
+          <button type="button" id="btnLeadSim" class="buscar">É o pesquisador</button>
+        </div>
+      </div>
+      <div class="modal-botoes" id="modalBotoesAgendar">
         <button onclick="fecharModalAgendar()">Cancelar</button>
         <button class="buscar" id="btnConfirmar" onclick="confirmarAgendamento()">Confirmar agendamento</button>
       </div>`;
@@ -466,6 +478,31 @@
     return texto.trim() ? `<p class="modal-resumo" style="margin-top:8px">${texto.trim()}</p>` : '';
   }
 
+  /** Pergunta, dentro do próprio modal (sem destruir o formulário), se
+   * o e-mail desconhecido no BioLead é mesmo o pesquisador responsável
+   * — pode ser aluno, contato administrativo etc. participando da
+   * reunião sem ser o lead em si. */
+  function perguntarNovoLead(nome) {
+    return new Promise((resolve) => {
+      const div = document.getElementById('perguntaLead');
+      document.getElementById('perguntaLeadTexto').textContent =
+        `"${nome}" não está cadastrado no BioLead. É o pesquisador responsável, ou alguém (aluno, contato administrativo etc.) participando da reunião sem ser o pesquisador?`;
+      div.style.display = 'block';
+      document.getElementById('modalBotoesAgendar').style.display = 'none';
+
+      document.getElementById('btnLeadNao').onclick = () => {
+        div.style.display = 'none';
+        document.getElementById('modalBotoesAgendar').style.display = '';
+        resolve(false);
+      };
+      document.getElementById('btnLeadSim').onclick = () => {
+        div.style.display = 'none';
+        document.getElementById('modalBotoesAgendar').style.display = '';
+        resolve(true);
+      };
+    });
+  }
+
   async function confirmarAgendamento() {
     const botaoAtivo = document.querySelector('.horario-opcao.ativa');
     const erro = document.getElementById('modalErro');
@@ -478,6 +515,18 @@
 
     if (!nomePesquisador) { erro.textContent = 'Informe o nome do pesquisador.'; return; }
     if (!pesquisadores) { erro.textContent = 'Informe pelo menos um e-mail.'; return; }
+
+    // usa o cache já carregado pro autocomplete — sem chamada nova —
+    // pra saber se algum e-mail digitado ainda não é conhecido no BioLead.
+    const emailsDigitados = pesquisadores.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    const algumDesconhecido = emailsDigitados.some(email =>
+      !cacheBioLead || !cacheBioLead.some(c => (c.email || '').toLowerCase().trim() === email)
+    );
+
+    let criarComoLead = true;
+    if (algumDesconhecido) {
+      criarComoLead = await perguntarNovoLead(nomePesquisador);
+    }
 
     const btn = document.getElementById('btnConfirmar');
     btn.disabled = true;
@@ -492,7 +541,8 @@
         nomePesquisador: nomePesquisador,
         titulo: titulo || 'Reunião Biomelting',
         incluirFabio: agendamentoAtual.incluirFabio ? '1' : '0',
-        incluirLeticia: agendamentoAtual.incluirLeticia ? '1' : '0'
+        incluirLeticia: agendamentoAtual.incluirLeticia ? '1' : '0',
+        criarComoLead: criarComoLead ? '1' : '0'
       });
       if (!data.ok) throw new Error(data.error || 'erro desconhecido');
       document.getElementById('modalCorpo').innerHTML = `
