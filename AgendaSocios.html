@@ -70,9 +70,23 @@
   .chip-hora { font-size: 12px; opacity: 0.8; }
   .chip.ambos { background: var(--green-bg); color: var(--green-text); border-color: var(--green-border); }
   .chip.parcial { background: var(--blue-bg); color: var(--blue-text); border-color: var(--blue-border); }
+  .chip { cursor: pointer; transition: transform .1s; }
+  .chip:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+  .chip-multi .chip-janela { display: block; text-decoration: underline; text-decoration-color: transparent; margin-top: 2px; }
+  .chip-multi .chip-janela:hover { text-decoration-color: currentColor; }
   .mes-divisor { grid-column: 1 / -1; font-size: 11px; font-weight: 600; text-transform: capitalize; color: var(--text-muted); margin: 4px 0 -2px; }
   .mes-divisor:not(:first-child) { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
   .vazio { font-size: 13px; color: var(--text-muted); padding: 4px 0; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(20,30,40,.5); align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.aberto { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: 380px; width: 100%; }
+  .modal h2 { font-size: 16px; font-weight: 500; margin: 0 0 8px; }
+  .modal-resumo { font-size: 13px; color: var(--text-muted); margin: 0 0 16px; }
+  .modal label { display: block; font-size: 12px; font-weight: 600; margin: 12px 0 4px; }
+  .modal input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+  .modal-erro { color: #c0392b; font-size: 12px; min-height: 16px; margin-top: 8px; }
+  .modal-botoes { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  .modal-botoes button:first-child { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 13px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -100,6 +114,10 @@
       <div class="vazio">Clique em "Buscar" pra ver os próximos horários disponíveis (próximos 30 dias).</div>
     </div>
   </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="fecharModalAgendarSeClicouFora(event)">
+  <div class="modal" onclick="event.stopPropagation()" id="modalCorpo"></div>
 </div>
 
 <script>
@@ -177,14 +195,24 @@
     aviso.style.display = 'block';
   }
 
-  function chipHTML(g, classe) {
-    const hora = g.janelas.map(j => `${j.horaInicio}–${j.horaFim}`).join(', ');
-    return `<span class="chip ${classe}"><span class="chip-dia">${g.diaSemana} ${g.data}</span><span class="chip-hora">${hora}</span></span>`;
+  function chipHTML(g, classe, incluirFabio, incluirLeticia) {
+    const diaTexto = (g.diaSemana + ' ' + g.data).replace(/'/g, '');
+    if (g.janelas.length === 1) {
+      const j = g.janelas[0];
+      return `<span class="chip ${classe}" onclick="abrirModalAgendar('${j.inicioISO}','${j.fimISO}','${diaTexto}',${incluirFabio},${incluirLeticia})">`
+        + `<span class="chip-dia">${g.diaSemana} ${g.data}</span><span class="chip-hora">${j.horaInicio}–${j.horaFim}</span></span>`;
+    }
+    // dia com mais de uma janela livre (ex: manhã e tarde): cada horário
+    // vira sua própria linha clicável, já que "o card inteiro" seria ambíguo.
+    const linhas = g.janelas.map(j =>
+      `<span class="chip-janela" onclick="event.stopPropagation();abrirModalAgendar('${j.inicioISO}','${j.fimISO}','${diaTexto}',${incluirFabio},${incluirLeticia})">${j.horaInicio}–${j.horaFim}</span>`
+    ).join('');
+    return `<span class="chip ${classe} chip-multi"><span class="chip-dia">${g.diaSemana} ${g.data}</span>${linhas}</span>`;
   }
 
   const MESES_PT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
-  function chipsComDivisorMes(grupos, classe) {
+  function chipsComDivisorMes(grupos, classe, incluirFabio, incluirLeticia) {
     let mesAtual = null;
     let html = '';
     grupos.forEach(g => {
@@ -193,7 +221,7 @@
         html += `<div class="mes-divisor">${MESES_PT[mesNum]}</div>`;
         mesAtual = mesNum;
       }
-      html += chipHTML(g, classe);
+      html += chipHTML(g, classe, incluirFabio, incluirLeticia);
     });
     return html;
   }
@@ -204,22 +232,87 @@
 
     if (r.ambos.length) {
       html += '<div class="grupo-label">Fábio e Letícia livres</div><div class="chips">';
-      html += chipsComDivisorMes(r.ambos, 'ambos');
+      html += chipsComDivisorMes(r.ambos, 'ambos', true, true);
       html += '</div>';
     }
     if (r.fabio.length) {
       html += '<div class="grupo-label">Só Fábio livre</div><div class="chips">';
-      html += chipsComDivisorMes(r.fabio, 'parcial');
+      html += chipsComDivisorMes(r.fabio, 'parcial', true, false);
       html += '</div>';
     }
     if (r.leticia.length) {
       html += '<div class="grupo-label">Só Letícia livre</div><div class="chips">';
-      html += chipsComDivisorMes(r.leticia, 'parcial');
+      html += chipsComDivisorMes(r.leticia, 'parcial', false, true);
       html += '</div>';
     }
     if (!html) html = '<div class="vazio">Nenhum horário livre encontrado nesse intervalo.</div>';
 
     div.innerHTML = html;
+  }
+
+  // ---- Agendamento: abre/fecha o modal e confirma a criação da reunião ----
+
+  let agendamentoAtual = null;
+
+  function abrirModalAgendar(inicioISO, fimISO, diaTexto, incluirFabio, incluirLeticia) {
+    agendamentoAtual = { inicioISO, fimISO, incluirFabio, incluirLeticia };
+    const quem = incluirFabio && incluirLeticia ? 'Fábio e Letícia' : (incluirFabio ? 'Fábio' : 'Letícia');
+    document.getElementById('modalCorpo').innerHTML = `
+      <h2>Agendar reunião</h2>
+      <p class="modal-resumo">${diaTexto} — ${quem}</p>
+      <label for="modalPesquisadores">E-mail(s) do(s) pesquisador(es)</label>
+      <input type="text" id="modalPesquisadores" placeholder="nome@instituicao.edu.br, outro@...">
+      <label for="modalTitulo">Título da reunião</label>
+      <input type="text" id="modalTitulo" value="Reunião Biomelting">
+      <div class="modal-erro" id="modalErro"></div>
+      <div class="modal-botoes">
+        <button onclick="fecharModalAgendar()">Cancelar</button>
+        <button class="buscar" id="btnConfirmar" onclick="confirmarAgendamento()">Confirmar agendamento</button>
+      </div>`;
+    document.getElementById('modalOverlay').classList.add('aberto');
+  }
+
+  function fecharModalAgendar() {
+    document.getElementById('modalOverlay').classList.remove('aberto');
+    agendamentoAtual = null;
+  }
+
+  function fecharModalAgendarSeClicouFora(ev) {
+    if (ev.target.id === 'modalOverlay') fecharModalAgendar();
+  }
+
+  async function confirmarAgendamento() {
+    const pesquisadores = document.getElementById('modalPesquisadores').value.trim();
+    const titulo = document.getElementById('modalTitulo').value.trim();
+    const erro = document.getElementById('modalErro');
+    erro.textContent = '';
+
+    if (!pesquisadores) { erro.textContent = 'Informe pelo menos um e-mail.'; return; }
+
+    const btn = document.getElementById('btnConfirmar');
+    btn.disabled = true;
+    btn.textContent = 'Agendando…';
+
+    try {
+      const data = await buscarJSONP({
+        action: 'agendar',
+        inicio: agendamentoAtual.inicioISO,
+        fim: agendamentoAtual.fimISO,
+        pesquisadores: pesquisadores,
+        titulo: titulo || 'Reunião Biomelting',
+        incluirFabio: agendamentoAtual.incluirFabio ? '1' : '0',
+        incluirLeticia: agendamentoAtual.incluirLeticia ? '1' : '0'
+      });
+      if (!data.ok) throw new Error(data.error || 'erro desconhecido');
+      document.getElementById('modalCorpo').innerHTML = `
+        <h2>Reunião agendada ✓</h2>
+        <p class="modal-resumo">Convite enviado por e-mail pra: ${data.resultado.convidados.join(', ')}</p>
+        <div class="modal-botoes"><button class="buscar" onclick="fecharModalAgendar()">Fechar</button></div>`;
+    } catch (err) {
+      erro.textContent = 'Não deu pra agendar: ' + err.message;
+      btn.disabled = false;
+      btn.textContent = 'Confirmar agendamento';
+    }
   }
 </script>
 </body>
