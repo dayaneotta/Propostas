@@ -91,6 +91,14 @@
   .modal-resumo { font-size: 13px; color: var(--text-muted); margin: 0 0 16px; }
   .modal label { display: block; font-size: 12px; font-weight: 600; margin: 12px 0 4px; }
   .modal input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+  .campo-com-sugestoes { position: relative; }
+  .sugestoes-lista { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-radius: 8px; margin-top: 3px; max-height: 168px; overflow-y: auto; z-index: 20; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+  .sugestoes-lista.aberta { display: block; }
+  .sugestao-item { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid var(--border); }
+  .sugestao-item:last-child { border-bottom: none; }
+  .sugestao-item:hover { background: var(--blue-bg); }
+  .sugestao-nome { font-size: 13px; font-weight: 600; }
+  .sugestao-email { font-size: 11px; color: var(--text-muted); }
   .label-horario { font-size: 13px !important; font-weight: 700 !important; color: var(--text); margin-top: 4px !important; }
   .horario-opcoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 200px; overflow-y: auto; padding: 2px; margin-bottom: 4px; }
   .horario-opcao { padding: 9px 6px; border: 1.5px solid var(--border); border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; font-family: inherit; color: var(--text); cursor: pointer; text-align: center; transition: all .12s; }
@@ -314,7 +322,10 @@
       <label class="label-horario">Horário específico (${duracao} min)</label>
       <div class="horario-opcoes">${opcoesHTML}</div>
       <label for="modalNomePesquisador">Nome do pesquisador *</label>
-      <input type="text" id="modalNomePesquisador" placeholder="Nome e sobrenome" oninput="atualizarTituloSugerido()">
+      <div class="campo-com-sugestoes">
+        <input type="text" id="modalNomePesquisador" placeholder="Nome e sobrenome — busca no BioLead" oninput="aoDigitarNomePesquisador()" onblur="ocultarSugestoesComAtraso()" autocomplete="off">
+        <div class="sugestoes-lista" id="modalSugestoes"></div>
+      </div>
       <label for="modalPesquisadores">E-mail(s) do(s) pesquisador(es)</label>
       <input type="text" id="modalPesquisadores" placeholder="nome@instituicao.edu.br, outro@...">
       <label for="modalTitulo">Título da reunião</label>
@@ -325,6 +336,7 @@
         <button class="buscar" id="btnConfirmar" onclick="confirmarAgendamento()">Confirmar agendamento</button>
       </div>`;
     document.getElementById('modalOverlay').classList.add('aberto');
+    carregarCacheBioLead();
   }
 
   function selecionarHorario(botao) {
@@ -343,6 +355,79 @@
     if (eraSugestao) {
       campoTitulo.value = nome ? `Reunião Biomelting e ${nome}` : 'Reunião Biomelting';
     }
+  }
+
+  // ---- Autocomplete de pesquisador a partir do cadastro no BioLead ----
+
+  let cacheBioLead = null;
+  let carregandoCacheBioLead = false;
+
+  /** Busca nome+e-mail de todo o BioLead uma vez, ao abrir o modal, e
+   * guarda em memória — filtrar localmente enquanto digita é instantâneo;
+   * uma chamada JSONP por letra digitada não seria. Falha aqui não impede
+   * o agendamento, só faz o campo funcionar sem sugestão. */
+  async function carregarCacheBioLead() {
+    if (cacheBioLead || carregandoCacheBioLead) return;
+    carregandoCacheBioLead = true;
+    try {
+      const data = await buscarJSONP({ action: 'buscarPesquisadores' });
+      if (data && data.ok) cacheBioLead = data.resultado;
+    } catch (e) {
+      // silencioso de propósito — ver comentário acima
+    } finally {
+      carregandoCacheBioLead = false;
+    }
+  }
+
+  function aoDigitarNomePesquisador() {
+    atualizarTituloSugerido();
+    const termo = document.getElementById('modalNomePesquisador').value.trim().toLowerCase();
+    const caixa = document.getElementById('modalSugestoes');
+
+    if (!termo || !cacheBioLead || !cacheBioLead.length) {
+      caixa.classList.remove('aberta');
+      caixa.innerHTML = '';
+      return;
+    }
+    const encontrados = cacheBioLead.filter(c => (c.nome || '').toLowerCase().includes(termo)).slice(0, 5);
+    if (!encontrados.length) {
+      caixa.classList.remove('aberta');
+      caixa.innerHTML = '';
+      return;
+    }
+
+    caixa.innerHTML = '';
+    encontrados.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'sugestao-item';
+      const nomeDiv = document.createElement('div');
+      nomeDiv.className = 'sugestao-nome';
+      nomeDiv.textContent = c.nome; // textContent, não innerHTML — sem risco de injeção
+      const emailDiv = document.createElement('div');
+      emailDiv.className = 'sugestao-email';
+      emailDiv.textContent = c.email;
+      item.appendChild(nomeDiv);
+      item.appendChild(emailDiv);
+      item.onclick = () => selecionarSugestaoBioLead(c.nome, c.email);
+      caixa.appendChild(item);
+    });
+    caixa.classList.add('aberta');
+  }
+
+  function selecionarSugestaoBioLead(nome, email) {
+    document.getElementById('modalNomePesquisador').value = nome;
+    document.getElementById('modalPesquisadores').value = email;
+    document.getElementById('modalSugestoes').classList.remove('aberta');
+    atualizarTituloSugerido();
+  }
+
+  /** Espera um pouco antes de esconder a lista, senão o clique na
+   * sugestão nunca chega a disparar — blur do input vem antes do click. */
+  function ocultarSugestoesComAtraso() {
+    setTimeout(() => {
+      const caixa = document.getElementById('modalSugestoes');
+      if (caixa) caixa.classList.remove('aberta');
+    }, 150);
   }
 
   function fecharModalAgendar() {
