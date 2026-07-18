@@ -408,7 +408,15 @@
       emailDiv.textContent = c.email;
       item.appendChild(nomeDiv);
       item.appendChild(emailDiv);
-      item.onclick = () => selecionarSugestaoBioLead(c.nome, c.email);
+      // mousedown (não click) com preventDefault: o blur do campo de texto
+      // dispara ANTES do click do item, então um handler de click perde
+      // a corrida contra o "esconder ao perder foco". mousedown com
+      // preventDefault impede o campo de perder o foco, então não há
+      // corrida nenhuma pra perder.
+      item.onmousedown = (ev) => {
+        ev.preventDefault();
+        selecionarSugestaoBioLead(c.nome, c.email);
+      };
       caixa.appendChild(item);
     });
     caixa.classList.add('aberta');
