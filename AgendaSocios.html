@@ -313,7 +313,7 @@
       <p class="modal-resumo">${diaTexto} — ${quem}</p>
       <label class="label-horario">Horário específico (${duracao} min)</label>
       <div class="horario-opcoes">${opcoesHTML}</div>
-      <label for="modalNomePesquisador">Nome do pesquisador</label>
+      <label for="modalNomePesquisador">Nome do pesquisador *</label>
       <input type="text" id="modalNomePesquisador" placeholder="Nome e sobrenome" oninput="atualizarTituloSugerido()">
       <label for="modalPesquisadores">E-mail(s) do(s) pesquisador(es)</label>
       <input type="text" id="modalPesquisadores" placeholder="nome@instituicao.edu.br, outro@...">
@@ -359,16 +359,18 @@
    * agendamento (a reunião já foi criada de qualquer jeito). */
   function textoStatusBioLead(biolead) {
     if (!biolead || !biolead.length) return '';
-    const ok = biolead.filter(b => b.resultado && b.resultado.ok).map(b => b.email);
+    const atualizados = biolead.filter(b => b.resultado && b.resultado.ok && !b.resultado.criado).map(b => b.email);
+    const criados = biolead.filter(b => b.resultado && b.resultado.ok && b.resultado.criado).map(b => b.email);
     const falhou = biolead.filter(b => !b.resultado || !b.resultado.ok);
     let texto = '';
-    if (ok.length) texto += `BioLead atualizado (${ok.join(', ')}).`;
+    if (atualizados.length) texto += `BioLead atualizado (${atualizados.join(', ')}). `;
+    if (criados.length) texto += `Novo contato espontâneo criado no BioLead (${criados.join(', ')}). `;
     if (falhou.length) {
       falhou.forEach(f => {
-        texto += (texto ? ' ' : '') + `${f.email}: ${(f.resultado && f.resultado.motivo) || 'não sincronizado com o BioLead'}.`;
+        texto += `${f.email}: ${(f.resultado && f.resultado.motivo) || 'não sincronizado com o BioLead'}. `;
       });
     }
-    return texto ? `<p class="modal-resumo" style="margin-top:8px">${texto}</p>` : '';
+    return texto.trim() ? `<p class="modal-resumo" style="margin-top:8px">${texto.trim()}</p>` : '';
   }
 
   async function confirmarAgendamento() {
@@ -376,10 +378,12 @@
     const erro = document.getElementById('modalErro');
     if (!botaoAtivo) { erro.textContent = 'Selecione um horário específico.'; return; }
     const [horarioInicio, horarioFim] = botaoAtivo.dataset.valor.split('|');
+    const nomePesquisador = document.getElementById('modalNomePesquisador').value.trim();
     const pesquisadores = document.getElementById('modalPesquisadores').value.trim();
     const titulo = document.getElementById('modalTitulo').value.trim();
     erro.textContent = '';
 
+    if (!nomePesquisador) { erro.textContent = 'Informe o nome do pesquisador.'; return; }
     if (!pesquisadores) { erro.textContent = 'Informe pelo menos um e-mail.'; return; }
 
     const btn = document.getElementById('btnConfirmar');
@@ -392,6 +396,7 @@
         inicio: horarioInicio,
         fim: horarioFim,
         pesquisadores: pesquisadores,
+        nomePesquisador: nomePesquisador,
         titulo: titulo || 'Reunião Biomelting',
         incluirFabio: agendamentoAtual.incluirFabio ? '1' : '0',
         incluirLeticia: agendamentoAtual.incluirLeticia ? '1' : '0'
