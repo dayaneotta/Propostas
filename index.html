@@ -24237,7 +24237,7 @@ async function sincronizarBioLeadAposProposta(d, numProposta) {
 function abrirConfirmacaoBioLead(nome, email, tel, linhaNota, palpiteFundacao) {
   const texto = document.getElementById('biolead-confirm-texto');
   texto.textContent = `"${nome}" (${email}) não está cadastrado no BioLead. Adicionar como pesquisador na aba Contato Espontâneo?`
-    + (palpiteFundacao ? ' Pelo nome do cliente, isso pode ser um contato administrativo de fundação de apoio, não o pesquisador final — confira antes de confirmar.' : '');
+    + (palpiteFundacao ? ' Pelo nome do cliente, pode ser um contato administrativo de fundação de apoio, não o pesquisador final — confira antes de confirmar.' : '');
 
   const btnSim = document.getElementById('biolead-confirm-sim');
   const btnNao = document.getElementById('biolead-confirm-nao');
