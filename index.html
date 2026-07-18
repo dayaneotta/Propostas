@@ -23628,6 +23628,17 @@ var __async = (__this, __arguments, generator) => {
 </div>
 
 <!-- Template modal -->
+<div class="modal-overlay" id="biolead-confirm-modal">
+  <div class="modal" style="width:440px">
+    <h3>🌱 Adicionar ao BioLead?</h3>
+    <p id="biolead-confirm-texto" style="font-size:13px;color:var(--text);margin-bottom:18px;line-height:1.5"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="biolead-confirm-nao">Não adicionar</button>
+      <button class="btn-primary" id="biolead-confirm-sim">Adicionar como pesquisador</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="template-modal">
   <div class="modal">
     <h3>📋 Inserir serviço pré-definido</h3>
@@ -24146,6 +24157,127 @@ async function reservarSeq(anoMes, proximoSeq) {
   }
 }
 
+// ===================== INTEGRAÇÃO COM O BIOLEAD =====================
+// Depois de salvar uma proposta com sucesso, tenta sincronizar o
+// CONTATO (nunca o cliente/instituição) com o BioLead. Usa fetch()
+// direto — o mesmo backend já responde assim pras outras ações desse
+// app, sem o CORS que exigiu JSONP na Agenda dos Sócios.
+
+const MESES_ABREV_PT_BL = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+function formatarDataNotaPTPropostas(data) {
+  return data.getDate() + ' ' + MESES_ABREV_PT_BL[data.getMonth()] + ' ' + data.getFullYear();
+}
+
+function formatarDataCurtaPropostas(d) {
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dia}/${mes}/${d.getFullYear()}`;
+}
+
+/** Sinal fraco, só pra pré-marcar um palpite na confirmação — nunca
+ * decide sozinho. Não tentei listar siglas de fundações (ex: FUNDEP)
+ * de propósito: não confio em mim mesmo pra fazer essa lista completa
+ * sem inventar ou esquecer alguma. */
+function pareceFundacaoDeApoio(nomeCliente) {
+  const termo = (nomeCliente || '').toLowerCase();
+  return termo.includes('fundação') || termo.includes('instituto de apoio');
+}
+
+async function chamarBioLeadPropostas(sub, params) {
+  const url = `${SHEETS_URL}?action=biolead&sub=${encodeURIComponent(sub)}&params=${encodeURIComponent(JSON.stringify(params))}&token=${tokenAuthBL()}`;
+  const resp = await fetch(url);
+  return await resp.json();
+}
+
+/**
+ * Ponto de entrada, chamado só em proposta NOVA (não em edição — editar
+ * uma proposta antiga não deveria gerar uma nota de "enviada hoje").
+ * Se `contato` vier vazio (proposta só pra instituição, sem pessoa
+ * nomeada), não faz nada. Falha aqui nunca aparece como erro pro
+ * usuário — a proposta já foi salva de qualquer jeito, isso é bônus.
+ */
+async function sincronizarBioLeadAposProposta(d, numProposta) {
+  try {
+    const nomeContato = (d.contato || '').trim();
+    if (!nomeContato || !d.email) return;
+
+    const listaResp = await chamarBioLeadPropostas('listar', {});
+    if (!listaResp.ok) { console.warn('BioLead: não foi possível listar contatos.'); return; }
+
+    const emailBusca = String(d.email).toLowerCase().trim();
+    const contatoExistente = (listaResp.dados || []).find(c => (c.email || '').toLowerCase().trim() === emailBusca);
+    const linhaProposta = `Proposta #${numProposta} enviada em ${formatarDataNotaPTPropostas(new Date())}.`;
+
+    if (contatoExistente) {
+      // Já existe — já foi validado como pesquisador antes de agora,
+      // então atualiza direto, sem perguntar. Mesma lógica de slot
+      // (maior c-N já preenchido) usada na Agenda dos Sócios.
+      let slotNota = 'c1_nota';
+      if (contatoExistente.c3_raw && String(contatoExistente.c3_raw).trim()) slotNota = 'c3_nota';
+      else if (contatoExistente.c2_raw && String(contatoExistente.c2_raw).trim()) slotNota = 'c2_nota';
+
+      const notaAtual = contatoExistente[slotNota] || '';
+      contatoExistente[slotNota] = notaAtual ? (notaAtual + '\n\n' + linhaProposta) : linhaProposta;
+      contatoExistente.status = 'Proposta enviada';
+
+      await chamarBioLeadPropostas('salvar', { contato: contatoExistente });
+      return;
+    }
+
+    // Não encontrado — pergunta antes de criar, porque `contato` pode
+    // ser alguém administrativo de uma fundação de apoio, não o
+    // pesquisador final (caso real, apontado pela Dayane).
+    abrirConfirmacaoBioLead(nomeContato, d.email, d.tel, linhaProposta, pareceFundacaoDeApoio(d.cliente));
+  } catch (e) {
+    console.warn('BioLead: sincronização falhou —', e);
+  }
+}
+
+function abrirConfirmacaoBioLead(nome, email, tel, linhaNota, palpiteFundacao) {
+  const texto = document.getElementById('biolead-confirm-texto');
+  texto.textContent = `"${nome}" (${email}) não está cadastrado no BioLead. Adicionar como pesquisador na aba Contato Espontâneo?`
+    + (palpiteFundacao ? ' Pelo nome do cliente, isso pode ser um contato administrativo de fundação de apoio, não o pesquisador final — confira antes de confirmar.' : '');
+
+  const btnSim = document.getElementById('biolead-confirm-sim');
+  const btnNao = document.getElementById('biolead-confirm-nao');
+  const modal = document.getElementById('biolead-confirm-modal');
+
+  const limpar = () => {
+    modal.classList.remove('open');
+    btnSim.onclick = null;
+    btnNao.onclick = null;
+  };
+
+  btnSim.onclick = async () => {
+    limpar();
+    const novoContato = {
+      id: (Date.now() + Math.random()).toString().replace(/['"]/g, ''),
+      nome: nome, email: email,
+      linha: '', inst: '', estado: '', tel: tel || '', lattes: '', instagram: '',
+      score: 'MÉDIO',
+      c1_raw: formatarDataCurtaPropostas(new Date()),
+      c1_nota: linhaNota,
+      c2_raw: '', c2_nota: '', c3_raw: '', c3_nota: '',
+      desqualificado: false, desq_motivo: '',
+      status: 'Proposta enviada',
+      retorno_data: '', retorno_obs: '', linkedin: '',
+      origem: 'Inbound — Gerador de Propostas'
+    };
+    await chamarBioLeadPropostas('salvar', { contato: novoContato });
+    showToast('✓ Adicionado ao BioLead como Contato Espontâneo.');
+  };
+  btnNao.onclick = limpar;
+
+  modal.classList.add('open');
+}
+
+document.getElementById('biolead-confirm-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('biolead-confirm-modal')) {
+    document.getElementById('biolead-confirm-modal').classList.remove('open');
+  }
+});
+
 async function salvarNoDrive(d, docxBuffer) {
   try {
     const modoEdicao = !!window.__modoEdicaoNum;
@@ -24205,6 +24337,10 @@ async function salvarNoDrive(d, docxBuffer) {
       window.__modoEdicaoNum = null;
       const badge = document.getElementById('badge-modo-edicao');
       if (badge) badge.remove();
+    } else {
+      // só em proposta NOVA — editar uma proposta antiga não deveria
+      // gerar uma nota de "enviada hoje" no BioLead.
+      sincronizarBioLeadAposProposta(d, d.num);
     }
   } catch(e) {
     showToast('⚠ Não foi possível salvar no Drive.');
