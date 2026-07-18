@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>
+(function() {
+  if (!sessionStorage.getItem('bl_auth_token')) {
+    window.location.href = '/Propostas/home.html';
+  }
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agenda dos sócios — Biomelting</title>
@@ -154,9 +161,18 @@
         script.remove();
       }
 
-      window[callbackName] = (data) => { limpar(); resolve(data); };
+      window[callbackName] = (data) => {
+        limpar();
+        if (data && data.naoAutorizado) {
+          sessionStorage.removeItem('bl_auth_token');
+          sessionStorage.removeItem('bl_auth_email');
+          window.location.href = '/Propostas/home.html';
+          return;
+        }
+        resolve(data);
+      };
 
-      const query = new URLSearchParams({ ...params, callback: callbackName }).toString();
+      const query = new URLSearchParams({ ...params, token: sessionStorage.getItem('bl_auth_token') || '', callback: callbackName }).toString();
       const script = document.createElement('script');
       script.src = `${APPS_SCRIPT_URL}?${query}`;
       script.onerror = () => { limpar(); reject(new Error('não foi possível contatar o servidor')); };
