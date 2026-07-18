@@ -254,12 +254,44 @@
 
   let agendamentoAtual = null;
 
+  /**
+   * Divide a janela livre clicada em opções de horário específico, do
+   * tamanho da duração buscada (30/60min), avançando de 30 em 30 minutos.
+   * Ex: janela 14:00–17:00 com duração de 30min vira 14:00, 14:30, ...,
+   * 16:30 (a última opção que ainda cabe inteira antes das 17:00).
+   */
+  function gerarOpcoesHorario(inicioISO, fimISO, duracaoMin) {
+    const passoMs = 30 * 60000;
+    const duracaoMs = duracaoMin * 60000;
+    const fimMs = +new Date(fimISO);
+    const opcoes = [];
+    for (let t = +new Date(inicioISO); t + duracaoMs <= fimMs; t += passoMs) {
+      const ini = new Date(t);
+      const term = new Date(t + duracaoMs);
+      opcoes.push({ inicioISO: ini.toISOString(), fimISO: term.toISOString(), label: formatarHoraBR(ini) + '–' + formatarHoraBR(term) });
+    }
+    return opcoes;
+  }
+
+  /** América/São_Paulo é UTC-3 fixo (sem horário de verão desde 2019) —
+   * não precisa de biblioteca de fuso, só subtrair 3h do horário UTC. */
+  function formatarHoraBR(dataUTC) {
+    const local = new Date(dataUTC.getTime() - 3 * 60 * 60 * 1000);
+    return String(local.getUTCHours()).padStart(2, '0') + ':' + String(local.getUTCMinutes()).padStart(2, '0');
+  }
+
   function abrirModalAgendar(inicioISO, fimISO, diaTexto, incluirFabio, incluirLeticia) {
-    agendamentoAtual = { inicioISO, fimISO, incluirFabio, incluirLeticia };
+    agendamentoAtual = { incluirFabio, incluirLeticia };
     const quem = incluirFabio && incluirLeticia ? 'Fábio e Letícia' : (incluirFabio ? 'Fábio' : 'Letícia');
+    const opcoes = gerarOpcoesHorario(inicioISO, fimISO, duracao);
+    const opcoesHTML = opcoes.map(o => `<option value="${o.inicioISO}|${o.fimISO}">${o.label}</option>`).join('');
     document.getElementById('modalCorpo').innerHTML = `
       <h2>Agendar reunião</h2>
       <p class="modal-resumo">${diaTexto} — ${quem}</p>
+      <label for="modalHorario">Horário específico (${duracao} min)</label>
+      <select id="modalHorario">${opcoesHTML}</select>
+      <label for="modalNomePesquisador">Nome do pesquisador</label>
+      <input type="text" id="modalNomePesquisador" placeholder="Nome e sobrenome" oninput="atualizarTituloSugerido()">
       <label for="modalPesquisadores">E-mail(s) do(s) pesquisador(es)</label>
       <input type="text" id="modalPesquisadores" placeholder="nome@instituicao.edu.br, outro@...">
       <label for="modalTitulo">Título da reunião</label>
@@ -272,6 +304,19 @@
     document.getElementById('modalOverlay').classList.add('aberto');
   }
 
+  /** Atualiza o título sugerido conforme o nome do pesquisador é digitado.
+   * Não sobrescreve se o campo de título já tiver sido editado manualmente
+   * pra algo que não segue mais o padrão "Reunião Biomelting e ..." — assim
+   * uma customização manual não é apagada por engano. */
+  function atualizarTituloSugerido() {
+    const nome = document.getElementById('modalNomePesquisador').value.trim();
+    const campoTitulo = document.getElementById('modalTitulo');
+    const eraSugestao = campoTitulo.value === 'Reunião Biomelting' || /^Reunião Biomelting e /.test(campoTitulo.value);
+    if (eraSugestao) {
+      campoTitulo.value = nome ? `Reunião Biomelting e ${nome}` : 'Reunião Biomelting';
+    }
+  }
+
   function fecharModalAgendar() {
     document.getElementById('modalOverlay').classList.remove('aberto');
     agendamentoAtual = null;
@@ -282,6 +327,7 @@
   }
 
   async function confirmarAgendamento() {
+    const [horarioInicio, horarioFim] = document.getElementById('modalHorario').value.split('|');
     const pesquisadores = document.getElementById('modalPesquisadores').value.trim();
     const titulo = document.getElementById('modalTitulo').value.trim();
     const erro = document.getElementById('modalErro');
@@ -296,8 +342,8 @@
     try {
       const data = await buscarJSONP({
         action: 'agendar',
-        inicio: agendamentoAtual.inicioISO,
-        fim: agendamentoAtual.fimISO,
+        inicio: horarioInicio,
+        fim: horarioFim,
         pesquisadores: pesquisadores,
         titulo: titulo || 'Reunião Biomelting',
         incluirFabio: agendamentoAtual.incluirFabio ? '1' : '0',
