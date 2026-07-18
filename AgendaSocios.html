@@ -354,6 +354,23 @@
     if (ev.target.id === 'modalOverlay') fecharModalAgendar();
   }
 
+  /** Resume o resultado da sincronização com o BioLead pra tela de
+   * sucesso — discreto, já que é um bônus, não o ponto principal do
+   * agendamento (a reunião já foi criada de qualquer jeito). */
+  function textoStatusBioLead(biolead) {
+    if (!biolead || !biolead.length) return '';
+    const ok = biolead.filter(b => b.resultado && b.resultado.ok).map(b => b.email);
+    const falhou = biolead.filter(b => !b.resultado || !b.resultado.ok);
+    let texto = '';
+    if (ok.length) texto += `BioLead atualizado (${ok.join(', ')}).`;
+    if (falhou.length) {
+      falhou.forEach(f => {
+        texto += (texto ? ' ' : '') + `${f.email}: ${(f.resultado && f.resultado.motivo) || 'não sincronizado com o BioLead'}.`;
+      });
+    }
+    return texto ? `<p class="modal-resumo" style="margin-top:8px">${texto}</p>` : '';
+  }
+
   async function confirmarAgendamento() {
     const botaoAtivo = document.querySelector('.horario-opcao.ativa');
     const erro = document.getElementById('modalErro');
@@ -383,6 +400,7 @@
       document.getElementById('modalCorpo').innerHTML = `
         <h2>Reunião agendada ✓</h2>
         <p class="modal-resumo">Convite enviado por e-mail pra: ${data.resultado.convidados.join(', ')}</p>
+        ${textoStatusBioLead(data.resultado.biolead)}
         <div class="modal-botoes"><button class="buscar" onclick="fecharModalAgendar()">Fechar</button></div>`;
     } catch (err) {
       erro.textContent = 'Não deu pra agendar: ' + err.message;
