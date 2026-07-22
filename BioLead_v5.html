@@ -892,7 +892,7 @@ async function adicionar() {
   const origemSelecionada = document.getElementById('f-origem').value || 'Prospecção ativa';
   const ehInbound = origemSelecionada !== 'Prospecção ativa';
   const p = {
-    id: Date.now()+Math.random(), nome, email,
+    id: (Date.now()+Math.random()).toString(), nome, email,
     estado: document.getElementById('f-uf').value.trim().toUpperCase(),
     inst: document.getElementById('f-inst').value.trim(),
     tel: document.getElementById('f-tel').value.trim(),
@@ -1623,7 +1623,7 @@ function importarCSV() {
     const nome=(m.nome||'').trim();
     if (nome.length<3||/^(sim|não|nao|solicitado)$/i.test(nome)||nome.startsWith(',')) return;
     const sv=['ALTO','MÉDIO','MEDIO'].includes((m.score||'').toUpperCase().trim());
-    const p={id:Date.now()+Math.random(),nome,email:m.email,linha:m.linha,inst:m.inst,
+    const p={id:(Date.now()+Math.random()).toString(),nome,email:m.email,linha:m.linha,inst:m.inst,
       estado:/^[A-Z]{2}$/.test((m.estado||'').trim().toUpperCase())?m.estado.trim().toUpperCase():'',
       tel:m.tel,lattes:m.lattes,
       instagram:/^[_\-\s]+$/.test((m.instagram||'').trim())?'':(m.instagram||'').trim(),
@@ -1701,7 +1701,7 @@ function migrarVersaoAnterior() {
     const desqualificado = status === 'Desqualificado' || p.desqualificado || false;
 
     return {
-      id: p.id || Date.now()+Math.random(),
+      id: (p.id || Date.now()+Math.random()).toString(),
       nome: p.nome||'',
       email: p.email||'',
       linha: p.resumo||p.linha||'',
@@ -1757,7 +1757,7 @@ function importarDados() {
   let n=0;
   arr.forEach(d=>{
     if (!d.nome) return;
-    const p={id:Date.now()+Math.random(),nome:d.nome||'',email:d.email||'',linha:d.linha||'',
+    const p={id:(Date.now()+Math.random()).toString(),nome:d.nome||'',email:d.email||'',linha:d.linha||'',
       inst:d.inst||'',estado:d.estado||'',tel:d.tel||'',lattes:d.lattes||'',instagram:d.instagram||'',linkedin:d.linkedin||'',
       score:d.score||'',c1_raw:limparData(d.c1_raw),c1_nota:d.c1_nota||extrairNotaDoRaw(d.c1_raw),
       c2_raw:limparData(d.c2_raw),c2_nota:d.c2_nota||extrairNotaDoRaw(d.c2_raw),
