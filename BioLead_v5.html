@@ -1227,7 +1227,18 @@ function atualizarRotulosPrimeiroContato(inbound) {
 }
 
 function abrirModal(id) {
-  const p = dados.find(x=>String(x.id)===String(id)); if (!p) return;
+  // Trava de segurança: se dois registros compartilham o mesmo id interno,
+  // .find() sempre devolveria o primeiro, editando silenciosamente o
+  // contato errado. Em vez disso, avisa e recusa abrir até alguém corrigir
+  // o id duplicado direto na planilha.
+  const candidatos = dados.filter(x=>String(x.id)===String(id));
+  if (candidatos.length > 1) {
+    alert('Atenção: encontrei ' + candidatos.length + ' contatos com o mesmo id interno: '
+      + candidatos.map(c=>c.nome).join(', ')
+      + '. Editar agora arriscaria salvar no registro errado — corrija o id duplicado na planilha (aba BioLead) antes de continuar.');
+    return;
+  }
+  const p = candidatos[0]; if (!p) return;
   document.getElementById('ed-id').value=String(id);
   document.getElementById('ed-nome').value=p.nome||'';
   document.getElementById('ed-email').value=p.email||'';
