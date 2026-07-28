@@ -24202,6 +24202,14 @@ async function chamarBioLeadPropostas(sub, params) {
  * nomeada), não faz nada. Falha aqui nunca aparece como erro pro
  * usuário — a proposta já foi salva de qualquer jeito, isso é bônus.
  */
+/** "---" é o valor literal que a planilha guarda pra data vazia (não é
+ * placeholder de tela, é o dado gravado de verdade) — sem tratar isso,
+ * um c2/c3 "vazio" passa como preenchido e rouba o slot do mais recente. */
+function _blDataPreenchida(raw) {
+  const s = String(raw || '').trim();
+  return s !== '' && s !== '---';
+}
+
 async function sincronizarBioLeadAposProposta(d, numProposta) {
   try {
     const nomeContato = (d.contato || '').trim();
@@ -24219,8 +24227,8 @@ async function sincronizarBioLeadAposProposta(d, numProposta) {
       // então atualiza direto, sem perguntar. Mesma lógica de slot
       // (maior c-N já preenchido) usada na Agenda dos Sócios.
       let slotNota = 'c1_nota';
-      if (contatoExistente.c3_raw && String(contatoExistente.c3_raw).trim()) slotNota = 'c3_nota';
-      else if (contatoExistente.c2_raw && String(contatoExistente.c2_raw).trim()) slotNota = 'c2_nota';
+      if (_blDataPreenchida(contatoExistente.c3_raw)) slotNota = 'c3_nota';
+      else if (_blDataPreenchida(contatoExistente.c2_raw)) slotNota = 'c2_nota';
 
       const notaAtual = contatoExistente[slotNota] || '';
       contatoExistente[slotNota] = notaAtual ? (notaAtual + '\n\n' + linhaProposta) : linhaProposta;
