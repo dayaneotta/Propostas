@@ -95,8 +95,8 @@
 
   .ver-edital { font-size:12px; font-weight:700; color:var(--mid); text-decoration:none; margin-top:4px; }
 
-  .actions { display:flex; flex-direction:column; gap:6px; width:168px; flex-shrink:0; margin-top:10px; }
-  .btn-decisao { font-family:inherit; font-size:12px; font-weight:600; border:none; padding:8px 12px; border-radius:7px; cursor:pointer; width:100%; transition:opacity .15s; }
+  .actions { display:flex; flex-direction:row; gap:6px; width:168px; flex-shrink:0; margin-top:10px; }
+  .btn-decisao { font-family:inherit; font-size:11.5px; font-weight:600; border:none; padding:8px 6px; border-radius:7px; cursor:pointer; width:100%; transition:opacity .15s; white-space:nowrap; }
   .btn-decisao:hover { opacity:.85; }
   .btn-decisao:disabled { opacity:.5; cursor:default; }
   .btn-funil { background:var(--teal); color:#fff; }
@@ -146,7 +146,7 @@
     <div class="stat duplicata" data-filtro="duplicata" tabindex="0"><div class="n" id="count-duplicata">–</div><div class="l">possíveis duplicatas</div></div>
   </div>
 
-  <input type="text" id="busca" class="busca" placeholder="Buscar por nome ou instituição...">
+  <input type="text" id="busca" class="busca" placeholder="Buscar por nome, instituição ou edital...">
 
   <div class="filters" id="filters"></div>
 
@@ -289,6 +289,7 @@ function renderizarLista() {
     if (!busca) return true;
     return (i.pesquisador || '').toLowerCase().indexOf(busca) !== -1
       || (i.instituicao || '').toLowerCase().indexOf(busca) !== -1
+      || (i.chamada || '').toLowerCase().indexOf(busca) !== -1
       || (i.matchBioLead || '').toLowerCase().indexOf(busca) !== -1;
   });
 
