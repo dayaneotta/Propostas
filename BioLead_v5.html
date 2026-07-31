@@ -1925,6 +1925,25 @@ const INST_NOMES = {
   'INSPER': 'Insper Instituto de Ensino e Pesquisa',
 };
 
+// Inverte INST_NOMES (sigla -> nome completo) pra ir na direção contrária
+// — usado quando o pré-preenchimento chega com nome por extenso (vem do
+// CNPq, que não abrevia), pra padronizar com o resto do BioLead, que já
+// usa sigla. Comparação sem acento/maiúscula pra tolerar pequenas
+// diferenças de grafia entre as duas fontes. Se não achar correspondência,
+// mantém o nome como veio — mais seguro que inventar uma sigla errada.
+function normalizarParaComparar(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
+}
+
+function converterInstituicaoParaSigla(nomeRecebido) {
+  if (!nomeRecebido) return nomeRecebido;
+  const alvo = normalizarParaComparar(nomeRecebido);
+  for (const sigla in INST_NOMES) {
+    if (normalizarParaComparar(INST_NOMES[sigla]) === alvo) return sigla;
+  }
+  return nomeRecebido;
+}
+
 function fmtDateBL(s){
   if(!s)return'';
   const m=s.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
@@ -1993,7 +2012,7 @@ carregarDados().then(function() {
     showTab('add');
     document.getElementById('f-nome').value = params.get('prefillNome') || '';
     document.getElementById('f-uf').value = params.get('prefillUf') || '';
-    document.getElementById('f-inst').value = params.get('prefillInst') || '';
+    document.getElementById('f-inst').value = converterInstituicaoParaSigla(params.get('prefillInst') || '');
     if (params.has('prefillLinha')) document.getElementById('f-linha').value = params.get('prefillLinha') || '';
 
     const origemVinda = params.get('prefillOrigem') || 'Resultado de Edital — CNPq';
