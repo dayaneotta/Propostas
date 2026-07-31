@@ -224,6 +224,44 @@ function normalizarCaixaNome(nome) {
   }).join(' ');
 }
 
+// Monta a "Linha de pesquisa / Resumo" pré-preenchida no BioLead conforme
+// o status REAL do resultado — não é a mesma coisa ganhar o edital (lead
+// de curto prazo, já tem verba) ou só ter passado no mérito técnico sem
+// verba (lead de médio/longo prazo, pode reaplicar depois). Sem essa
+// diferenciação, os dois casos geravam o mesmo texto — perdendo justamente
+// a informação que ajuda a julgar a urgência de cada contato depois.
+function descreverResultadoParaBioLead(item) {
+  const chamadaFonte = (item.chamada || '') + ' (' + (item.fonte || 'CNPq') + ')';
+
+  // Ganhou de verdade — Possível duplicata também vem da lista de
+  // aprovados (só o cruzamento com BioLead que ficou incerto), então conta
+  // como "ganhou" igual a Novo.
+  if (item.status === 'Novo' || item.status === 'Possível duplicata') {
+    let txt = 'Resultado no ' + (item.fonte || 'CNPq') + ': ' + (item.chamada || '') + '.';
+    if (item.valor) txt += ' Valor: ' + formatarValor(item.valor) + '.';
+    return txt;
+  }
+
+  // Passou em todas as etapas de mérito, só ficou de fora por não ter
+  // verba suficiente — recomendado tecnicamente, não uma rejeição de
+  // mérito.
+  if (item.status && item.status.indexOf('fora do limite') !== -1) {
+    return 'Recomendado no mérito técnico, mas não contemplado por limite orçamentário — ' + chamadaFonte + '.';
+  }
+
+  // Passou no mérito técnico, mas não chegou a ser avaliado numa etapa
+  // seguinte — o motivo específico (extraído do próprio documento) já vem
+  // dentro do status.
+  if (item.status && item.status.indexOf('Recomendado (mérito') !== -1) {
+    const motivo = item.status.replace('Recomendado (mérito técnico) — ', '');
+    return 'Recomendado no mérito técnico (' + motivo + ') — ' + chamadaFonte + '.';
+  }
+
+  // Não consta / qualquer outro status não previsto — neutro, sem
+  // presumir se ganhou ou não.
+  return 'Sinalizado em: ' + chamadaFonte + ' — status: ' + (item.status || 'a confirmar') + '.';
+}
+
 // Monta um link de busca no Google (nome + "lattes" + instituição) — jeito
 // mais rápido de descobrir a área de pesquisa de alguém sem sair pra outra
 // aba manualmente. Testado com nomes reais antes de implementar: retorna
@@ -447,16 +485,11 @@ document.getElementById('conteudo').addEventListener('click', function(e) {
   if (decisao === 'Aprovar') {
     const item = TODOS_OS_ITENS.find(function(i) { return i.processo === processo; });
     if (item && item.status !== 'Já no BioLead') {
-      // "Resultado no [fonte]" em vez de "Aprovado(a)" — evita depender de
-      // adivinhar o gênero da pessoa, que não dá pra saber com certeza só
-      // pelo nome.
-      let linha = 'Resultado no ' + (item.fonte || 'CNPq') + ': ' + (item.chamada || '') + '.';
-      if (item.valor) linha += ' Valor: ' + formatarValor(item.valor) + '.';
       const params = new URLSearchParams({
         prefillNome: normalizarCaixaNome(item.pesquisador || ''),
         prefillUf: item.uf || '',
         prefillInst: item.instituicao || '',
-        prefillLinha: linha
+        prefillLinha: descreverResultadoParaBioLead(item)
       });
       window.open('BioLead_v5.html?' + params.toString(), '_blank');
     }
