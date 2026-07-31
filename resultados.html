@@ -489,7 +489,8 @@ document.getElementById('conteudo').addEventListener('click', function(e) {
         prefillNome: normalizarCaixaNome(item.pesquisador || ''),
         prefillUf: item.uf || '',
         prefillInst: item.instituicao || '',
-        prefillLinha: descreverResultadoParaBioLead(item)
+        prefillLinha: descreverResultadoParaBioLead(item),
+        prefillOrigem: 'Resultado de Edital — ' + (item.fonte || 'CNPq')
       });
       window.open('BioLead_v5.html?' + params.toString(), '_blank');
     }
