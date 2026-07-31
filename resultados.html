@@ -447,10 +447,16 @@ document.getElementById('conteudo').addEventListener('click', function(e) {
   if (decisao === 'Aprovar') {
     const item = TODOS_OS_ITENS.find(function(i) { return i.processo === processo; });
     if (item && item.status !== 'Já no BioLead') {
+      // "Resultado no [fonte]" em vez de "Aprovado(a)" — evita depender de
+      // adivinhar o gênero da pessoa, que não dá pra saber com certeza só
+      // pelo nome.
+      let linha = 'Resultado no ' + (item.fonte || 'CNPq') + ': ' + (item.chamada || '') + '.';
+      if (item.valor) linha += ' Valor: ' + formatarValor(item.valor) + '.';
       const params = new URLSearchParams({
         prefillNome: normalizarCaixaNome(item.pesquisador || ''),
         prefillUf: item.uf || '',
-        prefillInst: item.instituicao || ''
+        prefillInst: item.instituicao || '',
+        prefillLinha: linha
       });
       window.open('BioLead_v5.html?' + params.toString(), '_blank');
     }
