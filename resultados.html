@@ -93,7 +93,7 @@
   .signal .tick { width:10px; height:5px; border-radius:2px; background:var(--border); }
   .signal .tick.on { background: var(--teal); }
   .signal .label { font-size:11px; color:var(--text-faint); }
-  .match-note { font-size:11.5px; color:var(--text-muted); }
+  .match-note { display:inline-block; font-size:11.5px; font-weight:700; color:var(--mid); background:#E9F1FB; padding:3px 10px; border-radius:12px; }
 
   .right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; min-width:160px; }
   .value { font-family:var(--font-mono); font-weight:600; font-size:15px; }
@@ -442,7 +442,7 @@ function renderizarLista() {
             </span>
             <span class="label">sinal ${forte ? 'forte' : 'médio'}</span>
           </div>
-          ${item.matchBioLead ? `<div class="meta-row"><span class="match-note">${item.matchBioLead}</span></div>` : ''}
+          ${item.matchBioLead ? `<div class="meta-row"><span class="match-note">🎯 ${item.matchBioLead}</span></div>` : ''}
         </div>
         <div class="right">
           ${idade ? `<span class="idade ${idade.classe}">${idade.texto}<span class="dica-data">Detectado em ${formatarData(item.detectadoEm)}</span></span>` : `<span class="date">${formatarData(item.detectadoEm)}</span>`}
