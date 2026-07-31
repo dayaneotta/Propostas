@@ -58,6 +58,13 @@
   .stat.card-ativo { border-color: var(--deep); border-width:2px; padding:13px; box-shadow:0 2px 8px rgba(13,78,138,.1); }
 
   .busca { width:100%; box-sizing:border-box; border:1px solid var(--border); background:var(--surface); font-size:13.5px; padding:10px 14px; border-radius:8px; margin-bottom:14px; font-family:inherit; color:var(--text); }
+  .barra-lote { display:none; align-items:center; gap:12px; background:#FFF3E0; border:1px solid #F0C878; border-radius:8px; padding:10px 16px; margin-bottom:14px; position:sticky; top:8px; z-index:10; }
+  .barra-lote.ativa { display:flex; }
+  .barra-lote span { font-size:13px; font-weight:600; color:#8A6300; margin-right:auto; }
+  .btn-lote-descartar, .btn-lote-limpar { font-family:inherit; font-size:12px; font-weight:600; border:none; padding:8px 14px; border-radius:7px; cursor:pointer; }
+  .btn-lote-descartar { background:#B8770A; color:#fff; }
+  .btn-lote-descartar:disabled { opacity:.5; cursor:default; }
+  .btn-lote-limpar { background:none; color:#8A6300; text-decoration:underline; padding:8px 4px; }
   .busca:focus { outline:none; border-color:var(--mid); }
   .filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
   .chip { border:1px solid var(--border); background:var(--surface); color:var(--text-muted); font-size:12.5px; padding:6px 12px; border-radius:20px; cursor:pointer; user-select:none; transition:.15s; }
@@ -66,7 +73,8 @@
   button:focus-visible, .chip:focus-visible { outline: 2px solid var(--mid); outline-offset:2px; }
 
   .list { display:flex; flex-direction:column; gap:10px; }
-  .card { background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--border); border-radius:10px; padding:16px 18px; display:grid; grid-template-columns: 1fr auto; gap:16px; align-items:start; }
+  .card { background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--border); border-radius:10px; padding:16px 18px; display:grid; grid-template-columns: auto 1fr auto; gap:16px; align-items:start; }
+  .card-checkbox { width:16px; height:16px; margin-top:3px; cursor:pointer; accent-color:var(--deep); }
   .card.st-novo { border-left-color: var(--teal); }
   .card.st-atualiza { border-left-color: var(--mid); }
   .card.st-duplicata { border-left-color: var(--amber); }
@@ -155,6 +163,12 @@
 
   <div class="filters" id="filters"></div>
 
+  <div class="barra-lote" id="barra-lote">
+    <span id="barra-lote-texto"></span>
+    <button class="btn-lote-descartar" id="btn-lote-descartar">Descartar marcados</button>
+    <button class="btn-lote-limpar" id="btn-lote-limpar">Limpar marcação</button>
+  </div>
+
   <div id="conteudo">
     <div class="estado" id="carregando">Carregando fila de revisão…</div>
   </div>
@@ -181,6 +195,7 @@ let TODOS_OS_ITENS = [];
 let fonteAtiva = 'todas';
 let termoBusca = '';
 let filtroCard = null; // 'novo-final' | 'novo-prelim' | 'atualiza' | 'duplicata' | null (= total, sem filtro)
+const marcadosParaDescarte = new Set(); // processos marcados pro botão "Descartar marcados" — sobrevive a mudança de filtro/busca, some só quando descartado de fato ou desmarcado manualmente
 
 function formatarValor(v) {
   if (!v && v !== 0) return '';
@@ -328,6 +343,7 @@ function renderizarLista() {
     const forte = item.sinal === 'forte';
     return `
       <div class="card st-${classe}">
+        ${item.status !== 'Já no BioLead' ? `<input type="checkbox" class="card-checkbox marcar-lote" data-processo="${item.processo || ''}" title="Marcar pra descartar em lote"${marcadosParaDescarte.has(item.processo) ? ' checked' : ''}>` : '<span></span>'}
         <div class="left">
           <div><span class="who">${item.pesquisador || ''}</span><span class="inst">${item.instituicao || ''}${item.uf ? ' · ' + item.uf : ''}</span></div>
           <div class="meta-row">
@@ -441,6 +457,112 @@ document.getElementById('conteudo').addEventListener('click', function(e) {
   }
 
   decidir(processo, decisao, botoesDoCard);
+});
+
+function atualizarBarraLote() {
+  const barra = document.getElementById('barra-lote');
+  const texto = document.getElementById('barra-lote-texto');
+  if (marcadosParaDescarte.size === 0) {
+    barra.classList.remove('ativa');
+    return;
+  }
+  barra.classList.add('ativa');
+  texto.textContent = marcadosParaDescarte.size + ' marcado(s) pra descartar';
+}
+
+document.getElementById('conteudo').addEventListener('change', function(e) {
+  const chk = e.target.closest('.marcar-lote');
+  if (!chk) return;
+  const processo = chk.dataset.processo;
+  if (!processo) return;
+  if (chk.checked) marcadosParaDescarte.add(processo);
+  else marcadosParaDescarte.delete(processo);
+  atualizarBarraLote();
+});
+
+document.getElementById('btn-lote-limpar').addEventListener('click', function() {
+  marcadosParaDescarte.clear();
+  atualizarBarraLote();
+  renderizarLista(); // desmarca visualmente todos os checkboxes já renderizados
+});
+
+// Sequencial (um de cada vez, espera a resposta antes do próximo) — evita
+// sobrecarregar o backend com várias chamadas simultâneas, mesmo padrão de
+// cautela já usado noutras partes do sistema (ex: pausa entre conversões
+// de PDF no Code.gs). Re-renderiza só UMA VEZ no final, não a cada item.
+function descartarEmLote(processos) {
+  const token = sessionStorage.getItem('bl_auth_token');
+  if (!token) { window.location.href = 'home.html'; return; }
+
+  const btnDescartar = document.getElementById('btn-lote-descartar');
+  const btnLimpar = document.getElementById('btn-lote-limpar');
+  btnDescartar.disabled = true;
+  btnLimpar.disabled = true;
+
+  let sucesso = 0, falha = 0, idx = 0;
+
+  function processarProximo() {
+    if (idx >= processos.length) {
+      btnDescartar.disabled = false;
+      btnLimpar.disabled = false;
+      alert(sucesso + ' descartado(s) com sucesso' + (falha > 0 ? ', ' + falha + ' falharam — tenta de novo individualmente pra esses.' : '.'));
+      montarFiltros(TODOS_OS_ITENS);
+      atualizarContadores(TODOS_OS_ITENS);
+      atualizarBarraLote();
+      renderizarLista();
+      return;
+    }
+
+    const processo = processos[idx];
+    document.getElementById('barra-lote-texto').textContent = 'Descartando ' + (idx + 1) + ' de ' + processos.length + '...';
+
+    const callbackName = 'loteCb_' + Date.now() + '_' + idx;
+    window[callbackName] = function(resp) {
+      delete window[callbackName];
+      const scriptTag = document.getElementById(callbackName);
+      if (scriptTag) scriptTag.remove();
+
+      if (resp && resp.naoAutorizado) {
+        sessionStorage.removeItem('bl_auth_token');
+        window.location.href = 'home.html';
+        return;
+      }
+      if (resp && resp.ok) {
+        sucesso++;
+        TODOS_OS_ITENS = TODOS_OS_ITENS.filter(function(i) { return i.processo !== processo; });
+        marcadosParaDescarte.delete(processo);
+      } else {
+        falha++;
+      }
+      idx++;
+      processarProximo();
+    };
+
+    const scriptEl = document.createElement('script');
+    scriptEl.id = callbackName;
+    scriptEl.src = WEB_APP_URL + '?action=decidir&processo=' + encodeURIComponent(processo)
+      + '&decisao=Descartado&token=' + encodeURIComponent(token) + '&callback=' + callbackName;
+    scriptEl.onerror = function() {
+      falha++;
+      idx++;
+      processarProximo();
+    };
+    document.body.appendChild(scriptEl);
+  }
+
+  processarProximo();
+}
+
+document.getElementById('btn-lote-descartar').addEventListener('click', function() {
+  const processos = Array.from(marcadosParaDescarte);
+  if (!processos.length) return;
+  const nomes = processos.map(function(p) {
+    const item = TODOS_OS_ITENS.find(function(i) { return i.processo === p; });
+    return item ? item.pesquisador : p;
+  });
+  const confirmado = confirm('Descartar ' + processos.length + ' pesquisador(es)?\n\n' + nomes.join('\n'));
+  if (!confirmado) return;
+  descartarEmLote(processos);
 });
 
 function carregarDados() {
