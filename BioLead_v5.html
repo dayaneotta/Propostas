@@ -1966,15 +1966,17 @@ function gerarProposta(id) {
 
 carregarDados().then(function() {
   // Vem do "Aprovar" no Resultados de Editais — nome/UF/instituição já
-  // extraídos do CNPq, o resto (e-mail, telefone, linha de pesquisa) fica
-  // pra preencher manualmente, já que simplesmente não existe no dado de
-  // origem.
+  // extraídos do CNPq, mais o contexto do edital (chamada + valor) já
+  // formatado como ponto de partida da linha de pesquisa. O resto
+  // (e-mail, telefone, Lattes) fica pra preencher manualmente, já que
+  // simplesmente não existe no dado de origem.
   const params = new URLSearchParams(window.location.search);
   if (params.has('prefillNome')) {
     showTab('add');
     document.getElementById('f-nome').value = params.get('prefillNome') || '';
     document.getElementById('f-uf').value = params.get('prefillUf') || '';
     document.getElementById('f-inst').value = params.get('prefillInst') || '';
+    if (params.has('prefillLinha')) document.getElementById('f-linha').value = params.get('prefillLinha') || '';
     document.getElementById('f-email').focus();
   }
 });
