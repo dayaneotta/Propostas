@@ -442,11 +442,10 @@ function renderizarLista() {
           ${item.matchBioLead ? `<div class="meta-row"><span class="match-note">${item.matchBioLead}</span></div>` : ''}
         </div>
         <div class="right">
-          ${idade ? `<span class="idade ${idade.classe}">${idade.texto}</span>` : ''}
+          ${idade ? `<span class="idade ${idade.classe}" title="Detectado em ${formatarData(item.detectadoEm)}">${idade.texto}</span>` : `<span class="date">${formatarData(item.detectadoEm)}</span>`}
           <span class="status ${classe}">${item.status}</span>
           ${item.valorFase && item.valor && item.valorFase !== item.fase ? `<span class="value-note">Valor na Fase ${item.valorFase}:</span>` : ''}
           <span class="value">${formatarValor(item.valor)}</span>
-          <span class="date">${formatarData(item.detectadoEm)}</span>
           ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
           ${item.pesquisador ? `<a class="ver-edital" href="${linkBuscaPesquisador(item)}" target="_blank" rel="noopener">Buscar pesquisador →</a>` : ''}
           <div class="actions">
