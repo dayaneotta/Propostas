@@ -352,8 +352,10 @@ function renderizarLista() {
           ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
           ${item.pesquisador ? `<a class="ver-edital" href="${linkBuscaPesquisador(item)}" target="_blank" rel="noopener">Buscar pesquisador →</a>` : ''}
           <div class="actions">
-            <button class="btn-decisao btn-funil" data-processo="${item.processo || ''}" data-decisao="Aprovar">Aprovar</button>
-            <button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Descartado">Descartar</button>
+            ${item.status === 'Já no BioLead'
+              ? `<button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Visto">Visto</button>`
+              : `<button class="btn-decisao btn-funil" data-processo="${item.processo || ''}" data-decisao="Aprovar">Aprovar</button>
+            <button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Descartado">Descartar</button>`}
           </div>
         </div>
       </div>
@@ -422,10 +424,13 @@ document.getElementById('conteudo').addEventListener('click', function(e) {
   // Ao aprovar, abre o BioLead numa aba nova, já na tela de "Adicionar" e
   // com nome/UF/instituição preenchidos — o resto (e-mail, telefone,
   // linha de pesquisa) fica pra preencher manualmente, já que essa
-  // informação simplesmente não existe no dado do CNPq.
+  // informação simplesmente não existe no dado do CNPq. Exceto quando o
+  // status já é "Já no BioLead" (match exato de nome) — aí a pessoa já
+  // está cadastrada, e abrir a tela de "Adicionar" só convidaria a criar
+  // um cadastro duplicado sem querer.
   if (decisao === 'Aprovar') {
     const item = TODOS_OS_ITENS.find(function(i) { return i.processo === processo; });
-    if (item) {
+    if (item && item.status !== 'Já no BioLead') {
       const params = new URLSearchParams({
         prefillNome: normalizarCaixaNome(item.pesquisador || ''),
         prefillUf: item.uf || '',
