@@ -94,8 +94,6 @@
   .status.descartado { background:#EEF1F4; color:#7C8896; }
 
   .ver-edital { font-size:12px; font-weight:700; color:var(--mid); text-decoration:none; margin-top:4px; }
-  .buscar-pesquisador { font-size:11.5px; color:var(--text-muted); text-decoration:none; margin-left:8px; }
-  .buscar-pesquisador:hover { color:var(--mid); text-decoration:underline; }
 
   .actions { display:flex; flex-direction:column; gap:6px; width:168px; flex-shrink:0; margin-top:10px; }
   .btn-decisao { font-family:inherit; font-size:12px; font-weight:600; border:none; padding:8px 12px; border-radius:7px; cursor:pointer; width:100%; transition:opacity .15s; }
@@ -305,7 +303,7 @@ function renderizarLista() {
     return `
       <div class="card st-${classe}">
         <div class="left">
-          <div><span class="who">${item.pesquisador || ''}</span><span class="inst">${item.instituicao || ''}${item.uf ? ' · ' + item.uf : ''}</span>${item.pesquisador ? `<a class="buscar-pesquisador" href="${linkBuscaPesquisador(item)}" target="_blank" rel="noopener">🔍 buscar</a>` : ''}</div>
+          <div><span class="who">${item.pesquisador || ''}</span><span class="inst">${item.instituicao || ''}${item.uf ? ' · ' + item.uf : ''}</span></div>
           <div class="meta-row">
             <span class="badge">${item.fonte || ''}</span>
             ${item.fase || item.situacao ? `<span class="badge">${[item.situacao, item.fase ? 'Fase ' + item.fase : ''].filter(Boolean).join(' · ')}</span>` : ''}
@@ -326,6 +324,7 @@ function renderizarLista() {
           <span class="value">${formatarValor(item.valor)}</span>
           <span class="date">${formatarData(item.detectadoEm)}</span>
           ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
+          ${item.pesquisador ? `<a class="ver-edital" href="${linkBuscaPesquisador(item)}" target="_blank" rel="noopener">Buscar pesquisador →</a>` : ''}
           <div class="actions">
             <button class="btn-decisao btn-funil" data-processo="${item.processo || ''}" data-decisao="Aprovar">Aprovar</button>
             <button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Descartado">Descartar</button>
