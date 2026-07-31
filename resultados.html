@@ -99,7 +99,10 @@
   .value { font-family:var(--font-mono); font-weight:600; font-size:15px; }
   .value-note { font-size:10.5px; color:var(--text-faint); }
   .date { font-size:11.5px; color:var(--text-faint); }
-  .idade { display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:10px; margin-bottom:4px; }
+  .idade { display:inline-block; position:relative; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:10px; margin-bottom:4px; cursor:default; }
+  .idade .dica-data { display:none; position:absolute; bottom:calc(100% + 7px); left:50%; transform:translateX(-50%); background:#2A3540; color:#fff; font-size:11px; font-weight:500; padding:5px 10px; border-radius:6px; white-space:nowrap; z-index:20; box-shadow:0 3px 10px rgba(0,0,0,.18); }
+  .idade .dica-data::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:#2A3540; }
+  .idade:hover .dica-data { display:block; }
   .idade-novo { background:#EEF1F4; color:#7C8896; }
   .idade-atencao { background:#FFF3E0; color:#B8770A; }
   .idade-urgente { background:#FDECEC; color:#C0392B; }
@@ -442,7 +445,7 @@ function renderizarLista() {
           ${item.matchBioLead ? `<div class="meta-row"><span class="match-note">${item.matchBioLead}</span></div>` : ''}
         </div>
         <div class="right">
-          ${idade ? `<span class="idade ${idade.classe}" title="Detectado em ${formatarData(item.detectadoEm)}">${idade.texto}</span>` : `<span class="date">${formatarData(item.detectadoEm)}</span>`}
+          ${idade ? `<span class="idade ${idade.classe}">${idade.texto}<span class="dica-data">Detectado em ${formatarData(item.detectadoEm)}</span></span>` : `<span class="date">${formatarData(item.detectadoEm)}</span>`}
           <span class="status ${classe}">${item.status}</span>
           ${item.valorFase && item.valor && item.valorFase !== item.fase ? `<span class="value-note">Valor na Fase ${item.valorFase}:</span>` : ''}
           <span class="value">${formatarValor(item.valor)}</span>
