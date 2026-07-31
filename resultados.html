@@ -189,6 +189,26 @@ function formatarValor(v) {
   return 'R$ ' + num.toLocaleString('pt-BR');
 }
 
+// Padroniza nome próprio pra Título (primeira letra maiúscula de cada
+// palavra), mantendo conectores em minúsculo — como o CNPq às vezes
+// devolve nome em CAIXA ALTA e às vezes já formatado, isso garante que
+// tudo que vai pro BioLead sai no mesmo padrão. Não mexe no dado guardado
+// na planilha do Resultados — só aplica na hora de exportar.
+const CONECTORES_NOME = ['de', 'da', 'do', 'das', 'dos', 'e'];
+
+function capitalizarPalavra(palavra) {
+  return palavra.split('-').map(function(parte) {
+    return parte.charAt(0).toUpperCase() + parte.slice(1);
+  }).join('-');
+}
+
+function normalizarCaixaNome(nome) {
+  return String(nome || '').toLowerCase().split(' ').filter(Boolean).map(function(palavra, idx) {
+    if (idx > 0 && CONECTORES_NOME.indexOf(palavra) !== -1) return palavra;
+    return capitalizarPalavra(palavra);
+  }).join(' ');
+}
+
 // Monta um link de busca no Google (nome + "lattes" + instituição) — jeito
 // mais rápido de descobrir a área de pesquisa de alguém sem sair pra outra
 // aba manualmente. Testado com nomes reais antes de implementar: retorna
@@ -407,7 +427,7 @@ document.getElementById('conteudo').addEventListener('click', function(e) {
     const item = TODOS_OS_ITENS.find(function(i) { return i.processo === processo; });
     if (item) {
       const params = new URLSearchParams({
-        prefillNome: item.pesquisador || '',
+        prefillNome: normalizarCaixaNome(item.pesquisador || ''),
         prefillUf: item.uf || '',
         prefillInst: item.instituicao || ''
       });
