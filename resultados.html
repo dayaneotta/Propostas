@@ -359,6 +359,19 @@ function ehFaseAvancada(item) {
 // clicar no card). Antes essa lógica existia só dentro do loop de
 // contagem; separar evita os dois se desalinharem se um for editado sem o
 // outro.
+// CONFIRMADO em caso real (André Salim Khayat, "fora do limite" mas já
+// cadastrado): "já está no BioLead" tem DUAS formas de aparecer — status
+// exato 'Já no BioLead' (caminho principal) OU uma nota em matchBioLead
+// prefixada "Já cadastrado no BioLead:" (caminho secundário, pra quem caiu
+// em fora do limite/recomendado parcial/não consta). Checar só o status
+// perdia o segundo caso — os botões continuavam mostrando Aprovar/Descartar
+// pra alguém que já estava cadastrado. Centralizado aqui, usado em todo
+// lugar que precisa saber isso, pra não ter mais de uma versão dessa
+// checagem podendo ficar desatualizada.
+function estaConfirmadoNoBioLead(item) {
+  return item.status === 'Já no BioLead' || (item.matchBioLead || '').indexOf('Já cadastrado no BioLead') !== -1;
+}
+
 function classificarParaCard(item) {
   if (item.status === 'Novo') return ehFaseAvancada(item) ? 'novo-final' : 'novo-prelim';
   if (item.status === 'Já no BioLead') return 'atualiza';
@@ -411,7 +424,7 @@ function renderizarLista() {
     const idade = calcularIdade(item.detectadoEm);
     return `
       <div class="card st-${classe}">
-        ${item.status !== 'Já no BioLead' ? `<input type="checkbox" class="card-checkbox marcar-lote" data-processo="${item.processo || ''}" title="Marcar pra descartar em lote"${marcadosParaDescarte.has(item.processo) ? ' checked' : ''}>` : '<span></span>'}
+        ${!estaConfirmadoNoBioLead(item) ? `<input type="checkbox" class="card-checkbox marcar-lote" data-processo="${item.processo || ''}" title="Marcar pra descartar em lote"${marcadosParaDescarte.has(item.processo) ? ' checked' : ''}>` : '<span></span>'}
         <div class="left">
           <div><span class="who">${item.pesquisador || ''}</span><span class="inst">${item.instituicao || ''}${item.uf ? ' · ' + item.uf : ''}</span></div>
           <div class="meta-row">
@@ -437,7 +450,7 @@ function renderizarLista() {
           ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
           ${item.pesquisador ? `<a class="ver-edital" href="${linkBuscaPesquisador(item)}" target="_blank" rel="noopener">Buscar pesquisador →</a>` : ''}
           <div class="actions">
-            ${item.status === 'Já no BioLead'
+            ${estaConfirmadoNoBioLead(item)
               ? `<button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Visto">Visto</button>`
               : `<button class="btn-decisao btn-funil" data-processo="${item.processo || ''}" data-decisao="Aprovar">Aprovar</button>
             <button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Descartado">Descartar</button>`}
@@ -515,7 +528,7 @@ document.getElementById('conteudo').addEventListener('click', function(e) {
   // um cadastro duplicado sem querer.
   if (decisao === 'Aprovar') {
     const item = TODOS_OS_ITENS.find(function(i) { return i.processo === processo; });
-    if (item && item.status !== 'Já no BioLead') {
+    if (item && !estaConfirmadoNoBioLead(item)) {
       const params = new URLSearchParams({
         prefillNome: normalizarCaixaNome(item.pesquisador || ''),
         prefillUf: item.uf || '',
