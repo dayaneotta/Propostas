@@ -338,6 +338,7 @@ textarea{resize:vertical;min-height:60px}
           <div class="form-field"><label>Origem do contato</label>
             <select id="f-origem" onchange="atualizarCampoMensagemInicial()">
               <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
+              <option value="Resultado de Edital — CNPq">🧬 Resultado de Edital — CNPq</option>
               <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
               <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
               <option value="Inbound — E-mail direto">✉️ Contato espontâneo — E-mail direto</option>
@@ -446,8 +447,9 @@ textarea{resize:vertical;min-height:60px}
     </div>
     <div class="form-full">
       <label>Origem do contato</label>
-      <select id="ed-origem" onchange="atualizarRotulosPrimeiroContato(this.value!=='Prospecção ativa')">
+      <select id="ed-origem" onchange="atualizarRotulosPrimeiroContato(!origemEhAtiva(this.value))">
         <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
+        <option value="Resultado de Edital — CNPq">🧬 Resultado de Edital — CNPq</option>
         <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
         <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
         <option value="Inbound — E-mail direto">✉️ Contato espontâneo — E-mail direto</option>
@@ -877,8 +879,17 @@ function mascaraData(input) {
   input.value = v;
 }
 
+// Origem "ativa" = fomos nós que iniciamos o contato (prospecção comum, ou
+// achado via resultado de edital) — o oposto de "inbound" (a pessoa nos
+// procurou). Centralizado aqui pra não ter a mesma checagem duplicada em
+// mais de um lugar, arriscando ficar desatualizada se um dia entrar uma
+// nova origem "ativa" (ex: resultado de outra fonte além do CNPq).
+function origemEhAtiva(origem) {
+  return origem === 'Prospecção ativa' || String(origem || '').indexOf('Resultado de Edital') === 0;
+}
+
 function atualizarCampoMensagemInicial() {
-  const inbound = document.getElementById('f-origem').value !== 'Prospecção ativa';
+  const inbound = !origemEhAtiva(document.getElementById('f-origem').value);
   document.getElementById('f-msg-inicial-wrap').style.display = inbound ? 'block' : 'none';
 }
 
@@ -894,7 +905,7 @@ async function adicionar() {
   const email = document.getElementById('f-email').value.trim();
   if (!nome||!email) { alert('Nome e e-mail são obrigatórios'); return; }
   const origemSelecionada = document.getElementById('f-origem').value || 'Prospecção ativa';
-  const ehInbound = origemSelecionada !== 'Prospecção ativa';
+  const ehInbound = !origemEhAtiva(origemSelecionada);
   const p = {
     id: Date.now()+Math.random(), nome, email,
     estado: document.getElementById('f-uf').value.trim().toUpperCase(),
@@ -1967,9 +1978,12 @@ function gerarProposta(id) {
 carregarDados().then(function() {
   // Vem do "Aprovar" no Resultados de Editais — nome/UF/instituição já
   // extraídos do CNPq, mais o contexto do edital (chamada + valor) já
-  // formatado como ponto de partida da linha de pesquisa. O resto
-  // (e-mail, telefone, Lattes) fica pra preencher manualmente, já que
-  // simplesmente não existe no dado de origem.
+  // formatado como ponto de partida da linha de pesquisa, e a origem
+  // marcada como "Resultado de Edital — CNPq" (rastreável separado de
+  // "Prospecção ativa" genérica, pra dar pra medir depois se esse canal
+  // converte melhor ou pior que outros). O resto (e-mail, telefone,
+  // Lattes) fica pra preencher manualmente, já que simplesmente não existe
+  // no dado de origem.
   const params = new URLSearchParams(window.location.search);
   if (params.has('prefillNome')) {
     showTab('add');
@@ -1977,6 +1991,8 @@ carregarDados().then(function() {
     document.getElementById('f-uf').value = params.get('prefillUf') || '';
     document.getElementById('f-inst').value = params.get('prefillInst') || '';
     if (params.has('prefillLinha')) document.getElementById('f-linha').value = params.get('prefillLinha') || '';
+    document.getElementById('f-origem').value = 'Resultado de Edital — CNPq';
+    atualizarCampoMensagemInicial();
     document.getElementById('f-email').focus();
   }
 });
