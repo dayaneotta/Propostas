@@ -99,6 +99,10 @@
   .value { font-family:var(--font-mono); font-weight:600; font-size:15px; }
   .value-note { font-size:10.5px; color:var(--text-faint); }
   .date { font-size:11.5px; color:var(--text-faint); }
+  .idade { display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:10px; margin-bottom:4px; }
+  .idade-novo { background:#EEF1F4; color:#7C8896; }
+  .idade-atencao { background:#FFF3E0; color:#B8770A; }
+  .idade-urgente { background:#FDECEC; color:#C0392B; }
   .status { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:3px 8px; border-radius:5px; }
   .status.novo { background:var(--teal-bg); color:#177A63; }
   .status.atualiza { background:var(--blue-bg); color:var(--deep); }
@@ -281,6 +285,24 @@ function formatarData(iso) {
   return d.toLocaleDateString('pt-BR');
 }
 
+// Limites em dias pra colorir o selo de idade — sem dado histórico de
+// conversão pra calibrar com precisão, são um ponto de partida razoável,
+// ajustável se a experiência mostrar que devia ser diferente.
+const IDADE_DIAS_ATENCAO = 7;
+const IDADE_DIAS_URGENTE = 21;
+
+function calcularIdade(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  const dias = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+  let classe = 'idade-novo';
+  if (dias > IDADE_DIAS_URGENTE) classe = 'idade-urgente';
+  else if (dias > IDADE_DIAS_ATENCAO) classe = 'idade-atencao';
+  const texto = dias <= 0 ? 'hoje' : (dias === 1 ? 'há 1 dia' : 'há ' + dias + ' dias');
+  return { dias: dias, classe: classe, texto: texto };
+}
+
 function montarFiltros(itens) {
   const fontes = [...new Set(itens.map(function(i) { return i.fonte; }))].sort();
   const container = document.getElementById('filters');
@@ -371,6 +393,13 @@ function renderizarLista() {
       || (i.matchBioLead || '').toLowerCase().indexOf(busca) !== -1;
   });
 
+  // Mais antigo primeiro — protege contra esquecer alguém na pilha; quem
+  // quer ver o que é mais recente/quente já tem os cards de "Novo" pra
+  // isso, não depende dessa ordem padrão.
+  itensFiltrados.sort(function(a, b) {
+    return new Date(a.detectadoEm || 0) - new Date(b.detectadoEm || 0);
+  });
+
   if (itensFiltrados.length === 0) {
     conteudo.innerHTML = '<div class="estado">Nada encontrado com esse filtro.</div>';
     return;
@@ -379,6 +408,7 @@ function renderizarLista() {
   const listaHtml = itensFiltrados.map(function(item) {
     const classe = classeDoStatus(item.status);
     const forte = item.sinal === 'forte';
+    const idade = calcularIdade(item.detectadoEm);
     return `
       <div class="card st-${classe}">
         ${item.status !== 'Já no BioLead' ? `<input type="checkbox" class="card-checkbox marcar-lote" data-processo="${item.processo || ''}" title="Marcar pra descartar em lote"${marcadosParaDescarte.has(item.processo) ? ' checked' : ''}>` : '<span></span>'}
@@ -399,6 +429,7 @@ function renderizarLista() {
           ${item.matchBioLead ? `<div class="meta-row"><span class="match-note">${item.matchBioLead}</span></div>` : ''}
         </div>
         <div class="right">
+          ${idade ? `<span class="idade ${idade.classe}">${idade.texto}</span>` : ''}
           <span class="status ${classe}">${item.status}</span>
           ${item.valorFase && item.valor && item.valorFase !== item.fase ? `<span class="value-note">Valor na Fase ${item.valorFase}:</span>` : ''}
           <span class="value">${formatarValor(item.valor)}</span>
