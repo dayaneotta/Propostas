@@ -338,7 +338,7 @@ textarea{resize:vertical;min-height:60px}
           <div class="form-field"><label>Origem do contato</label>
             <select id="f-origem" onchange="atualizarCampoMensagemInicial()">
               <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
-              <option value="Resultado de Edital — CNPq">🧬 Resultado de Edital — CNPq</option>
+              <option value="Prospecção ativa — Resultado de Edital (CNPq)">🧬 Prospecção ativa — Resultado de Edital (CNPq)</option>
               <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
               <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
               <option value="Inbound — E-mail direto">✉️ Contato espontâneo — E-mail direto</option>
@@ -449,7 +449,7 @@ textarea{resize:vertical;min-height:60px}
       <label>Origem do contato</label>
       <select id="ed-origem" onchange="atualizarRotulosPrimeiroContato(!origemEhAtiva(this.value))">
         <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
-        <option value="Resultado de Edital — CNPq">🧬 Resultado de Edital — CNPq</option>
+        <option value="Prospecção ativa — Resultado de Edital (CNPq)">🧬 Prospecção ativa — Resultado de Edital (CNPq)</option>
         <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
         <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
         <option value="Inbound — E-mail direto">✉️ Contato espontâneo — E-mail direto</option>
@@ -879,13 +879,16 @@ function mascaraData(input) {
   input.value = v;
 }
 
-// Origem "ativa" = fomos nós que iniciamos o contato (prospecção comum, ou
-// achado via resultado de edital) — o oposto de "inbound" (a pessoa nos
-// procurou). Centralizado aqui pra não ter a mesma checagem duplicada em
-// mais de um lugar, arriscando ficar desatualizada se um dia entrar uma
-// nova origem "ativa" (ex: resultado de outra fonte além do CNPq).
+// Origem "ativa" = fomos nós que iniciamos o contato (o oposto de
+// "inbound", onde a pessoa nos procurou primeiro). "Resultado de Edital"
+// é uma VARIAÇÃO de prospecção ativa, não uma categoria à parte — só muda
+// COMO achamos o nome (edital em vez de busca manual por Lattes/PPG), não
+// quem inicia o contato. Por isso o valor salvo começa com "Prospecção
+// ativa —", e checar só esse prefixo já cobre qualquer variação futura
+// (resultado de outra fonte além do CNPq, por exemplo) sem precisar mudar
+// esta função de novo.
 function origemEhAtiva(origem) {
-  return origem === 'Prospecção ativa' || String(origem || '').indexOf('Resultado de Edital') === 0;
+  return String(origem || '').indexOf('Prospecção ativa') === 0;
 }
 
 function atualizarCampoMensagemInicial() {
@@ -1996,17 +1999,20 @@ function gerarProposta(id) {
 
 carregarDados().then(function() {
   // Vem do "Aprovar" no Resultados de Editais — nome/UF/instituição já
-  // extraídos do CNPq (ou fonte futura equivalente), mais o contexto do
-  // edital (chamada + valor) já formatado como ponto de partida da linha
-  // de pesquisa, e a origem marcada como "Resultado de Edital — [fonte]"
-  // (rastreável separado de "Prospecção ativa" genérica, pra dar pra medir
-  // depois se esse canal converte melhor ou pior que outros — e separado
-  // POR FONTE, já que CNPq/FACEPE/FAPESB etc podem converter diferente
-  // entre si). A fonte vem do próprio resultados.html (item.fonte), não é
-  // fixa aqui — se um dia aparecer uma fonte nova sem opção correspondente
-  // no dropdown, cria a opção na hora em vez de deixar o campo em branco
-  // silenciosamente. O resto (e-mail, telefone, Lattes) fica pra preencher
-  // manualmente, já que simplesmente não existe no dado de origem.
+  // extraídos do CNPq (ou fonte futura equivalente, convertida pra sigla
+  // via INST_NOMES quando reconhecida), mais o contexto do edital (chamada
+  // + valor) já formatado como ponto de partida da linha de pesquisa.
+  // Origem marcada como "Prospecção ativa — Resultado de Edital
+  // ([fonte])" — é uma VARIAÇÃO de prospecção ativa (quem inicia o
+  // contato somos nós, igual à prospecção manual), só muda COMO achamos o
+  // nome. O valor rastreia POR FONTE (CNPq/FACEPE/FAPESB podem converter
+  // diferente entre si), mas continua contando como prospecção ativa pra
+  // qualquer lógica que dependa disso. A fonte vem do próprio
+  // resultados.html (item.fonte), não é fixa aqui — se aparecer uma fonte
+  // nova sem opção correspondente no dropdown, cria a opção na hora em vez
+  // de deixar o campo em branco silenciosamente. O resto (e-mail,
+  // telefone, Lattes) fica pra preencher manualmente, já que simplesmente
+  // não existe no dado de origem.
   const params = new URLSearchParams(window.location.search);
   if (params.has('prefillNome')) {
     showTab('add');
@@ -2015,7 +2021,7 @@ carregarDados().then(function() {
     document.getElementById('f-inst').value = converterInstituicaoParaSigla(params.get('prefillInst') || '');
     if (params.has('prefillLinha')) document.getElementById('f-linha').value = params.get('prefillLinha') || '';
 
-    const origemVinda = params.get('prefillOrigem') || 'Resultado de Edital — CNPq';
+    const origemVinda = params.get('prefillOrigem') || 'Prospecção ativa — Resultado de Edital (CNPq)';
     const selectOrigem = document.getElementById('f-origem');
     const jaTemOpcao = Array.from(selectOrigem.options).some(function(op) { return op.value === origemVinda; });
     if (!jaTemOpcao) {
