@@ -1433,6 +1433,24 @@ function remover(id) {
 }
 
 // ── Render tabela ─────────────────────────────────────────────────────────────
+// Detecta se o contato veio do Resultados de Editais com resultado
+// GANHOU ou SEM VERBA (mérito técnico, mas não contemplado), lendo o
+// início do texto que descreverResultadoParaBioLead() já grava em "Linha
+// de pesquisa" (resultados.html) — sem precisar de nenhum campo novo no
+// dado salvo. Puramente derivado na hora de exibir; se o texto não bater
+// com nenhum dos dois padrões (contato manual, por exemplo), não mostra
+// selo nenhum.
+function selosEditalBL(linha) {
+  const l = String(linha || '');
+  if (l.indexOf('Resultado no') === 0) {
+    return '<span style="display:inline-block;font-size:9px;font-weight:700;color:#177A63;background:#E6F6F3;border-radius:4px;padding:1px 6px;margin-top:2px">🟢 Ganhou o edital</span>';
+  }
+  if (l.indexOf('Recomendado no mérito técnico') === 0) {
+    return '<span style="display:inline-block;font-size:9px;font-weight:700;color:#B8770A;background:#FFF3E0;border-radius:4px;padding:1px 6px;margin-top:2px">🟡 Sem verba (mérito)</span>';
+  }
+  return '';
+}
+
 function render() {
   // Garantir que todos os campos são strings
   dados = dados.map(normalizarContato);
@@ -1477,7 +1495,7 @@ function render() {
     const igBtn=p.instagram&&p.instagram.startsWith('@')?`<a href="https://instagram.com/${encodeURIComponent(p.instagram.slice(1))}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#993556;text-decoration:none;font-weight:500"><i class="ti ti-brand-instagram" style="font-size:13px"></i>IG</a>`:'';
     const liBtn=p.linkedin?`<a href="${escapeAttr(p.linkedin)}" target="_blank" style="display:flex;align-items:center;gap:3px;font-size:10px;color:#0A66C2;text-decoration:none;font-weight:500"><i class="ti ti-brand-linkedin" style="font-size:13px"></i>LinkedIn</a>`:'';
     return `<tr class="${p.desqualificado?'desq':''}">
-      <td><div class="name-cell"><div class="av ${av}">${ini}</div><div><div class="nmt">${escapeHtml(p.nome)}</div><div class="ins">${escapeHtml(p.inst)||'—'}</div></div></div></td>
+      <td><div class="name-cell"><div class="av ${av}">${ini}</div><div><div class="nmt">${escapeHtml(p.nome)}</div><div class="ins">${escapeHtml(p.inst)||'—'}</div>${selosEditalBL(p.linha)}</div></div></td>
       <td><span style="font-size:10px;font-weight:700;color:var(--bm-blue);background:#E8F5FB;border-radius:4px;padding:2px 6px">${escapeHtml(p.estado)||'—'}</span></td>
       <td><span class="badge badge-${p.score==='ALTO'?'alto':'medio'}">● ${escapeHtml(p.score)}</span></td>
       <td><div class="dots-wrap">${buildDotsBL(p)}</div></td>
