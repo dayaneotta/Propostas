@@ -687,7 +687,7 @@ function normalizarContato(p) {
     lattes: String(p.lattes || ''),
     instagram: String(p.instagram || ''),
     linkedin: String(p.linkedin || ''),
-    origem: String(p.origem || 'Prospecção ativa — Busca manual'),
+    origem: migrarOrigemAntiga(String(p.origem || '')) || 'Prospecção ativa — Busca manual',
     score: String(p.score || ''),
     c1_raw: normalizarData(p.c1_raw),
     c1_nota: String(p.c1_nota || ''),
@@ -889,6 +889,20 @@ function mascaraData(input) {
 // esta função de novo.
 function origemEhAtiva(origem) {
   return String(origem || '').indexOf('Prospecção ativa') === 0;
+}
+
+// CONFIRMADO em caso real: renomear a opção do dropdown ("Prospecção
+// ativa" -> "Prospecção ativa — Busca manual") quebrou a exibição de
+// TODOS os ~300 contatos já salvos com o valor antigo — <select>.value só
+// marca uma opção se bater EXATO com algum item da lista; sem
+// correspondência, mostra em branco (o dado em si continua salvo, intacto
+// — é só a tela que não sabia mostrar). Traduz valores antigos conhecidos
+// pro padrão novo ANTES de jogar no dropdown, em vez de deixar o
+// navegador falhar silenciosamente. Usar em TODO lugar que lê p.origem
+// pra popular um <select> ou decidir o valor a salvar.
+function migrarOrigemAntiga(origem) {
+  if (origem === 'Prospecção ativa') return 'Prospecção ativa — Busca manual';
+  return origem;
 }
 
 function atualizarCampoMensagemInicial() {
@@ -1261,7 +1275,7 @@ function abrirModal(id) {
   document.getElementById('ed-id').value=String(id);
   document.getElementById('ed-nome').value=p.nome||'';
   document.getElementById('ed-email').value=p.email||'';
-  document.getElementById('ed-origem').value=p.origem||'Prospecção ativa — Busca manual';
+  document.getElementById('ed-origem').value=migrarOrigemAntiga(p.origem)||'Prospecção ativa — Busca manual';
   atualizarRotulosPrimeiroContato(ehInboundOrigem(p.origem));
   document.getElementById('ed-uf').value=p.estado||'';
   document.getElementById('ed-inst').value=p.inst||'';
