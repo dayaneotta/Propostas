@@ -1275,7 +1275,9 @@ function abrirModal(id) {
   document.getElementById('ed-id').value=String(id);
   document.getElementById('ed-nome').value=p.nome||'';
   document.getElementById('ed-email').value=p.email||'';
-  document.getElementById('ed-origem').value=migrarOrigemAntiga(p.origem)||'Prospecção ativa — Busca manual';
+  const origemDoContato = migrarOrigemAntiga(p.origem) || 'Prospecção ativa — Busca manual';
+  garantirOpcaoOrigem(document.getElementById('ed-origem'), origemDoContato);
+  document.getElementById('ed-origem').value = origemDoContato;
   atualizarRotulosPrimeiroContato(ehInboundOrigem(p.origem));
   document.getElementById('ed-uf').value=p.estado||'';
   document.getElementById('ed-inst').value=p.inst||'';
@@ -2011,6 +2013,25 @@ function gerarProposta(id) {
   window.location.href = '/Propostas/index.html?' + params.toString();
 }
 
+// CONFIRMADO em caso real: qualquer <select> que recebe um valor sem opção
+// correspondente falha silenciosamente (mostra em branco), mesmo com o
+// dado intacto por baixo — foi exatamente o bug dos ~300 contatos com
+// "Prospecção ativa" antigo. Em vez de só corrigir esse caso específico,
+// generaliza: garante que a opção exista (cria na hora se faltar) ANTES
+// de tentar selecionar, pra qualquer origem futura (FACEPE, FAPESB, etc)
+// nunca reproduzir o mesmo problema — nem no formulário de adicionar, nem
+// no de editar.
+function garantirOpcaoOrigem(selectEl, valor) {
+  if (!valor) return;
+  const existe = Array.from(selectEl.options).some(function(op) { return op.value === valor; });
+  if (!existe) {
+    const opcao = document.createElement('option');
+    opcao.value = valor;
+    opcao.textContent = '🧬 ' + valor;
+    selectEl.appendChild(opcao);
+  }
+}
+
 carregarDados().then(function() {
   // Vem do "Aprovar" no Resultados de Editais — nome/UF/instituição já
   // extraídos do CNPq (ou fonte futura equivalente, convertida pra sigla
@@ -2037,13 +2058,7 @@ carregarDados().then(function() {
 
     const origemVinda = params.get('prefillOrigem') || 'Prospecção ativa — Resultado de Edital (CNPq)';
     const selectOrigem = document.getElementById('f-origem');
-    const jaTemOpcao = Array.from(selectOrigem.options).some(function(op) { return op.value === origemVinda; });
-    if (!jaTemOpcao) {
-      const novaOpcao = document.createElement('option');
-      novaOpcao.value = origemVinda;
-      novaOpcao.textContent = '🧬 ' + origemVinda;
-      selectOrigem.appendChild(novaOpcao);
-    }
+    garantirOpcaoOrigem(selectOrigem, origemVinda);
     selectOrigem.value = origemVinda;
     atualizarCampoMensagemInicial();
 
