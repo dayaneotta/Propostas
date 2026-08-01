@@ -1443,10 +1443,10 @@ function remover(id) {
 function selosEditalBL(linha) {
   const l = String(linha || '');
   if (l.indexOf('Resultado no') === 0) {
-    return '<span style="display:inline-block;font-size:9px;font-weight:700;color:#177A63;background:#E6F6F3;border-radius:4px;padding:1px 6px;margin-top:2px">🟢 Ganhou o edital</span>';
+    return '<span style="display:inline-block;font-size:9px;font-weight:700;color:#177A63;background:#E6F6F3;border-radius:4px;padding:1px 6px;margin-top:2px">🏆 Ganhou o edital</span>';
   }
   if (l.indexOf('Recomendado no mérito técnico') === 0) {
-    return '<span style="display:inline-block;font-size:9px;font-weight:700;color:#B8770A;background:#FFF3E0;border-radius:4px;padding:1px 6px;margin-top:2px">🟡 Sem verba (mérito)</span>';
+    return '<span style="display:inline-block;font-size:9px;font-weight:700;color:#B8770A;background:#FFF3E0;border-radius:4px;padding:1px 6px;margin-top:2px">📋 Sem verba (mérito)</span>';
   }
   return '';
 }
