@@ -337,7 +337,7 @@ textarea{resize:vertical;min-height:60px}
         <div class="form-grid">
           <div class="form-field"><label>Origem do contato</label>
             <select id="f-origem" onchange="atualizarCampoMensagemInicial()">
-              <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
+              <option value="Prospecção ativa — Busca manual">📋 Prospecção ativa — Busca manual</option>
               <option value="Prospecção ativa — Resultado de Edital (CNPq)">🧬 Prospecção ativa — Resultado de Edital (CNPq)</option>
               <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
               <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
@@ -448,7 +448,7 @@ textarea{resize:vertical;min-height:60px}
     <div class="form-full">
       <label>Origem do contato</label>
       <select id="ed-origem" onchange="atualizarRotulosPrimeiroContato(!origemEhAtiva(this.value))">
-        <option value="Prospecção ativa">📋 Prospecção ativa (nós contatamos)</option>
+        <option value="Prospecção ativa — Busca manual">📋 Prospecção ativa — Busca manual</option>
         <option value="Prospecção ativa — Resultado de Edital (CNPq)">🧬 Prospecção ativa — Resultado de Edital (CNPq)</option>
         <option value="Inbound — Site">🌐 Contato espontâneo — Site</option>
         <option value="Inbound — WhatsApp">💬 Contato espontâneo — WhatsApp</option>
@@ -687,7 +687,7 @@ function normalizarContato(p) {
     lattes: String(p.lattes || ''),
     instagram: String(p.instagram || ''),
     linkedin: String(p.linkedin || ''),
-    origem: String(p.origem || 'Prospecção ativa'),
+    origem: String(p.origem || 'Prospecção ativa — Busca manual'),
     score: String(p.score || ''),
     c1_raw: normalizarData(p.c1_raw),
     c1_nota: String(p.c1_nota || ''),
@@ -898,7 +898,7 @@ function atualizarCampoMensagemInicial() {
 
 function limparForm() {
   ['f-nome','f-email','f-uf','f-inst','f-tel','f-lattes','f-insta','f-linkedin','f-linha','f-msg-inicial'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-origem').value = 'Prospecção ativa';
+  document.getElementById('f-origem').value = 'Prospecção ativa — Busca manual';
   document.getElementById('f-score').value='';
   atualizarCampoMensagemInicial();
 }
@@ -907,7 +907,7 @@ async function adicionar() {
   const nome = document.getElementById('f-nome').value.trim();
   const email = document.getElementById('f-email').value.trim();
   if (!nome||!email) { alert('Nome e e-mail são obrigatórios'); return; }
-  const origemSelecionada = document.getElementById('f-origem').value || 'Prospecção ativa';
+  const origemSelecionada = document.getElementById('f-origem').value || 'Prospecção ativa — Busca manual';
   const ehInbound = !origemEhAtiva(origemSelecionada);
   const p = {
     id: Date.now()+Math.random(), nome, email,
@@ -1261,7 +1261,7 @@ function abrirModal(id) {
   document.getElementById('ed-id').value=String(id);
   document.getElementById('ed-nome').value=p.nome||'';
   document.getElementById('ed-email').value=p.email||'';
-  document.getElementById('ed-origem').value=p.origem||'Prospecção ativa';
+  document.getElementById('ed-origem').value=p.origem||'Prospecção ativa — Busca manual';
   atualizarRotulosPrimeiroContato(ehInboundOrigem(p.origem));
   document.getElementById('ed-uf').value=p.estado||'';
   document.getElementById('ed-inst').value=p.inst||'';
@@ -1385,7 +1385,7 @@ function salvarEdicao() {
   const email=document.getElementById('ed-email').value.trim();
   if (!nome||!email) { alert('Nome e e-mail são obrigatórios'); return; }
   p.nome=nome; p.email=email;
-  p.origem=document.getElementById('ed-origem').value||'Prospecção ativa';
+  p.origem=document.getElementById('ed-origem').value||'Prospecção ativa — Busca manual';
   p.estado=document.getElementById('ed-uf').value.trim().toUpperCase();
   p.inst=document.getElementById('ed-inst').value.trim();
   p.tel=document.getElementById('ed-tel').value.trim();
