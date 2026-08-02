@@ -86,6 +86,9 @@
   .inst { color:var(--text-muted); font-size:13px; margin-left:6px; font-weight:400; }
   .meta-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
   .badge { font-size:11.5px; padding:3px 8px; border-radius:6px; background:var(--bg); color:var(--text-muted); border:1px solid var(--border); }
+  .badge-fonte-cnpq { background:#EEF2FF; color:#4338CA; border-color:#E0E7FF; }
+  .badge-fonte-faperj { background:#FDF2F8; color:#BE185D; border-color:#FCE7F3; }
+  .badge-fonte-outra { background:#F3F4F6; color:#4B5563; border-color:#E5E7EB; }
   .chamada { font-size:13px; color:var(--text-muted); max-width:56ch; }
 
   .signal { display:flex; align-items:center; gap:5px; }
@@ -190,6 +193,15 @@ const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxWyCIZPQBT-IyuVZ9X
 // avançou (parou na Fase X)" têm texto variável (o X muda) — um dicionário
 // de match exato nunca ia reconhecer essas. O fallback só cai em 'novo' se
 // o status for algo genuinamente desconhecido, o que deveria ser raro.
+// Extensível de propósito — fonte futura não mapeada aqui ainda cai no
+// fallback neutro em vez de ficar sem cor nenhuma (classe inexistente).
+function classeFonte(fonte) {
+  const f = String(fonte || '').toUpperCase();
+  if (f === 'CNPQ') return 'badge-fonte-cnpq';
+  if (f === 'FAPERJ') return 'badge-fonte-faperj';
+  return 'badge-fonte-outra';
+}
+
 function classeDoStatus(status) {
   if (status === 'Novo') return 'novo';
   if (status === 'Já no BioLead') return 'atualiza';
@@ -429,9 +441,9 @@ function renderizarLista() {
       <div class="card st-${classe}">
         ${!estaConfirmadoNoBioLead(item) ? `<input type="checkbox" class="card-checkbox marcar-lote" data-processo="${item.processo || ''}" title="Marcar pra descartar em lote"${marcadosParaDescarte.has(item.processo) ? ' checked' : ''}>` : '<span></span>'}
         <div class="left">
-          <div><span class="who">${item.pesquisador || ''}</span><span class="inst">${item.instituicao || ''}${item.uf ? ' · ' + item.uf : ''}</span></div>
+          <div><span class="who">${normalizarCaixaNome(item.pesquisador || '')}</span><span class="inst">${item.instituicao || ''}${item.uf ? ' · ' + item.uf : ''}</span></div>
           <div class="meta-row">
-            <span class="badge">${item.fonte || ''}</span>
+            <span class="badge ${classeFonte(item.fonte)}">${item.fonte || ''}</span>
             ${item.fase || item.situacao ? `<span class="badge">${[item.situacao, item.fase ? 'Fase ' + item.fase : ''].filter(Boolean).join(' · ')}</span>` : ''}
           </div>
           <div class="chamada">${item.chamada || ''}</div>
@@ -536,7 +548,7 @@ document.getElementById('conteudo').addEventListener('click', function(e) {
         prefillUf: item.uf || '',
         prefillInst: item.instituicao || '',
         prefillLinha: descreverResultadoParaBioLead(item),
-        prefillOrigem: 'Resultado de Edital — ' + (item.fonte || 'CNPq')
+        prefillOrigem: 'Prospecção ativa — Resultado de Edital (' + (item.fonte || 'CNPq') + ')'
       });
       window.open('BioLead_v5.html?' + params.toString(), '_blank');
     }
