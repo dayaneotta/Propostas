@@ -89,6 +89,14 @@
   .badge-fonte-cnpq { background:#EEF2FF; color:#4338CA; border-color:#E0E7FF; }
   .badge-fonte-faperj { background:#FDF2F8; color:#BE185D; border-color:#FCE7F3; }
   .badge-fonte-outra { background:#F3F4F6; color:#4B5563; border-color:#E5E7EB; }
+  .grupo-edital { margin-bottom:14px; }
+  .grupo-cabecalho { display:flex; align-items:center; gap:10px; padding:12px 16px; background:#F7F9FB; border:1px solid var(--border); border-radius:10px; cursor:pointer; user-select:none; }
+  .grupo-toggle-icon { font-size:12px; color:var(--text-faint); transition:transform .15s; flex-shrink:0; }
+  .grupo-titulo { flex:1; font-size:13.5px; color:var(--text-muted); font-weight:600; }
+  .grupo-contador { font-size:11.5px; color:var(--text-faint); background:#fff; padding:2px 9px; border-radius:10px; border:1px solid var(--border); flex-shrink:0; }
+  .grupo-cards { padding-top:10px; }
+  .grupo-edital.colapsado .grupo-cards { display:none; }
+  .grupo-edital.colapsado .grupo-toggle-icon { transform:rotate(-90deg); }
   .chamada { font-size:13px; color:var(--text-muted); max-width:56ch; }
 
   .signal { display:flex; align-items:center; gap:5px; }
@@ -408,6 +416,66 @@ function atualizarContadores(itens) {
   document.getElementById('count-duplicata').textContent = cont['duplicata'];
 }
 
+function renderizarCard(item, ocultarChamada) {
+  const classe = classeDoStatus(item.status);
+  const forte = item.sinal === 'forte';
+  const idade = calcularIdade(item.detectadoEm);
+  return `
+      <div class="card st-${classe}">
+        ${!estaConfirmadoNoBioLead(item) ? `<input type="checkbox" class="card-checkbox marcar-lote" data-processo="${item.processo || ''}" title="Marcar pra descartar em lote"${marcadosParaDescarte.has(item.processo) ? ' checked' : ''}>` : '<span></span>'}
+        <div class="left">
+          <div><span class="who">${normalizarCaixaNome(item.pesquisador || '')}</span><span class="inst">${item.instituicao || ''}${item.uf ? ' · ' + item.uf : ''}</span></div>
+          <div class="meta-row">
+            <span class="badge ${classeFonte(item.fonte)}">${item.fonte || ''}</span>
+            ${item.fase || item.situacao ? `<span class="badge">${[item.situacao, item.fase ? 'Fase ' + item.fase : ''].filter(Boolean).join(' · ')}</span>` : ''}
+          </div>
+          ${ocultarChamada ? '' : `<div class="chamada">${item.chamada || ''}</div>`}
+          <div class="signal">
+            <span class="ticks">
+              <span class="tick on"></span>
+              <span class="tick ${forte ? 'on' : ''}"></span>
+            </span>
+            <span class="label">sinal ${forte ? 'forte' : 'médio'}</span>
+          </div>
+          ${item.matchBioLead ? `<div class="meta-row"><span class="match-note">🎯 ${item.matchBioLead}</span></div>` : ''}
+        </div>
+        <div class="right">
+          ${idade ? `<span class="idade ${idade.classe}">${idade.texto}<span class="dica-data">Detectado em ${formatarData(item.detectadoEm)}</span></span>` : `<span class="date">${formatarData(item.detectadoEm)}</span>`}
+          <span class="status ${classe}">${item.status}</span>
+          ${item.valorFase && item.valor && item.valorFase !== item.fase ? `<span class="value-note">Valor na Fase ${item.valorFase}:</span>` : ''}
+          <span class="value">${formatarValor(item.valor)}</span>
+          ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
+          ${item.pesquisador ? `<a class="ver-edital" href="${linkBuscaPesquisador(item)}" target="_blank" rel="noopener">Buscar pesquisador →</a>` : ''}
+          <div class="actions">
+            ${estaConfirmadoNoBioLead(item)
+              ? `<button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Visto">Visto</button>`
+              : `<button class="btn-decisao btn-funil" data-processo="${item.processo || ''}" data-decisao="Aprovar">Aprovar</button>
+            <button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Descartado">Descartar</button>`}
+          </div>
+        </div>
+      </div>
+    `;
+}
+
+// Agrupa por edital (chave = link da chamada, com fallback pro título se
+// não tiver link) preservando a ordem de primeira ocorrência — como
+// itensFiltrados já vem ordenado do mais antigo pro mais novo antes de
+// agrupar, os GRUPOS também saem nessa ordem (o grupo aparece na posição
+// do seu membro mais antigo).
+function agruparPorEdital(itens) {
+  const grupos = [];
+  const indicePorChave = {};
+  itens.forEach(function(item) {
+    const chave = item.link || item.chamada || '(sem edital)';
+    if (indicePorChave[chave] === undefined) {
+      indicePorChave[chave] = grupos.length;
+      grupos.push({ chave: chave, chamada: item.chamada, fonte: item.fonte, itens: [] });
+    }
+    grupos[indicePorChave[chave]].itens.push(item);
+  });
+  return grupos;
+}
+
 function renderizarLista() {
   const conteudo = document.getElementById('conteudo');
   const busca = termoBusca.toLowerCase();
@@ -433,43 +501,26 @@ function renderizarLista() {
     return;
   }
 
-  const listaHtml = itensFiltrados.map(function(item) {
-    const classe = classeDoStatus(item.status);
-    const forte = item.sinal === 'forte';
-    const idade = calcularIdade(item.detectadoEm);
+  // Editais com só 1 pessoa continuam como card solto, sem acordeão —
+  // agrupar isso só adicionaria clique sem economizar espaço nenhum.
+  // Grupos vêm expandidos por padrão (mesma quantidade de informação
+  // visível de antes, só sem repetir o título da chamada em cada pessoa) —
+  // ela pode recolher os que já revisou.
+  const grupos = agruparPorEdital(itensFiltrados);
+  const listaHtml = grupos.map(function(grupo) {
+    if (grupo.itens.length === 1) {
+      return renderizarCard(grupo.itens[0], false);
+    }
+    const cardsDoGrupo = grupo.itens.map(function(item) { return renderizarCard(item, true); }).join('');
     return `
-      <div class="card st-${classe}">
-        ${!estaConfirmadoNoBioLead(item) ? `<input type="checkbox" class="card-checkbox marcar-lote" data-processo="${item.processo || ''}" title="Marcar pra descartar em lote"${marcadosParaDescarte.has(item.processo) ? ' checked' : ''}>` : '<span></span>'}
-        <div class="left">
-          <div><span class="who">${normalizarCaixaNome(item.pesquisador || '')}</span><span class="inst">${item.instituicao || ''}${item.uf ? ' · ' + item.uf : ''}</span></div>
-          <div class="meta-row">
-            <span class="badge ${classeFonte(item.fonte)}">${item.fonte || ''}</span>
-            ${item.fase || item.situacao ? `<span class="badge">${[item.situacao, item.fase ? 'Fase ' + item.fase : ''].filter(Boolean).join(' · ')}</span>` : ''}
-          </div>
-          <div class="chamada">${item.chamada || ''}</div>
-          <div class="signal">
-            <span class="ticks">
-              <span class="tick on"></span>
-              <span class="tick ${forte ? 'on' : ''}"></span>
-            </span>
-            <span class="label">sinal ${forte ? 'forte' : 'médio'}</span>
-          </div>
-          ${item.matchBioLead ? `<div class="meta-row"><span class="match-note">🎯 ${item.matchBioLead}</span></div>` : ''}
+      <div class="grupo-edital">
+        <div class="grupo-cabecalho" onclick="this.parentElement.classList.toggle('colapsado')">
+          <span class="grupo-toggle-icon">▾</span>
+          <span class="badge ${classeFonte(grupo.fonte)}">${grupo.fonte || ''}</span>
+          <span class="grupo-titulo">${grupo.chamada || ''}</span>
+          <span class="grupo-contador">${grupo.itens.length} pessoas</span>
         </div>
-        <div class="right">
-          ${idade ? `<span class="idade ${idade.classe}">${idade.texto}<span class="dica-data">Detectado em ${formatarData(item.detectadoEm)}</span></span>` : `<span class="date">${formatarData(item.detectadoEm)}</span>`}
-          <span class="status ${classe}">${item.status}</span>
-          ${item.valorFase && item.valor && item.valorFase !== item.fase ? `<span class="value-note">Valor na Fase ${item.valorFase}:</span>` : ''}
-          <span class="value">${formatarValor(item.valor)}</span>
-          ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
-          ${item.pesquisador ? `<a class="ver-edital" href="${linkBuscaPesquisador(item)}" target="_blank" rel="noopener">Buscar pesquisador →</a>` : ''}
-          <div class="actions">
-            ${estaConfirmadoNoBioLead(item)
-              ? `<button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Visto">Visto</button>`
-              : `<button class="btn-decisao btn-funil" data-processo="${item.processo || ''}" data-decisao="Aprovar">Aprovar</button>
-            <button class="btn-decisao btn-descartar" data-processo="${item.processo || ''}" data-decisao="Descartado">Descartar</button>`}
-          </div>
-        </div>
+        <div class="grupo-cards">${cardsDoGrupo}</div>
       </div>
     `;
   }).join('');
