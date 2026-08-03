@@ -88,6 +88,7 @@
   .badge { font-size:11.5px; padding:3px 8px; border-radius:6px; background:var(--bg); color:var(--text-muted); border:1px solid var(--border); }
   .badge-fonte-cnpq { background:#EEF2FF; color:#4338CA; border-color:#E0E7FF; }
   .badge-fonte-faperj { background:#FDF2F8; color:#BE185D; border-color:#FCE7F3; }
+  .badge-fonte-fapesp { background:#ECFEFF; color:#0E7490; border-color:#CFFAFE; }
   .badge-fonte-outra { background:#F3F4F6; color:#4B5563; border-color:#E5E7EB; }
   .grupo-edital { margin-bottom:14px; }
   .grupo-cabecalho { display:flex; align-items:center; gap:10px; padding:12px 16px; background:#F7F9FB; border:1px solid var(--border); border-radius:10px; cursor:pointer; user-select:none; position:sticky; top:8px; z-index:5; box-shadow:0 2px 6px rgba(0,0,0,.06); }
@@ -209,6 +210,7 @@ function classeFonte(fonte) {
   const f = String(fonte || '').toUpperCase();
   if (f === 'CNPQ') return 'badge-fonte-cnpq';
   if (f === 'FAPERJ') return 'badge-fonte-faperj';
+  if (f === 'FAPESP') return 'badge-fonte-fapesp';
   return 'badge-fonte-outra';
 }
 
