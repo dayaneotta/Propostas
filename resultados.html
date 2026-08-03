@@ -444,7 +444,7 @@ function renderizarCard(item, ocultarChamada) {
           <span class="status ${classe}">${item.status}</span>
           ${item.valorFase && item.valor && item.valorFase !== item.fase ? `<span class="value-note">Valor na Fase ${item.valorFase}:</span>` : ''}
           <span class="value">${formatarValor(item.valor)}</span>
-          ${item.link ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
+          ${item.link && !ocultarChamada ? `<a class="ver-edital" href="${item.link}" target="_blank" rel="noopener">Ver edital →</a>` : ''}
           ${item.pesquisador ? `<a class="ver-edital" href="${linkBuscaPesquisador(item)}" target="_blank" rel="noopener">Buscar pesquisador →</a>` : ''}
           <div class="actions">
             ${estaConfirmadoNoBioLead(item)
@@ -519,6 +519,7 @@ function renderizarLista() {
           <span class="badge ${classeFonte(grupo.fonte)}">${grupo.fonte || ''}</span>
           <span class="grupo-titulo">${grupo.chamada || ''}</span>
           <span class="grupo-contador">${grupo.itens.length} pessoas</span>
+          ${grupo.itens[0].link ? `<a class="ver-edital" href="${grupo.itens[0].link}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Ver edital →</a>` : ''}
         </div>
         <div class="grupo-cards">${cardsDoGrupo}</div>
       </div>
