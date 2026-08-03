@@ -95,6 +95,7 @@
   .grupo-titulo { flex:1; font-size:13.5px; color:var(--text-muted); font-weight:600; }
   .grupo-contador { font-size:11.5px; color:var(--text-faint); background:#fff; padding:2px 9px; border-radius:10px; border:1px solid var(--border); flex-shrink:0; }
   .grupo-cards { padding-top:10px; }
+  .grupo-cards .card { padding:11px 18px; }
   .grupo-edital.colapsado .grupo-cards { display:none; }
   .grupo-edital.colapsado .grupo-toggle-icon { transform:rotate(-90deg); }
   .chamada { font-size:13px; color:var(--text-muted); max-width:56ch; }
@@ -501,24 +502,21 @@ function renderizarLista() {
     return;
   }
 
-  // Editais com só 1 pessoa continuam como card solto, sem acordeão —
-  // agrupar isso só adicionaria clique sem economizar espaço nenhum.
-  // Grupos vêm expandidos por padrão (mesma quantidade de informação
-  // visível de antes, só sem repetir o título da chamada em cada pessoa) —
-  // ela pode recolher os que já revisou.
+  // Todo edital vira grupo, mesmo com 1 pessoa só — consistência visual
+  // pedida pela Dayane (card solto com formato diferente do agrupado
+  // ficava confuso de bater o olho). Grupos vêm FECHADOS por padrão; ela
+  // expande o que quiser revisar.
   const grupos = agruparPorEdital(itensFiltrados);
   const listaHtml = grupos.map(function(grupo) {
-    if (grupo.itens.length === 1) {
-      return renderizarCard(grupo.itens[0], false);
-    }
     const cardsDoGrupo = grupo.itens.map(function(item) { return renderizarCard(item, true); }).join('');
+    const rotuloContador = grupo.itens.length === 1 ? '1 pessoa' : grupo.itens.length + ' pessoas';
     return `
       <div class="grupo-edital colapsado">
         <div class="grupo-cabecalho" onclick="this.parentElement.classList.toggle('colapsado')">
           <span class="grupo-toggle-icon">▾</span>
           <span class="badge ${classeFonte(grupo.fonte)}">${grupo.fonte || ''}</span>
           <span class="grupo-titulo">${grupo.chamada || ''}</span>
-          <span class="grupo-contador">${grupo.itens.length} pessoas</span>
+          <span class="grupo-contador">${rotuloContador}</span>
           ${grupo.itens[0].link ? `<a class="ver-edital" href="${grupo.itens[0].link}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Ver edital →</a>` : ''}
         </div>
         <div class="grupo-cards">${cardsDoGrupo}</div>
