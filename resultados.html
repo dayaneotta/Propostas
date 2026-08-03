@@ -443,8 +443,8 @@ function renderizarCard(item, ocultarChamada) {
         </div>
         <div class="right">
           <div class="linha-idade-status">
-            ${idade ? `<span class="idade ${idade.classe}">${idade.texto}<span class="dica-data">Detectado em ${formatarData(item.detectadoEm)}</span></span>` : `<span class="date">${formatarData(item.detectadoEm)}</span>`}
             <span class="status ${classe}">${item.status}</span>
+            ${idade ? `<span class="idade ${idade.classe}">${idade.texto}<span class="dica-data">Detectado em ${formatarData(item.detectadoEm)}</span></span>` : `<span class="date">${formatarData(item.detectadoEm)}</span>`}
           </div>
           ${item.valorFase && item.valor && item.valorFase !== item.fase ? `<span class="value-note">Valor na Fase ${item.valorFase}:</span>` : ''}
           <span class="value">${formatarValor(item.valor)}</span>
