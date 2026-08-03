@@ -513,7 +513,7 @@ function renderizarLista() {
     }
     const cardsDoGrupo = grupo.itens.map(function(item) { return renderizarCard(item, true); }).join('');
     return `
-      <div class="grupo-edital">
+      <div class="grupo-edital colapsado">
         <div class="grupo-cabecalho" onclick="this.parentElement.classList.toggle('colapsado')">
           <span class="grupo-toggle-icon">▾</span>
           <span class="badge ${classeFonte(grupo.fonte)}">${grupo.fonte || ''}</span>
