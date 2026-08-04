@@ -1093,16 +1093,16 @@ function renderLembretes() {
     const tem2 = atrasados.some(l => l.contato === '2°');
     const tem3 = atrasados.some(l => l.contato === '3°');
     let botoesLote = '';
-    if (tem2) botoesLote += `<button class="btn" style="padding:3px 10px;font-size:11px" onclick="gerarLoteAtrasados2()">📨 Gerar rascunhos em lote (2º contato)</button>`;
-    if (tem3) botoesLote += `<button class="btn" style="padding:3px 10px;font-size:11px;margin-left:6px" onclick="gerarLoteAtrasados3()">📨 Gerar rascunhos em lote (3º contato)</button>`;
+    if (tem2) botoesLote += `<button class="btn" style="padding:3px 10px;font-size:11px" onclick="gerarLoteAtrasados2()"><i class="ti ti-send" style="font-size:14px"></i> Gerar rascunhos em lote (2º contato)</button>`;
+    if (tem3) botoesLote += `<button class="btn" style="padding:3px 10px;font-size:11px;margin-left:6px" onclick="gerarLoteAtrasados3()"><i class="ti ti-send" style="font-size:14px"></i> Gerar rascunhos em lote (3º contato)</button>`;
     html += `<div class="lembrete-card atrasado"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px"><h3 style="margin-bottom:0">🔴 Atrasados (${atrasados.length})</h3><div>${botoesLote}</div></div>${atrasados.map((l,i)=>itemLembrete(l,atrasados[i-1])).join('')}</div>`;
   }
   if (proximos.length) {
     const tem2p = proximos.some(l => l.contato === '2°');
     const tem3p = proximos.some(l => l.contato === '3°');
     let botoesLoteP = '';
-    if (tem2p) botoesLoteP += `<button class="btn" style="padding:3px 10px;font-size:11px" onclick="gerarLoteProximos2()">📨 Gerar rascunhos em lote (2º contato)</button>`;
-    if (tem3p) botoesLoteP += `<button class="btn" style="padding:3px 10px;font-size:11px;margin-left:6px" onclick="gerarLoteProximos3()">📨 Gerar rascunhos em lote (3º contato)</button>`;
+    if (tem2p) botoesLoteP += `<button class="btn" style="padding:3px 10px;font-size:11px" onclick="gerarLoteProximos2()"><i class="ti ti-send" style="font-size:14px"></i> Gerar rascunhos em lote (2º contato)</button>`;
+    if (tem3p) botoesLoteP += `<button class="btn" style="padding:3px 10px;font-size:11px;margin-left:6px" onclick="gerarLoteProximos3()"><i class="ti ti-send" style="font-size:14px"></i> Gerar rascunhos em lote (3º contato)</button>`;
     html += `<div class="lembrete-card hoje"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px"><h3 style="margin-bottom:0">🟡 Para hoje ou amanhã (${proximos.length})</h3><div>${botoesLoteP}</div></div>${proximos.map((l,i)=>itemLembrete(l,proximos[i-1])).join('')}</div>`;
   }
   painel.innerHTML = htmlSemContato + html;
