@@ -1090,12 +1090,58 @@ function renderLembretes() {
   };
 
   if (atrasados.length) {
-    html += `<div class="lembrete-card atrasado"><h3>🔴 Atrasados (${atrasados.length})</h3>${atrasados.map((l,i)=>itemLembrete(l,atrasados[i-1])).join('')}</div>`;
+    const tem3 = atrasados.some(l => l.contato === 3);
+    const botaoLote = tem3 ? `<button class="btn" style="padding:3px 10px;font-size:11px" onclick="gerarLoteAtrasados3()">📨 Gerar rascunhos em lote (3º contato)</button>` : '';
+    html += `<div class="lembrete-card atrasado"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><h3 style="margin-bottom:0">🔴 Atrasados (${atrasados.length})</h3>${botaoLote}</div>${atrasados.map((l,i)=>itemLembrete(l,atrasados[i-1])).join('')}</div>`;
   }
   if (proximos.length) {
     html += `<div class="lembrete-card hoje"><h3>🟡 Para hoje ou amanhã (${proximos.length})</h3>${proximos.map((l,i)=>itemLembrete(l,proximos[i-1])).join('')}</div>`;
   }
   painel.innerHTML = htmlSemContato + html;
+}
+
+async function gerarLoteAtrasados3() {
+  const lembretes = calcularLembretes();
+  const alvos = lembretes.filter(l => l.atrasado && !l.manual && l.contato === 3);
+
+  if (!alvos.length) {
+    toast('✅ Nenhum atrasado de 3º contato no momento.');
+    return;
+  }
+
+  if (!confirm(`Gerar rascunhos de 3º e-mail para ${alvos.length} pesquisador${alvos.length !== 1 ? 'es' : ''} atrasados? Os rascunhos vão para sua caixa de rascunhos do Gmail — nada é enviado automaticamente.`)) return;
+
+  const pessoas = alvos.map(l => {
+    const p = dados.find(x => String(x.id) === String(l.id));
+    return { id: l.id, nome: p ? p.nome : l.nome, inst: p ? p.inst : '', linha: p ? p.linha : '', email: p ? p.email : '' };
+  });
+
+  const btn = event.target;
+  const textoOriginal = btn.textContent;
+  btn.textContent = '⏳ Gerando lote...';
+  btn.disabled = true;
+
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=gerarLoteEmail3&params=${encodeURIComponent(JSON.stringify({pessoas}))}&token=${tokenAuthBL()}`)
+    .then(r => r.json())
+    .then(data => {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      if (data.naoAutorizado) { _blSessaoExpirada(); return; }
+      if (data.ok) {
+        let resumo = `✅ ${data.criados} de ${data.total} rascunhos criados.`;
+        if (data.comFallback.length) resumo += `\n\n⚠ Saudação neutra, revisar manualmente (${data.comFallback.length}):\n${data.comFallback.join(', ')}`;
+        if (data.comErro.length) resumo += `\n\n❌ Não criados (${data.comErro.length}):\n${data.comErro.join(', ')}`;
+        alert(resumo);
+      } else {
+        toast('⚠ Erro ao gerar lote: ' + (data.error || 'tente novamente'));
+      }
+    })
+    .catch(err => {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      toast('⚠ Erro de conexão ao gerar lote.');
+      console.error(err);
+    });
 }
 
 // ── Atalho ChatGPT ────────────────────────────────────────────────────────────
