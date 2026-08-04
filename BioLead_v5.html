@@ -1077,12 +1077,13 @@ function renderLembretes() {
     const pesq = dados.find(x=>String(x.id)===String(l.id));
     const email = pesq ? pesq.email : '';
     const diasAtraso = Math.round((new Date() - l.due) / (1000*60*60*24));
-    const seloDias = l.atrasado ? `<span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:12px;font-size:10px;font-weight:600;border:.5px solid #fca5a5;background:#FEF2F2;color:#dc2626;margin-left:6px">${diasAtraso}d</span>` : '';
+    const seloDias = l.atrasado ? `<span style="flex-shrink:0;display:inline-flex;align-items:center;padding:1px 7px;border-radius:12px;font-size:10px;font-weight:600;border:.5px solid #fca5a5;background:#FEF2F2;color:#dc2626">${diasAtraso}d</span>` : '';
     return `<div class="lembrete-item"${espacoAntes}>
-      <div style="flex:1">
-        <div><strong>${l.nome}</strong> — ${l.contato} contato ${l.atrasado ? `atrasado desde <strong>${l.due.toLocaleDateString('pt-BR')}</strong>` : `sugerido para <strong>${l.due.toLocaleDateString('pt-BR')}</strong>`}${seloDias}</div>
+      <div style="flex:1;min-width:0">
+        <div><strong>${l.nome}</strong> — ${l.contato} contato ${l.atrasado ? `atrasado desde <strong>${l.due.toLocaleDateString('pt-BR')}</strong>` : `sugerido para <strong>${l.due.toLocaleDateString('pt-BR')}</strong>`}</div>
         ${email ? `<div style="font-size:11px;color:var(--text3);font-style:italic;margin-top:1px">${email}</div>` : ''}
       </div>
+      ${seloDias}
       <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer;margin-left:8px" onclick="abrirModal('${l.id}')" title="Editar cadastro"><i class="ti ti-pencil" style="font-size:14px"></i></button>
       <button class="btn" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #6055B0;color:#6055B0;cursor:pointer;margin-left:4px" onclick="abrirModalEmail('${l.id}')" title="Gerar e-mail de follow-up"><i class="ti ti-mail" style="font-size:14px"></i></button>
     </div>`;
