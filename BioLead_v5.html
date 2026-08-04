@@ -1098,7 +1098,12 @@ function renderLembretes() {
     html += `<div class="lembrete-card atrasado"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px"><h3 style="margin-bottom:0">🔴 Atrasados (${atrasados.length})</h3><div>${botoesLote}</div></div>${atrasados.map((l,i)=>itemLembrete(l,atrasados[i-1])).join('')}</div>`;
   }
   if (proximos.length) {
-    html += `<div class="lembrete-card hoje"><h3>🟡 Para hoje ou amanhã (${proximos.length})</h3>${proximos.map((l,i)=>itemLembrete(l,proximos[i-1])).join('')}</div>`;
+    const tem2p = proximos.some(l => l.contato === '2°');
+    const tem3p = proximos.some(l => l.contato === '3°');
+    let botoesLoteP = '';
+    if (tem2p) botoesLoteP += `<button class="btn" style="padding:3px 10px;font-size:11px" onclick="gerarLoteProximos2()">📨 Gerar rascunhos em lote (2º contato)</button>`;
+    if (tem3p) botoesLoteP += `<button class="btn" style="padding:3px 10px;font-size:11px;margin-left:6px" onclick="gerarLoteProximos3()">📨 Gerar rascunhos em lote (3º contato)</button>`;
+    html += `<div class="lembrete-card hoje"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px"><h3 style="margin-bottom:0">🟡 Para hoje ou amanhã (${proximos.length})</h3><div>${botoesLoteP}</div></div>${proximos.map((l,i)=>itemLembrete(l,proximos[i-1])).join('')}</div>`;
   }
   painel.innerHTML = htmlSemContato + html;
 }
@@ -1158,6 +1163,95 @@ async function gerarLoteAtrasados3() {
   }
 
   if (!confirm(`Gerar rascunhos de 3º e-mail para ${alvos.length} pesquisador${alvos.length !== 1 ? 'es' : ''} atrasados? Os rascunhos vão para sua caixa de rascunhos do Gmail — nada é enviado automaticamente.`)) return;
+
+  const pessoas = alvos.map(l => {
+    const p = dados.find(x => String(x.id) === String(l.id));
+    return { id: l.id, nome: p ? p.nome : l.nome, inst: p ? p.inst : '', linha: p ? p.linha : '', email: p ? p.email : '' };
+  });
+
+  const btn = event.target;
+  const textoOriginal = btn.textContent;
+  btn.textContent = '⏳ Gerando lote...';
+  btn.disabled = true;
+
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=gerarLoteEmail3&params=${encodeURIComponent(JSON.stringify({pessoas}))}&token=${tokenAuthBL()}`)
+    .then(r => r.json())
+    .then(data => {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      if (data.naoAutorizado) { _blSessaoExpirada(); return; }
+      if (data.ok) {
+        let resumo = `✅ ${data.criados} de ${data.total} rascunhos criados.`;
+        if (data.comFallback.length) resumo += `\n\n⚠ Saudação neutra, revisar manualmente (${data.comFallback.length}):\n${data.comFallback.join(', ')}`;
+        if (data.comErro.length) resumo += `\n\n❌ Não criados (${data.comErro.length}):\n${data.comErro.join(', ')}`;
+        alert(resumo);
+      } else {
+        toast('⚠ Erro ao gerar lote: ' + (data.error || 'tente novamente'));
+      }
+    })
+    .catch(err => {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      toast('⚠ Erro de conexão ao gerar lote.');
+      console.error(err);
+    });
+}
+
+async function gerarLoteProximos2() {
+  const lembretes = calcularLembretes();
+  const alvos = lembretes.filter(l => !l.atrasado && !l.manual && l.contato === '2°');
+
+  if (!alvos.length) {
+    toast('✅ Ninguém de 2º contato para hoje ou amanhã no momento.');
+    return;
+  }
+
+  if (!confirm(`Gerar rascunhos de 2º e-mail para ${alvos.length} pesquisador${alvos.length !== 1 ? 'es' : ''} (hoje/amanhã)? Os rascunhos vão para sua caixa de rascunhos do Gmail — nada é enviado automaticamente.`)) return;
+
+  const pessoas = alvos.map(l => {
+    const p = dados.find(x => String(x.id) === String(l.id));
+    return { id: l.id, nome: p ? p.nome : l.nome, inst: p ? p.inst : '', linha: p ? p.linha : '', email: p ? p.email : '' };
+  });
+
+  const btn = event.target;
+  const textoOriginal = btn.textContent;
+  btn.textContent = '⏳ Gerando lote...';
+  btn.disabled = true;
+
+  fetch(`${SHEETS_URL_BL}?action=biolead&sub=gerarLoteEmail2&params=${encodeURIComponent(JSON.stringify({pessoas}))}&token=${tokenAuthBL()}`)
+    .then(r => r.json())
+    .then(data => {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      if (data.naoAutorizado) { _blSessaoExpirada(); return; }
+      if (data.ok) {
+        let resumo = `✅ ${data.criados} de ${data.total} rascunhos criados.`;
+        if (data.semLinha.length) resumo += `\n\n📋 Sem "linha de pesquisa" cadastrada, não geradas (${data.semLinha.length}):\n${data.semLinha.join(', ')}`;
+        if (data.comFallback.length) resumo += `\n\n⚠ Conexão genérica, revisar manualmente (${data.comFallback.length}):\n${data.comFallback.join(', ')}`;
+        if (data.comErro.length) resumo += `\n\n❌ Não criados (${data.comErro.length}):\n${data.comErro.join(', ')}`;
+        alert(resumo);
+      } else {
+        toast('⚠ Erro ao gerar lote: ' + (data.error || 'tente novamente'));
+      }
+    })
+    .catch(err => {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      toast('⚠ Erro de conexão ao gerar lote.');
+      console.error(err);
+    });
+}
+
+async function gerarLoteProximos3() {
+  const lembretes = calcularLembretes();
+  const alvos = lembretes.filter(l => !l.atrasado && !l.manual && l.contato === '3°');
+
+  if (!alvos.length) {
+    toast('✅ Ninguém de 3º contato para hoje ou amanhã no momento.');
+    return;
+  }
+
+  if (!confirm(`Gerar rascunhos de 3º e-mail para ${alvos.length} pesquisador${alvos.length !== 1 ? 'es' : ''} (hoje/amanhã)? Os rascunhos vão para sua caixa de rascunhos do Gmail — nada é enviado automaticamente.`)) return;
 
   const pessoas = alvos.map(l => {
     const p = dados.find(x => String(x.id) === String(l.id));
