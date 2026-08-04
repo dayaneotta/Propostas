@@ -1090,7 +1090,7 @@ function renderLembretes() {
   };
 
   if (atrasados.length) {
-    const tem3 = atrasados.some(l => l.contato === 3);
+    const tem3 = atrasados.some(l => l.contato === '3°');
     const botaoLote = tem3 ? `<button class="btn" style="padding:3px 10px;font-size:11px" onclick="gerarLoteAtrasados3()">📨 Gerar rascunhos em lote (3º contato)</button>` : '';
     html += `<div class="lembrete-card atrasado"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><h3 style="margin-bottom:0">🔴 Atrasados (${atrasados.length})</h3>${botaoLote}</div>${atrasados.map((l,i)=>itemLembrete(l,atrasados[i-1])).join('')}</div>`;
   }
@@ -1102,7 +1102,7 @@ function renderLembretes() {
 
 async function gerarLoteAtrasados3() {
   const lembretes = calcularLembretes();
-  const alvos = lembretes.filter(l => l.atrasado && !l.manual && l.contato === 3);
+  const alvos = lembretes.filter(l => l.atrasado && !l.manual && l.contato === '3°');
 
   if (!alvos.length) {
     toast('✅ Nenhum atrasado de 3º contato no momento.');
