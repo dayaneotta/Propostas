@@ -552,6 +552,8 @@ textarea{resize:vertical;min-height:60px}
     <div class="form-full">
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
         <button type="button" class="btn btn-primary" style="font-size:12px" onclick="gerarEmailLattes()" id="btn-gerar-email">✉️ Gerar e-mail</button>
+        <!-- btn-copiar-prompt: só visível no 1º e-mail, controlado por abrirModalEmail() -->
+        <button type="button" class="btn" id="btn-copiar-prompt" style="display:none" onclick="copiarPromptEmail1()">📋 Copiar prompt</button>
         <!-- btn-abrir-email: só visível no 1º e-mail, controlado por abrirModalEmail() -->
         <button type="button" class="btn" id="btn-abrir-email" style="display:none" onclick="abrirGmailDoContato()"><i class="ti ti-mail-plus" style="font-size:14px"></i> Abrir e-mail</button>
         <button type="button" class="btn btn-green" onclick="marcarContatoEnviado()"><i class="ti ti-circle-check" style="font-size:14px"></i> Marcar contato enviado</button>
@@ -1238,6 +1240,374 @@ function copiarEmailGerado() {
   });
 }
 
+// ── Prompt do 1º e-mail (uso externo no ChatGPT) ────────────────────────────────
+const PROMPT_EMAIL1_TEMPLATE = `# PROMPT – Geração de e-mail de prospecção altamente personalizado para pesquisadores
+
+Você é um especialista em comunicação científica e prospecção B2B para pesquisadores acadêmicos.
+
+Sua tarefa é elaborar um e-mail de prospecção para apresentar a Biomelting a um pesquisador, utilizando como base seu currículo, linhas de pesquisa e projetos recentes.
+
+O objetivo NÃO é vender serviços, mas estabelecer uma conexão científica e posicionar a Biomelting como uma parceira técnico-científica para projetos de pesquisa.
+
+---
+
+# Sobre a Biomelting
+
+A Biomelting atua como parceira técnico-científica na execução completa de projetos baseados em <u>sequenciamento de nova geração (NGS)</u>, oferecendo suporte desde o desenho experimental, preparo de bibliotecas, controle de qualidade de DNA e RNA, sequenciamento e análise bioinformática.
+
+Nossa equipe é composta majoritariamente por doutores, com sólida experiência em pesquisa e desenvolvimento, permitindo compreender os desafios científicos de cada projeto e atuar de forma colaborativa com grupos de pesquisa.
+
+---
+
+# Antes de escrever
+
+Antes de redigir o e-mail, analise cuidadosamente o currículo do pesquisador e identifique:
+
+* sua principal área de atuação;
+* o verdadeiro eixo científico do laboratório;
+* as tecnologias utilizadas pelo grupo;
+* os projetos mais recentes;
+* quais abordagens ômicas realmente fazem sentido para sua pesquisa.
+
+Exemplos de eixo científico:
+
+* Neurociências
+* Oncologia
+* Imunologia
+* Farmacologia
+* Bioquímica
+* Biologia Molecular
+* Biotecnologia
+* Medicina Translacional
+* Terapia Celular
+* Terapia Gênica
+* Nanomedicina
+* Vesículas Extracelulares
+* Genética Vegetal
+* Recursos Genéticos
+* Ecologia
+* Microbiologia
+* Virologia
+* Bioinformática
+
+Todo o texto deve ser construído em torno desse eixo.
+
+Nunca tente encaixar todos os pesquisadores no mesmo modelo.
+
+---
+
+# Terminologia
+
+Utilizar sempre:
+
+* transcritômica
+
+Nunca utilizar:
+
+* transcriptômica
+
+Empregar sempre a terminologia científica mais apropriada em português.
+
+---
+
+# Estrutura obrigatória
+
+## Assunto
+
+Gerar um assunto personalizado.
+
+Preferencialmente utilizar:
+
+**Parceria técnico-científica em genômica e transcritômica aplicadas à...**
+
+Adaptar o complemento conforme a área do pesquisador.
+
+Exemplos:
+
+* neurociências
+* imunologia molecular
+* oncologia translacional
+* medicina regenerativa
+* biotecnologia vegetal
+* farmacologia
+* terapias avançadas
+* recursos genéticos vegetais
+* bioengenharia
+* microbiologia
+* vesículas extracelulares
+
+Caso outra abordagem seja mais representativa do laboratório, adaptar naturalmente.
+
+Nunca utilizar assunto genérico.
+
+---
+
+## Primeiro parágrafo
+
+Apresente o pesquisador demonstrando conhecimento de sua trajetória.
+
+Nunca copiar trechos do currículo.
+
+Resuma em duas ou três linhas:
+
+* instituição;
+* área principal;
+* principais linhas de pesquisa;
+* projeto recente (quando relevante).
+
+Utilize linguagem natural.
+
+Exemplo:
+
+"Acompanhamos sua trajetória na Universidade..., especialmente sua atuação em..., com destaque para..."
+
+---
+
+## Segundo parágrafo
+
+Este deve ser o trecho mais personalizado do e-mail.
+
+Explique por que as pesquisas desenvolvidas dialogam com abordagens ômicas.
+
+Relacionar apenas tecnologias realmente pertinentes ao laboratório.
+
+Exemplos:
+
+* genômica
+* transcritômica
+* RNA-seq
+* single-cell RNA-seq
+* expressão gênica
+* miRNAs
+* lncRNAs
+* CRISPR
+* DNA
+* RNA
+* exoma
+* metagenômica
+* microbioma
+* epigenética
+* regulação gênica
+* vias moleculares
+* mecanismos celulares
+
+Não listar tecnologias.
+
+Explicar como essas abordagens podem contribuir para responder às perguntas científicas daquele grupo.
+
+Sempre adaptar o texto ao eixo científico identificado.
+
+---
+
+## Terceiro parágrafo
+
+Apresente a Biomelting utilizando obrigatoriamente a seguinte estrutura:
+
+> "A Biomelting atua como parceira técnico-científica na execução completa de projetos baseados em <u>sequenciamento de nova geração (NGS)</u>, oferecendo suporte desde o desenho experimental, preparo de bibliotecas e controle de qualidade de DNA e RNA até o sequenciamento e a análise bioinformática."
+
+Em seguida acrescentar obrigatoriamente:
+
+> "Nossa equipe é composta majoritariamente por doutores, com experiência em pesquisa e desenvolvimento, o que nos permite compreender os desafios científicos de cada projeto..."
+
+Depois personalizar o restante do parágrafo mostrando como a Biomelting pode contribuir especificamente para aquele laboratório.
+
+Exemplos:
+
+* estudos de genômica estrutural e funcional;
+* análises de expressão gênica;
+* bulk RNA-seq;
+* single-cell RNA-seq;
+* montagem de genomas;
+* integração de plataformas de sequenciamento;
+* caracterização molecular;
+* mecanismos regulatórios;
+* RNAs não codificantes;
+* metagenômica;
+* microbioma;
+* descoberta de genes;
+* aplicações biotecnológicas.
+
+Nunca repetir exatamente os conceitos utilizados no segundo parágrafo.
+
+O segundo parágrafo explica o contexto científico.
+
+O terceiro explica como a Biomelting pode contribuir.
+
+A expressão **<u>sequenciamento de nova geração (NGS)</u>** deve permanecer sublinhada em todos os e-mails.
+
+Não sublinhar outros termos.
+
+---
+
+## Quarto parágrafo
+
+Utilizar sempre o texto abaixo:
+
+> "Considerando a relevância das pesquisas desenvolvidas pelo seu grupo, gostaríamos de propor uma breve conversa on-line para compreender suas demandas atuais e explorar oportunidades de apoio aos seus projetos presentes e futuros. Nosso Diretor Científico participará da reunião para aprofundar os aspectos técnico-científicos envolvidos."
+
+---
+
+## Encerramento
+
+Utilizar sempre:
+
+> "Você teria disponibilidade para uma conversa nos próximos dias? Ficamos à disposição para ajustar o horário conforme sua agenda."
+
+---
+
+# Regras importantes
+
+O e-mail deve parecer escrito exclusivamente para aquele pesquisador.
+
+Nunca copiar frases do currículo.
+
+Nunca utilizar linguagem comercial.
+
+Nunca fazer propaganda da Biomelting.
+
+Evitar excesso de adjetivos.
+
+Escrever em tom científico, profissional e cordial.
+
+---
+
+## Evitar repetições
+
+Não repetir excessivamente palavras ou expressões como:
+
+* biomarcadores;
+* mecanismos moleculares;
+* caracterização molecular;
+* medicina de precisão;
+* expressão gênica;
+* genômica;
+* transcritômica.
+
+Cada conceito deve aparecer apenas quando contribuir para a construção do texto.
+
+Variar naturalmente o vocabulário.
+
+Evitar que o segundo e o terceiro parágrafos transmitam a mesma ideia com palavras diferentes.
+
+---
+
+## Personalização obrigatória
+
+Se o pesquisador já utiliza:
+
+* NGS;
+* RNA-seq;
+* single-cell RNA-seq;
+* Oxford Nanopore;
+* Illumina;
+* PacBio;
+* bioinformática.
+
+NÃO apresentar essas tecnologias como novidade.
+
+Posicionar a Biomelting como parceira complementar.
+
+---
+
+## Adaptar conforme a área
+
+Se o pesquisador trabalha com:
+
+* CRISPR;
+* RNAi;
+* miRNAs;
+* lncRNAs;
+* terapia gênica;
+* terapia celular;
+* vesículas extracelulares;
+* organoides;
+* iPSCs;
+* modelos animais;
+* microbiologia;
+* virologia;
+* plantas;
+* fungos;
+* ecologia;
+* farmacologia;
+* neurociências;
+* oncologia;
+* imunologia.
+
+O texto deve dialogar naturalmente com essas linhas.
+
+Jamais utilizar exemplos ou aplicações de outras áreas apenas para mencionar tecnologias.
+
+---
+
+## Verificação final (obrigatória)
+
+Antes de finalizar o e-mail, responda internamente às seguintes perguntas:
+
+1. O texto demonstra claramente que o currículo do pesquisador foi lido?
+2. O e-mail poderia ser enviado para outro pesquisador apenas trocando o nome?
+
+   * Se sim, reescreva.
+3. Há repetição excessiva de conceitos entre o segundo e o terceiro parágrafos?
+
+   * Se sim, reescreva.
+4. A Biomelting está posicionada como parceira técnico-científica e não apenas como prestadora de serviços?
+5. O texto está natural, objetivo e científico?
+
+Somente entregue o e-mail quando todas as respostas forem satisfatórias.
+
+---
+
+# Entrada
+
+Receber:
+
+* currículo resumido;
+* linhas de pesquisa;
+* projetos recentes.
+
+---
+
+# Saída
+
+Gerar:
+
+1. assunto do e-mail;
+2. e-mail completo pronto para envio, seguindo exatamente a estrutura acima.`;
+
+function copiarPromptEmail1() {
+  const resumo = document.getElementById('ed-resumo-lattes') ? document.getElementById('ed-resumo-lattes').value.trim() : '';
+
+  if (!resumo) {
+    toast('⚠ Cole um resumo do Lattes antes de copiar o prompt.');
+    return;
+  }
+
+  const id = document.getElementById('email-modal-id').value;
+  const p = dados.find(x=>String(x.id)===String(id));
+  const nome = p ? p.nome || '' : '';
+  const inst = p ? p.inst || '' : '';
+  const linha = p ? p.linha || '' : '';
+
+  const promptCompleto = `${PROMPT_EMAIL1_TEMPLATE}
+
+---
+
+# Dados do pesquisador (preencher a Entrada acima com isto)
+
+Nome: ${nome}
+Instituição: ${inst}
+Linha de pesquisa cadastrada: ${linha}
+
+Currículo resumido / trajetória / projetos recentes:
+${resumo}`;
+
+  navigator.clipboard.writeText(promptCompleto).then(() => {
+    toast('✅ Prompt copiado! Cole no ChatGPT.');
+  }).catch(() => {
+    toast('⚠ Não foi possível copiar automaticamente.');
+  });
+}
+
 function atualizarRotulosPrimeiroContato(inbound) {
   document.getElementById('ed-c1-titulo').textContent = inbound ? '📩 Mensagem recebida' : '1° Contato';
   document.getElementById('ed-c1-data-label').textContent = inbound ? 'Recebido em' : 'Data';
@@ -1328,13 +1698,16 @@ function abrirModalEmail(id) {
   const tituloBase = titulosPorNumero[numEmail] || titulosPorNumero[1];
   document.getElementById('email-modal-titulo').innerHTML = `✉️ ${tituloBase} — <span id="email-modal-nome" style="font-weight:400;color:var(--text2)">${escapeHtml(p.nome)}</span>`;
 
-  // Resumo do Lattes é exibido apenas quando o pesquisador já respondeu (numEmail 0)
-  // No 1º e-mail o fluxo é via ChatGPT externo; no 2º e 3º não há resumo
+  // Resumo do Lattes é exibido quando o pesquisador já respondeu (numEmail 0)
+  // ou no 1º contato (numEmail 1), onde alimenta o prompt do ChatGPT externo
   const wrapResumo = document.getElementById('resumo-lattes-wrap');
-  wrapResumo.style.display = numEmail === 0 ? '' : 'none';
+  wrapResumo.style.display = (numEmail === 0 || numEmail === 1) ? '' : 'none';
 
   // No 1º e-mail o e-mail é gerado via ChatGPT — esconde o botão de geração automática
   document.getElementById('btn-gerar-email').style.display = numEmail === 1 ? 'none' : '';
+
+  // Botão "Copiar prompt" (monta o prompt completo pro ChatGPT) — só no 1º e-mail
+  document.getElementById('btn-copiar-prompt').style.display = numEmail === 1 ? '' : 'none';
 
   // Botão "Abrir e-mail" (abre Gmail com destinatário preenchido) — só no 1º e-mail
   document.getElementById('btn-abrir-email').style.display = numEmail === 1 ? '' : 'none';
