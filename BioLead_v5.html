@@ -1058,8 +1058,8 @@ function renderLembretes() {
         <span style="font-size:13px">📅</span>
         <div style="flex:1"><strong>${l.nome}</strong>${l.obs ? ` — <span style="color:var(--text3);font-size:11px">${l.obs}</span>` : ''}</div>
         <span style="font-size:11px;color:${l.atrasado?'#dc2626':'#e65100'};margin-left:auto;white-space:nowrap">${l.atrasado?'Atrasado: ':''}${l.due.toLocaleDateString('pt-BR')}</span>
-        <button class="btn" style="padding:2px 8px;font-size:11px;margin-left:8px" onclick="abrirModal('${l.id}')" title="Editar cadastro">✏️</button>
-        <button class="btn" style="padding:2px 8px;font-size:11px;margin-left:4px" onclick="abrirModalEmail('${l.id}')" title="Gerar e-mail">✉️</button>
+        <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer;margin-left:8px" onclick="abrirModal('${l.id}')" title="Editar cadastro"><i class="ti ti-pencil" style="font-size:14px"></i></button>
+        <button class="btn" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #6055B0;color:#6055B0;cursor:pointer;margin-left:4px" onclick="abrirModalEmail('${l.id}')" title="Gerar e-mail"><i class="ti ti-mail" style="font-size:14px"></i></button>
       </div>`).join('')}</div>`;
   }
   // Ordenar: primeiro 2° contato, depois 3° contato; dentro de cada grupo do mais atrasado para o menos
@@ -1077,22 +1077,14 @@ function renderLembretes() {
     const pesq = dados.find(x=>String(x.id)===String(l.id));
     const email = pesq ? pesq.email : '';
     const diasAtraso = Math.round((new Date() - l.due) / (1000*60*60*24));
-    const maxDias = 120;
-    const pct = Math.min(diasAtraso / maxDias, 1);
-    const circleColor = pct > 0.5 ? '#dc2626' : pct > 0.2 ? '#f59e0b' : '#22c55e';
-    const arcLen = Math.round(pct * 101);
-    const arcGap = 101 - arcLen;
-    return `<div class="lembrete-item"${espacoAntes} style="align-items:center">
+    const seloDias = l.atrasado ? `<span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:12px;font-size:10px;font-weight:600;border:.5px solid #fca5a5;background:#FEF2F2;color:#dc2626;margin-left:6px">${diasAtraso}d</span>` : '';
+    return `<div class="lembrete-item"${espacoAntes}>
       <div style="flex:1">
-        <div><strong><a href="#" onclick="abrirModal('${l.id}');return false;" style="color:var(--bm-blue);text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(13,111,182,.3)">${l.nome}</a></strong> — ${l.contato} contato ${l.atrasado ? `atrasado desde <strong>${l.due.toLocaleDateString('pt-BR')}</strong>` : `sugerido para <strong>${l.due.toLocaleDateString('pt-BR')}</strong>`}</div>
+        <div><strong>${l.nome}</strong> — ${l.contato} contato ${l.atrasado ? `atrasado desde <strong>${l.due.toLocaleDateString('pt-BR')}</strong>` : `sugerido para <strong>${l.due.toLocaleDateString('pt-BR')}</strong>`}${seloDias}</div>
         ${email ? `<div style="font-size:11px;color:var(--text3);font-style:italic;margin-top:1px">${email}</div>` : ''}
       </div>
-      <button class="btn" style="padding:4px 9px;font-size:11px;margin-left:8px" onclick="abrirModalEmail('${l.id}')" title="Gerar e-mail de follow-up">✉️</button>
-      <svg width="44" height="44" viewBox="0 0 40 40" style="flex-shrink:0;margin-left:10px">
-        <circle cx="20" cy="20" r="16" fill="none" stroke="var(--border)" stroke-width="3"/>
-        <circle cx="20" cy="20" r="16" fill="none" stroke="${circleColor}" stroke-width="3" stroke-dasharray="${arcLen} ${arcGap}" stroke-dashoffset="25" stroke-linecap="round"/>
-        <text x="20" y="24" text-anchor="middle" font-size="10" font-weight="500" fill="${circleColor}">${diasAtraso}d</text>
-      </svg>
+      <button style="padding:5px 8px;border-radius:6px;background:#E6F1FB;border:1px solid #85B7EB;color:#185FA5;cursor:pointer;margin-left:8px" onclick="abrirModal('${l.id}')" title="Editar cadastro"><i class="ti ti-pencil" style="font-size:14px"></i></button>
+      <button class="btn" style="padding:5px 8px;border-radius:6px;background:#fff;border:1px solid #6055B0;color:#6055B0;cursor:pointer;margin-left:4px" onclick="abrirModalEmail('${l.id}')" title="Gerar e-mail de follow-up"><i class="ti ti-mail" style="font-size:14px"></i></button>
     </div>`;
   };
 
