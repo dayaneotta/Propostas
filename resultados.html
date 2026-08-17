@@ -227,6 +227,7 @@ let fonteAtiva = 'todas';
 let termoBusca = '';
 let filtroCard = null; // 'novo-final' | 'novo-prelim' | 'atualiza' | 'duplicata' | null (= total, sem filtro)
 const marcadosParaDescarte = new Set(); // processos marcados pro botão "Descartar marcados" — sobrevive a mudança de filtro/busca, some só quando descartado de fato ou desmarcado manualmente
+const gruposExpandidos = new Set(); // chaves de grupo (link do edital) que o usuário abriu manualmente — sobrevive a re-renderização (ex: depois de Aprovar/Descartar um card do grupo), pra não fechar sozinho a cada ação
 
 function formatarValor(v) {
   if (!v && v !== 0) return '';
@@ -468,6 +469,20 @@ function renderizarCard(item, ocultarChamada) {
 // itensFiltrados já vem ordenado do mais antigo pro mais novo antes de
 // agrupar, os GRUPOS também saem nessa ordem (o grupo aparece na posição
 // do seu membro mais antigo).
+// Alterna o grupo entre aberto/fechado E atualiza gruposExpandidos, pra
+// esse estado sobreviver à próxima renderizarLista() (que reconstrói tudo
+// do zero depois de qualquer ação — Aprovar, Descartar, etc.).
+function alternarGrupo(cabecalhoEl) {
+  const grupoEl = cabecalhoEl.parentElement;
+  grupoEl.classList.toggle('colapsado');
+  const chave = cabecalhoEl.dataset.chaveGrupo;
+  if (grupoEl.classList.contains('colapsado')) {
+    gruposExpandidos.delete(chave);
+  } else {
+    gruposExpandidos.add(chave);
+  }
+}
+
 function agruparPorEdital(itens) {
   const grupos = [];
   const indicePorChave = {};
@@ -509,15 +524,17 @@ function renderizarLista() {
 
   // Todo edital vira grupo, mesmo com 1 pessoa só — consistência visual
   // pedida pela Dayane (card solto com formato diferente do agrupado
-  // ficava confuso de bater o olho). Grupos vêm FECHADOS por padrão; ela
-  // expande o que quiser revisar.
+  // ficava confuso de bater o olho). Fechados por padrão na primeira
+  // vez; gruposExpandidos guarda quem ela abriu manualmente, então isso
+  // sobrevive à reconstrução da lista depois de uma ação (Aprovar/
+  // Descartar) em vez de fechar tudo de novo.
   const grupos = agruparPorEdital(itensFiltrados);
   const listaHtml = grupos.map(function(grupo) {
     const cardsDoGrupo = grupo.itens.map(function(item) { return renderizarCard(item, true); }).join('');
     const rotuloContador = grupo.itens.length === 1 ? '1 pessoa' : grupo.itens.length + ' pessoas';
     return `
-      <div class="grupo-edital colapsado">
-        <div class="grupo-cabecalho" onclick="this.parentElement.classList.toggle('colapsado')">
+      <div class="grupo-edital${gruposExpandidos.has(grupo.chave) ? '' : ' colapsado'}">
+        <div class="grupo-cabecalho" data-chave-grupo="${grupo.chave}" onclick="alternarGrupo(this)">
           <span class="grupo-toggle-icon">▾</span>
           <span class="badge ${classeFonte(grupo.fonte)}">${grupo.fonte || ''}</span>
           <span class="grupo-titulo">${grupo.chamada || ''}</span>
